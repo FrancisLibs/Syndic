@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Coproprietaire{% endblock %}
+
+{% block body %}
+    <h1>Edit Coproprietaire</h1>
+
+    {{ include('coproprietaire/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_coproprietaire_index') }}">back to list</a>
+
+    {{ include('coproprietaire/_delete_form.html.twig') }}
+{% endblock %}

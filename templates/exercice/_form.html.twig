@@ -1,0 +1,24 @@
+{{ form_start(form) }}
+<div>
+	<div class="row justify-content-start">
+		<div class="col-md-6">
+			{{ form_row(form.nom) }}
+		</div>
+	</div>
+	<div class="row justify-content-start">
+		<div class="col-md-6">
+			{{ form_row(form.copropriete) }}
+		</div>
+	</div>
+	<div class="row justify-content-start">
+		<div class="col-md-3">
+			{{ form_row(form.dateDebut) }}
+		</div>
+		<div class="col-md-3">
+			{{ form_row(form.dateFin) }}
+		</div>
+	</div>
+
+	<button class="btn btn-primary">{{ button_label|default('Valider') }}</button>
+</div>
+{{ form_end(form) }}

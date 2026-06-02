@@ -1,0 +1,173 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	État de compte
+{% endblock %}
+
+{% block body %}
+
+	<div class="container mt-4">
+
+		<div class="d-flex justify-content-between align-items-center mb-4">
+
+			<div>
+				<h1 class="mb-0">
+					État de compte
+				</h1>
+
+				<H2 class="text-muted">
+					{{ copro.nom }}
+					- Compte :
+					{{ compte.numero }}
+				</H2>
+			</div>
+
+			<div class="text-end">
+				<div class="fw-bold">
+					Solde
+				</div>
+
+				<div class="fs-4
+											{% if solde > 0 %} text-danger
+											{% elseif solde < 0 %} text-success
+											{% endif %}">
+					{{ solde|number_format(2, ',', ' ') }}
+					€
+				</div>
+			</div>
+
+		</div>
+
+		<div class="card shadow-sm">
+
+			<div class="card-body p-0">
+
+				<table class="table table-hover mb-0 align-middle">
+
+					<thead class="table-light">
+
+						<tr>
+							<th>Exercice</th>
+							<th>Date</th>
+							<th>Pièce</th>
+							<th>Type</th>
+							<th>Libellé</th>
+
+							<th class="text-end">
+								Débit
+							</th>
+
+							<th class="text-end">
+								Crédit
+							</th>
+
+							<th class="text-end">
+								Solde
+							</th>
+						</tr>
+
+					</thead>
+
+					<tbody>
+
+						{% for ligne in mvt %}
+
+							<tr>
+
+								<td>
+									{{ ligne.exercice }}
+								</td>
+
+								<td>
+									{{ ligne.date|date('d/m/Y') }}
+								</td>
+
+								<td>
+									{{ ligne.piece }}
+								</td>
+
+								<td>
+									<span class="badge bg-secondary">
+										{{ ligne.type }}
+									</span>
+								</td>
+
+								<td>
+									{{ ligne.libelle }}
+								</td>
+
+								<td class="text-end text-danger">
+
+									{% if ligne.debit > 0 %}
+										{{ ligne.debit|number_format(2, ',', ' ') }}
+										€
+									{% endif %}
+
+								</td>
+
+								<td class="text-end text-success">
+
+									{% if ligne.credit > 0 %}
+										{{ ligne.credit|number_format(2, ',', ' ') }}
+										€
+									{% endif %}
+
+								</td>
+
+								<td class="text-end fw-bold">
+
+									{{ ligne.solde|number_format(2, ',', ' ') }}
+									€
+
+								</td>
+
+							</tr>
+
+						{% else %}
+
+							<tr>
+								<td colspan="7" class="text-center py-4 text-muted">
+									Aucun mouvement
+								</td>
+							</tr>
+
+						{% endfor %}
+
+					</tbody>
+
+					<tfoot class="table-light">
+
+						<tr>
+
+							<th colspan="4" class="text-end">
+								Totaux
+							</th>
+
+							<th class="text-end text-danger">
+								{{ totalDebit|number_format(2, ',', ' ') }}
+								€
+							</th>
+
+							<th class="text-end text-success">
+								{{ totalCredit|number_format(2, ',', ' ') }}
+								€
+							</th>
+
+							<th class="text-end">
+								{{ solde|number_format(2, ',', ' ') }}
+								€
+							</th>
+
+						</tr>
+
+					</tfoot>
+
+				</table>
+
+			</div>
+
+		</div>
+
+	</div>
+
+{% endblock %}

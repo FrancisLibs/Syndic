@@ -1,0 +1,113 @@
+{# templates/facture/index.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Factures fournisseurs
+{% endblock %}
+
+{% block body %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Factures fournisseurs</h1>
+            <p class="text-muted mb-0">
+                Suivi des charges et règlements fournisseurs
+            </p>
+        </div>
+
+        <a href="{{ path('app_charge_new') }}"
+           class="btn btn-primary">
+            ➕ Nouvelle facture
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                Liste des factures
+            </h5>
+        </div>
+
+        <div class="card-body p-0">
+
+            <table class="table table-hover mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Libellé</th>
+                        <th class="text-end">Montant</th>
+                        <th class="text-end">Payé</th>
+                        <th class="text-end">Reste</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for f in factures %}
+
+                        <tr>
+
+                            <td>
+                                {{ f.date|date('d/m/Y') }}
+                            </td>
+
+                            <td>
+                                {{ f.libelle }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ f.montant|number_format(2, ',', ' ') }}
+                                €
+                            </td>
+
+                            <td class="text-end text-success">
+                                {{ f.paye|number_format(2, ',', ' ') }}
+                                €
+                            </td>
+
+                            <td class="text-end
+                                {% if f.reste > 0 %}
+                                    text-danger
+                                {% else %}
+                                    text-success
+                                {% endif %}
+                            ">
+                                {{ f.reste|number_format(2, ',', ' ') }}
+                                €
+                            </td>
+
+                            <td>
+                                <span class="badge bg-{{ f.badge }}">
+                                    {{ f.statut }}
+                                </span>
+                            </td>
+
+                        </tr>
+
+                    {% else %}
+
+                        <tr>
+                            <td colspan="6"
+                                class="text-center py-4 text-muted">
+                                Aucune facture enregistrée.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

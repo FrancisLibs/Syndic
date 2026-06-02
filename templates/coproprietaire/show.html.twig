@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Coproprietaire
+{% endblock %}
+
+{% block body %}
+	<h1>Coproprietaire</h1>
+
+	<table class="table">
+		<tbody>
+			<tr>
+				<th>Nom</th>
+				<td>{{ coproprietaire.nom }}</td>
+			</tr>
+			<tr>
+				<th>Email</th>
+				<td>{{ coproprietaire.email }}</td>
+			</tr>
+			<tr>
+				<th>Telephone</th>
+				<td>{{ coproprietaire.telephone }}</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h2>Lots</h2>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Référence</th>
+				<th>Désignation</th>
+				<th>Tantièmes</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			{% for lot in coproprietaire.lotsActifs %}
+				<tr>
+					<td>{{ lot.reference }}</td>
+					<td>{{ lot.designation }}</td>
+					<td>{{ lot.tantiemes }}</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="4">No lots found.</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<a href="{{ path('app_coproprietaire_index') }}">back to list</a>
+
+	<a href="{{ path('app_coproprietaire_edit', {'id': coproprietaire.id}) }}">edit</a>
+
+	{{ include('coproprietaire/_delete_form.html.twig') }}
+{% endblock %}

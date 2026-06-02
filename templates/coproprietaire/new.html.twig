@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Coproprietaire{% endblock %}
+
+{% block body %}
+    <h1>Create new Coproprietaire</h1>
+
+    {{ include('coproprietaire/_form.html.twig') }}
+
+    <a href="{{ path('app_coproprietaire_index') }}">back to list</a>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Lot index
+{% endblock %}
+
+{% block body %}
+	<h1>Lot index</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-center">Reference</th>
+
+				<th class="text-center">Designation</th>
+				<th class="text-center">Tantiemes</th>
+				<th class="text-center">Coproprietaire</th>
+				<th class="text-center">Copropriete</th>
+				<th class="text-center">actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for lot in lots %}
+				<tr>
+					<td class="text-center">{{ lot.reference }}</td>
+					<td class="text-center">{{ lot.designation }}</td>
+					<td class="text-center">{{ lot.tantiemes }}</td>
+					<td class="text-center">{{ lot.coproprietaireActuel ? lot.coproprietaireActuel.nom : '—' }}</td>
+					<td class="text-center">{{ lot.copropriete }}</td>
+					<td class="text-center">
+						<a href="{{ path('app_lot_show', {'id': lot.id}) }}">show</a>
+						<a href="{{ path('app_lot_edit', {'id': lot.id}) }}">edit</a>
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="5">no records found</td>
+				</tr>
+			{% endfor %}
+			<div class="mb-3">
+				<label>Total Tantièmes:</label>
+				{{ totalTantiemes }}
+			</div>
+		</tbody>
+	</table>
+
+	<a href="{{ path('app_lot_new') }}">Create new</a>
+{% endblock %}

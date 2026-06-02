@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New TypeCharge{% endblock %}
+
+{% block body %}
+    <h1>Create new TypeCharge</h1>
+
+    {{ include('type_charge/_form.html.twig') }}
+
+    <a href="{{ path('app_type_charge_index') }}">back to list</a>
+{% endblock %}

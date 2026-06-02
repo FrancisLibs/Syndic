@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}TypeCharge index
+{% endblock %}
+
+{% block body %}
+	<h1>TypeCharge index</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Id</th>
+				<th>Nom</th>
+				<th>ModeRepartition</th>
+				<th>Compte</th>
+				<th>Num. Compte</th>
+				<th>actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for type_charge in type_charges %}
+				<tr>
+					<td>{{ type_charge.id }}</td>
+					<td>{{ type_charge.nom }}</td>
+					<td>{{ type_charge.modeRepartition.value }}</td>
+					<td>{{ type_charge.compte.libelle }}</td>
+					<td>{{ type_charge.compte.numero }}</td>
+					<td>
+						<a href="{{ path('app_type_charge_show', {'id': type_charge.id}) }}">show</a>
+						<a href="{{ path('app_type_charge_edit', {'id': type_charge.id}) }}">edit</a>
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="4">no records found</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<a href="{{ path('app_type_charge_new') }}">Create new</a>
+{% endblock %}

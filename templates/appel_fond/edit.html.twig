@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit AppelFond{% endblock %}
+
+{% block body %}
+    <h1>Edit AppelFond</h1>
+
+    {{ include('appel_fond/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_appel_fond_index') }}">back to list</a>
+
+{% endblock %}

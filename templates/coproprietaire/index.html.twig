@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Coproprietaire index
+{% endblock %}
+
+{% block body %}
+	<h1>Coproprietaire index</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-center">Nom</th>
+				<th class="text-center">Prenom</th>
+				<th class="text-center">Email</th>
+				<th class="text-center">Telephone</th>
+				<th class="text-center">Compte</th>
+				<th class="text-center">actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for coproprietaire in coproprietaires %}
+				<tr>
+					<td class="text-center">{{ coproprietaire.nom }}</td>
+					<td class="text-center">{{ coproprietaire.prenom }}</td>
+					<td class="text-center">{{ coproprietaire.email }}</td>
+					<td class="text-center">{{ coproprietaire.telephone }}</td>
+					<td class="text-center">{{ coproprietaire.compte ? coproprietaire.compte.numero : '' }}</td>
+					<td class="text-center">
+						<a href="{{ path('app_coproprietaire_show', {'id': coproprietaire.id}) }}">show</a>
+						<a href="{{ path('app_coproprietaire_edit', {'id': coproprietaire.id}) }}">edit</a>
+						<a href="{{ path('app_coproprietaire_etat_compte', {'id': coproprietaire.id}) }}" class="btn btn-sm btn-info">Compte
+						</a>
+
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="5">no records found</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<a href="{{ path('app_coproprietaire_new') }}">Create new</a>
+{% endblock %}

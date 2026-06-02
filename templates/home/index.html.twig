@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello OperationController!
+{% endblock %}
+
+{% block body %}
+	{# templates/home/index.html.twig #}
+
+
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Libellé</th>
+				<th>Montant Total</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for operation in operations %}
+				<tr>
+					<td>{{ operation.date|date('d/m/Y') }}</td>
+					<td>{{ operation.libelle }}</td>
+					<td>
+						{# On cherche l'écriture qui a un débit (la charge) #}
+						{% set montant = 0 %}
+						{% for ecriture in operation.ecritures %}
+							{% if ecriture.debit > 0 %}
+								{% set montant = ecriture.debit %}
+							{% endif %}
+						{% endfor %}
+						{{ montant|number_format(2, ',', ' ') }}
+						€
+					</td>
+					<td>
+						<a href="{{ path('operation_show', {id: operation.id}) }}" class="btn btn-sm btn-primary">
+							Voir les répartitions
+						</a>
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="4">Aucune opération enregistrée.</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+{% endblock %}

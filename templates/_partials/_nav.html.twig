@@ -1,0 +1,125 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+	<div class="container-fluid">
+		<a class="navbar-brand" href="#">
+			MaCopro : 14 RUE NEUVE
+		</a>
+		<div class="collapse navbar-collapse">
+			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+				{# ========================= #}
+				{# COMPTABILITÉ #}
+				{# ========================= #}
+
+					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+						Comptabilité
+					</a>
+					<ul class="dropdown-menu">
+						<li>
+							<a class="dropdown-item" href="{{ path('app_balance') }}">
+								Balance comptable
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_grand_livre') }}">
+								Grand livre
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_journal') }}">
+								Journal comptable
+							</a>
+						</li>
+						<li>
+							<hr class="dropdown-divider">
+						</li>
+					</ul>
+				</li>
+				{# ========================= #}
+				{# EXPLOITATION #}
+				{# ========================= #}
+					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+						Exploitation
+					</a>
+					<ul class="dropdown-menu">
+						<li>
+							<a class="dropdown-item" href="{{ path('app_budget_index') }}">
+								Budgets
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_appel_fond_index') }}">
+								<i class="bi bi-cash-stack"></i>
+								Appels de fonds
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_facture_fournisseur_index') }}">
+								<i class="bi bi-receipt"></i>
+								Factures fournisseurs
+							</a>
+						</li>
+					</ul>
+				</li>
+				{# ========================= #}
+				{# TRÉSORERIE #}
+				{# ========================= #}
+					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+						Trésorerie
+					</a>
+				</li>
+
+				{# ========================= #}
+				{# PARAMÉTRAGE #}
+				{# ========================= #}
+					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+						Paramétrage
+					</a>
+					<ul class="dropdown-menu">
+						<li>
+							<a class="dropdown-item" href="{{ path('app_copropriete_index') }}">
+								Copropriétés
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_lot_index') }}">
+								Lots
+							</a>
+						</li>
+						<li>
+							<hr class="dropdown-divider">
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_exercice_index') }}">
+								Exercices
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_type_charge_index') }}">
+								Types de charges
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_fournisseur_index') }}">
+								Fournisseurs
+							</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+			{# ========================= #}
+			{# ACTIONS RAPIDES #}
+			{# ========================= #}
+
+				<div class="d-flex gap-2"> <a href="{{ path('app_facture_fournisseur_new') }}" class="btn btn-light">
+					+ Facture fournisseur
+				</a>
+
+				<a href="{{ path('app_paiement_new') }}" class="btn btn-light">
+					+ Paiement copropriétaire
+				</a>
+				<a class="btn btn-light" href="{{ path('app_coproprietaire_index') }}">
+					Copropriétaires
+				</a>
+			</div>
+		</div>
+	</div>
+</nav>

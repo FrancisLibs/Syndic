@@ -1,0 +1,180 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Grand livre
+{% endblock %}
+
+{% block body %}
+
+	<div class="container mt-4">
+
+		<h1 class="mb-4">
+			Grand livre
+		</h1>
+
+		{% for ligne in grandLivre %}
+
+			<div class="card shadow-sm mb-5">
+
+				<div class="card-header bg-dark text-white">
+
+					<div class="d-flex justify-content-between">
+
+						<div>
+
+							<strong>
+								{{ ligne.compte.numero }}
+							</strong>
+
+							—
+							{{ ligne.compte.libelle }}
+
+						</div>
+
+						<div>
+
+							Solde :
+							{{ ligne.solde|number_format(2, ',', ' ') }}
+
+						</div>
+
+					</div>
+
+				</div>
+
+				<div class="card-body p-0">
+
+					<table class="table table-sm table-hover mb-0">
+
+						<thead class="table-light">
+
+							<tr>
+								<th>Exercice</th>
+
+								<th>Date</th>
+
+								<th>Libellé</th>
+
+								<th class="text-end">
+									Débit
+								</th>
+
+								<th class="text-end">
+									Crédit
+								</th>
+
+								<th class="text-end">
+									Solde
+								</th>
+
+							</tr>
+
+						</thead>
+
+						<tbody>
+
+							{% for mvt in ligne.mouvements %}
+
+								<tr>
+									<td>
+										{{ mvt.exercice }}
+									</td>
+
+									<td>
+										{{ mvt.date|date('d/m/Y') }}
+									</td>
+
+									<td>
+										{{ mvt.libelle }}
+									</td>
+
+									<td class="text-end">
+
+										{% if mvt.debit > 0 %}
+											{{ mvt.debit|number_format(2, ',', ' ') }}
+										{% endif %}
+
+									</td>
+
+									<td class="text-end">
+
+										{% if mvt.credit > 0 %}
+											{{ mvt.credit|number_format(2, ',', ' ') }}
+										{% endif %}
+
+									</td>
+
+									<td class="text-end fw-bold">
+
+										{{ mvt.solde|number_format(2, ',', ' ') }}
+
+									</td>
+
+								</tr>
+
+							{% else %}
+
+								<tr>
+
+									<td colspan="5" class="text-center text-muted py-3">
+
+										Aucun mouvement
+
+									</td>
+
+								</tr>
+
+							{% endfor %}
+
+						</tbody>
+
+						<tfoot class="table-light fw-bold">
+
+							<tr>
+
+								<td colspan="2">
+									Totaux
+								</td>
+
+								<td class="text-end">
+
+									{{
+                                    ligne.totalDebit
+                                    |number_format(2, ',', ' ')
+                                }}
+
+								</td>
+
+								<td class="text-end">
+
+									{{
+                                    ligne.totalCredit
+                                    |number_format(2, ',', ' ')
+                                }}
+
+								</td>
+
+								<td class="text-end">
+
+									{{
+                                    ligne.solde
+                                    |number_format(2, ',', ' ')
+                                }}
+
+								</td>
+
+							</tr>
+
+						</tfoot>
+
+					</table>
+
+				</div>
+
+			</div>
+
+		{% endfor %}
+
+	</div>
+
+{% endblock %}

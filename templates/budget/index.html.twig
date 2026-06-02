@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Budget index
+{% endblock %}
+
+{% block body %}
+	<h1>Budget index</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="text-left">Libelle</th>
+				<th class="text-center">Montant</th>
+				<th class="text-center">actions</th>
+				<th class="text-center">Génération</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for budget in budgets %}
+				<tr>
+					<td class="text-left">{{ budget.libelle }}
+						{{ budget.exercice }}
+					</td>
+					<td class="text-center">
+						{{ budget.total|number_format(2, ',', ' ') }}€
+					</td>
+					<td class="text-center">
+						<a href="{{ path('app_budget_show', {'id': budget.id}) }}">show</a>
+						<a href="{{ path('app_budget_edit', {'id': budget.id}) }}">edit</a>
+					</td>
+					<td class="text-center">
+						<form method="post" action="{{ path( 'app_budget_generer_appel', { id: budget.id } ) }}">
+							{% if not budget.isVerrouille() %}
+								<button class="btn btn-success">
+									Générer appel de fonds
+								</button>
+							{% else %}
+								<div>
+									Appel déjà généré.
+								</div>
+							{% endif %}
+						</form>
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="4">no records found</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<a href="{{ path('app_budget_new') }}">Create new</a>
+{% endblock %}

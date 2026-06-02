@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+	<h1>Paiements copropriétaires</h1>
+
+	<table class="table table-striped">
+
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Copropriétaire</th>
+				<th>Montant</th>
+				<th>Référence</th>
+				<th></th>
+			</tr>
+		</thead>
+
+		<tbody>
+
+			{% for paiement in paiements %}
+
+				<tr>
+
+					<td>
+						{{ paiement.datePaiement|date('d/m/Y') }}
+					</td>
+
+					<td>
+						{{ paiement.coproprietaire }}
+					</td>
+
+					<td>
+						{{ paiement.montant|number_format(2, ',', ' ') }}
+						€
+					</td>
+
+					<td>
+						{{ paiement.reference }}
+					</td>
+
+					<td>
+
+						<a href="{{ path( 'app_paiement_show', { id: paiement.id } ) }}" class="btn btn-sm btn-primary">
+							Voir
+						</a>
+
+					</td>
+
+				</tr>
+
+			{% else %}
+
+				<tr>
+					<td colspan="5">
+						Aucun paiement enregistré
+					</td>
+				</tr>
+
+			{% endfor %}
+
+		</tbody>
+
+	</table>
+
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+	<h1>Enregistrer un paiement</h1>
+
+	{{ form_start(form) }}
+
+	<div class="row">
+
+		<div class="col-md-3">
+			{{ form_row(form.datePaiement) }}
+		</div>
+
+		<div class="col-md-3">
+			{{ form_row(form.coproprietaire) }}
+		</div>
+
+		<div class="col-md-3">
+			{{ form_row(form.exercice) }}
+		</div>
+
+	</div>
+
+	<div class="row mt-3">
+
+		<div class="col-md-3">
+			{{ form_row(form.montant) }}
+		</div>
+
+		<div class="col-md-3">
+			{{ form_row(form.reference) }}
+		</div>
+
+	</div>
+
+	<button type="submit" class="btn btn-success mt-3">
+		Valider le paiement
+	</button>
+
+	{{ form_end(form) }}
+
+{% endblock %}

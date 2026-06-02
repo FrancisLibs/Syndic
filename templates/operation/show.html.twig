@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello OperationController!
+{% endblock %}
+
+{% block body %}
+
+{# templates/operation/show.html.twig #}
+
+<div class="container">
+	<h2>Détail de l'opération #{{ operation.id }}</h2>
+	<div class="card mb-4">
+		<div class="card-body">
+			<h5 class="card-title">{{ operation.libelle }}</h5>
+			<h6 class="card-subtitle mb-2 text-muted">
+				Date :
+				{{ operation.date|date('d/m/Y') }}
+				| 
+				Type :
+				<span class="badge bg-info">{{ operation.type.value|upper }}</span>
+			</h6>
+		</div>
+	</div>
+
+	{# --- LOGIQUE D'AFFICHAGE SELON LE TYPE --- #}
+
+	{% if operation.type.value == 'charge' %}
+		{# Section spécifique aux charges #}
+		<h3>Répartition par lot</h3>
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Lot</th>
+					<th>Copropiétaire</th>
+					<th>Quote-part (%)</th>
+					<th>Montant dû</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for ecriture in operation.ecritures %}
+					{% for repartition in ecriture.repartitions %}
+						<tr>
+							<td>{{ repartition.lot.reference }}</td>
+							<td>{{ repartition.lot.coproprietaireActuel.nom }}</td>
+							<td>{{ repartition.tantiemes }}</td>
+							<td>{{ repartition.montant|number_format(2, ',', ' ') }}
+								€</td>
+						</tr>
+					{% endfor %}
+				{% endfor %}
+			</tbody>
+		</table>
+
+	{% elseif operation.type.value == 'paiement' %}
+		{# Section spécifique aux paiements #}
+		<h3>Détails du versement</h3>
+		<div class="list-group">
+			{% for ecriture in operation.ecritures %}
+				{# On n'affiche que l'écriture liée au lot (le crédit), pas la banque #}
+				{% if ecriture.lot %}
+					<div class="list-group-item list-group-item-success">
+						<p class="mb-1">
+							<strong>Lot crédité :</strong>
+							n°{{ ecriture.lot.reference }}</p>
+						<p class="mb-1">
+							<strong>Copropriétaire :</strong>
+							{{ ecriture.lot.coproprietaireActuel.nom }}
+						<h4 class="mb-1">Montant reçu :
+							{{ ecriture.credit|number_format(2, ',', ' ') }}
+							€</h4>
+					</div>
+				{% endif %}
+			{% endfor %}
+		</div>
+
+	{% endif %}
+
+	<hr>
+	<a href="{{ path('app_operation') }}" class="btn btn-secondary">Retour à la liste</a>
+</div>
+
+
+{% endblock %}

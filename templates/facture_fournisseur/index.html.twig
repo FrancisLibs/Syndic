@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}FactureFournisseur index
+{% endblock %}
+
+{% block body %}
+	<h1>FactureFournisseur index</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Id</th>
+				<th>Numero</th>
+				<th>Libelle</th>
+				<th>DateFacture</th>
+				<th>DateEcheance</th>
+				<th>Montant</th>
+				<th>MontantRegle</th>
+				<th>Soldee</th>
+				<th>Comptabilisee</th>
+				<th>actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for facture in factures %}
+				<tr>
+					<td>{{ facture.id }}</td>
+					<td>{{ facture.numero }}</td>
+					<td>{{ facture.libelle }}</td>
+					<td>{{ facture.dateFacture ? facture.dateFacture|date('Y-m-d') : '' }}</td>
+					<td>{{ facture.dateEcheance ? facture.dateEcheance|date('Y-m-d') : '' }}</td>
+					<td>{{ facture.montant }}</td>
+					<td>{{ facture.montantRegle }}</td>
+					<td>{{ facture.soldee ? 'Yes' : 'No' }}</td>
+					<td>{{ facture.comptabilisee ? 'Yes' : 'No' }}</td>
+					<td>
+						<a href="{{ path('app_facture_fournisseur_show', {'id': facture.id}) }}">show</a>
+
+						{% if not facture.comptabilisee %}
+							<a href="{{ path('app_facture_fournisseur_edit', {'id': facture.id}) }}">
+								Editer
+							</a>
+						{% endif %}
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="10">no records found</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<a href="{{ path('app_facture_fournisseur_new') }}">Create new</a>
+{% endblock %}

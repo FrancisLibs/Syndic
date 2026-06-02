@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+	<h1>Nouvelle charge</h1>
+
+	{{ form_start(form) }}
+	<div class="row">
+		<div class="col-3">
+			{{ form_row(form.copropriete) }}
+		</div>
+		<div class="col-3">
+			{{ form_row(form.date) }}
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-3">
+			{{ form_row(form.type) }}
+		</div>
+		<div class="col-3">
+			{{ form_row(form.compte) }}
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-6">
+			{{ form_row(form.libelle) }}
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-2">
+			{{ form_row(form.piece) }}
+		</div>
+		<div class="col-2">
+			{{ form_row(form.montant) }}
+		</div>
+	</div>
+
+
+	{{ form_widget(form) }}
+
+	<button class="btn btn-primary">Enregistrer</button>
+	{{ form_end(form) }}
+{% endblock %}

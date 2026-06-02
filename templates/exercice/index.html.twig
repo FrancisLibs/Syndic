@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Exercice index
+{% endblock %}
+
+{% block body %}
+	<div class="d-flex align-items-center justify-content-start">
+		<h1 class="me-5">Exercice index</h1>
+		<a class="btn btn-primary" href="{{ path('app_exercice_new') }}">Create new</a>
+	</div>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Nom</th>
+				<th>DateDebut</th>
+				<th>DateFin</th>
+				<th>Statut</th>
+				<th>actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for exercice in exercices %}
+				<tr>
+					<td>{{ exercice.nom }}</td>
+					<td>{{ exercice.dateDebut ? exercice.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
+					<td>{{ exercice.dateFin ? exercice.dateFin|date('Y-m-d H:i:s') : '' }}</td>
+					<td>{{ exercice.statut.value }}</td>
+					<td>
+						<a href="{{ path('app_exercice_show', {'id': exercice.id}) }}">show</a>
+						<a href="{{ path('app_exercice_edit', {'id': exercice.id}) }}">edit</a>
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="6">no records found</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}

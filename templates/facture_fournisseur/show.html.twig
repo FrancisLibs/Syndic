@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Facture Fournisseur
+{% endblock %}
+
+{% block body %}
+	<div class="container">
+		<div class="d-flex justify-content-start">
+			<div>
+				<h1 class="me-3">Facture Fournisseur</h1>
+			</div>
+			<div class="d-flex align-items-center col-4">
+				<div class="me-3">
+					<a class="btn btn-primary" role="button" aria-disabled="true" href="{{ path('app_facture_fournisseur_index') }}">
+						Retour à la liste
+					</a>
+				</div>
+				<div class="me-3">
+				{% if not facture_fournisseur.soldee %}
+					<form method="post" action="{{ path( 'app_facture_fournisseur_regler', { id: facture_fournisseur.id } ) }}">
+						<button class="btn btn-success">
+							Régler la facture
+						</button>
+					</form>
+				{% endif %}
+				</div>
+			</div>
+		</div>
+
+		<table class="table">
+			<tbody>
+				<tr>
+					<th>Numero</th>
+					<td>{{ facture_fournisseur.numero }}</td>
+				</tr>
+				<tr>
+					<th>Libelle</th>
+					<td>{{ facture_fournisseur.libelle }}</td>
+				</tr>
+				<tr>
+					<th>DateFacture</th>
+					<td>{{ facture_fournisseur.dateFacture ? facture_fournisseur.dateFacture|date('Y-m-d') : '' }}</td>
+				</tr>
+				<tr>
+					<th>DateEcheance</th>
+					<td>{{ facture_fournisseur.dateEcheance ? facture_fournisseur.dateEcheance|date('Y-m-d') : '' }}</td>
+				</tr>
+				<tr>
+					<th>Montant</th>
+					<td>{{ facture_fournisseur.montant }}</td>
+				</tr>
+				<tr>
+					<th>MontantRegle</th>
+					<td>{{ facture_fournisseur.montantRegle }}</td>
+				</tr>
+				<tr>
+					<th>Soldee</th>
+					<td>{{ facture_fournisseur.soldee ? 'Oui' : 'Non' }}</td>
+				</tr>
+				<tr>
+					<th>Comptabilisee</th>
+					<td>{{ facture_fournisseur.comptabilisee ? 'Oui' : 'Non' }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+{% endblock %}

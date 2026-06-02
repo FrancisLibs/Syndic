@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Coproprietaire index
+{% endblock %}
+
+{% block body %}
+	<h1>Relevé -
+		{{ copro.nom }}</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Libellé</th>
+				<th>Type</th>
+				<th>Débit</th>
+				<th>Crédit</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for mvt in mouvements %}
+				<tr>
+					<td>{{ mvt.date|date('d/m/Y') }}</td>
+					<td>{{ mvt.libelle }}</td>
+					<td>{{ mvt.type }}</td>
+					<td>{{ mvt.debit ?: '' }}</td>
+					<td>{{ mvt.credit ?: '' }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<h3>Total charges :
+		{{ totalCharges }}</h3>
+	<h3>Total paiements :
+		{{ totalPaiements }}</h3>
+	<h2>Solde :
+		{{ solde }}</h2>
+
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fournisseur index
+{% endblock %}
+
+{% block body %}
+	<h1>Fournisseur index</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Id</th>
+				<th>Nom</th>
+				<th>Compte</th>
+				<th>Adresse</th>
+				<th>CodePostal</th>
+				<th>Localite</th>
+				<th>actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for fournisseur in fournisseurs %}
+				<tr>
+					<td>{{ fournisseur.id }}</td>
+					<td>{{ fournisseur.nom }}</td>
+					<td>{{ fournisseur.compte }}</td>
+					<td>{{ fournisseur.adresse }}</td>
+					<td>{{ fournisseur.codePostal }}</td>
+					<td>{{ fournisseur.localite }}</td>
+					<td>
+						<a href="{{ path('app_fournisseur_show', {'id': fournisseur.id}) }}">show</a>
+						<a href="{{ path('app_fournisseur_edit', {'id': fournisseur.id}) }}">edit</a>
+						<a href="{{ path( 'app_fournisseur_compte', {id: fournisseur.id} ) }}" class="btn btn-sm btn-outline-primary">
+
+							Compte
+
+						</a>
+
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="7">no records found</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<a href="{{ path('app_fournisseur_new') }}">Create new</a>
+{% endblock %}

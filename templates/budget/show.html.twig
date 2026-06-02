@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Budget
+{% endblock %}
+
+{% block body %}
+	<h1>Budget</h1>
+
+	<form method="post" action="{{ path( 'app_budget_generer_appel', { id: budget.id } ) }}">
+		{% if not budget.isVerrouille() %}
+			<button class="btn btn-success">
+				Générer les appels de fonds
+			</button>
+		{% else %}
+			<div class="alert alert-info">
+				Les appels de fonds ont déjà été générés pour ce budget.
+			</div>
+		{% endif %}
+	</form>
+
+	<table class="table">
+		<tbody>
+			<tr>
+				<th>Id</th>
+				<td>{{ budget.id }}</td>
+			</tr>
+			<tr>
+				<th>Libelle</th>
+				<td>{{ budget.libelle }}</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<div class="card shadow-sm mt-4">
+
+		<div class="card-header bg-dark text-white">
+
+			Lignes budget
+
+		</div>
+
+		<div class="card-body p-0">
+
+			<table class="table table-hover mb-0">
+
+				<thead class="table-light">
+
+					<tr>
+
+						<th>
+							Type charge
+						</th>
+
+						<th class="text-end">
+							Montant
+						</th>
+
+					</tr>
+
+				</thead>
+
+				<tbody>
+
+					{% for ligne in budget.lignes %}
+
+						<tr>
+
+							<td>
+								{{ ligne.typeCharge.nom }}
+							</td>
+
+							<td class="text-end">
+
+								{{
+                                ligne.montant
+                                |number_format(2, ',', ' ')
+                            }}
+								€
+
+							</td>
+
+						</tr>
+
+					{% else %}
+
+						<tr>
+
+							<td colspan="2" class="text-center text-muted py-3">
+
+								Aucune ligne budget
+
+							</td>
+
+						</tr>
+
+					{% endfor %}
+
+				</tbody>
+
+				<tfoot class="table-light fw-bold">
+
+					<tr>
+
+						<td>
+							Total budget
+						</td>
+
+						<td class="text-end">
+
+							{{
+                            budget.total
+                            |number_format(2, ',', ' ')
+                        }}
+							€
+
+						</td>
+
+					</tr>
+
+				</tfoot>
+
+			</table>
+
+		</div>
+
+	</div>
+
+
+	<a href="{{ path('app_budget_index') }}">back to list</a>
+
+	<a href="{{ path('app_budget_edit', {'id': budget.id}) }}">edit</a>
+
+	{# {{ include('budget/_delete_form.html.twig') }} #}
+{% endblock %}
