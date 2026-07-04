@@ -2,14 +2,14 @@
 
 namespace App\Service;
 
-use App\Entity\Operation;
-use App\Enum\OperationStatut;
-use App\Enum\OperationType;
-use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Compte;
 use App\Entity\Coproprietaire;
 use App\Entity\Ecriture;
 use App\Entity\Exercice;
+use App\Entity\Operation;
+use App\Enum\OperationStatut;
+use App\Enum\OperationType;
+use Doctrine\ORM\EntityManagerInterface;
 
 class ComptabiliteService
 {

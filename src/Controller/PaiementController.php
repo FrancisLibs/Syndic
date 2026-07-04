@@ -52,9 +52,18 @@ extends AbstractController
         AffectationPaiementService $affectationService,
         ExerciceRepository $exerciceRepository
     ): Response {
+
         $paiement = new Paiement();
 
-        $paiement->setExercice($exerciceRepository->findActif());
+        $exercice = $exerciceRepository->findActif();
+
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice actif trouvé.'
+            );
+        }
+
+        $paiement->setExercice($exercice);
 
         $paiement->setDatePaiement(
             new \DateTimeImmutable()
