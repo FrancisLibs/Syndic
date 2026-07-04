@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Paiement;
 use App\Form\PaiementType;
+use App\Repository\ExerciceRepository;
 use App\Repository\PaiementRepository;
 use App\Service\AffectationPaiementService;
 use App\Service\GenerationPaiementService;
@@ -18,21 +19,23 @@ final class PaiementController
 extends AbstractController
 {
     #[Route(
-        '/',
+        '/index',
         name: 'app_paiement_index',
         methods: ['GET']
     )]
     public function index(
-        PaiementRepository $repository
+        ExerciceRepository $exerciceRepository,
+        PaiementRepository $paiementRepository
     ): Response {
+
+        $exercice = $exerciceRepository->findActif();
+        $paiements = $paiementRepository->findPaiementsValides();
 
         return $this->render(
             'paiement/index.html.twig',
             [
-                'paiements' => $repository->findBy(
-                    [],
-                    ['datePaiement' => 'DESC']
-                ),
+                'paiements' => $paiements,
+                'exercice' => $exercice,
             ]
         );
     }
@@ -46,10 +49,12 @@ extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         GenerationPaiementService $generationService,
-        AffectationPaiementService $affectationService
+        AffectationPaiementService $affectationService,
+        ExerciceRepository $exerciceRepository
     ): Response {
-
         $paiement = new Paiement();
+
+        $paiement->setExercice($exerciceRepository->findActif());
 
         $paiement->setDatePaiement(
             new \DateTimeImmutable()
@@ -86,6 +91,7 @@ extends AbstractController
         return $this->render(
             'paiement/new.html.twig',
             [
+                'exercice' => $exercice,
                 'paiement' => $paiement,
                 'form' => $form,
             ]
@@ -93,7 +99,7 @@ extends AbstractController
     }
 
     #[Route(
-        '/{id}',
+        'show/{id}',
         name: 'app_paiement_show',
         methods: ['GET']
     )]

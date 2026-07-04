@@ -1,13 +1,12 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit TypeCharge{% endblock %}
+{% block title %}Edit TypeCharge
+{% endblock %}
 
 {% block body %}
-    <h1>Edit TypeCharge</h1>
+	<h1>Modifier un type de charge</h1>
 
-    {{ include('type_charge/_form.html.twig', {'button_label': 'Update'}) }}
+	{{ include('type_charge/_form.html.twig', {'button_label': 'Sauvegarder'}) }}
 
-    <a href="{{ path('app_type_charge_index') }}">back to list</a>
-
-    {{ include('type_charge/_delete_form.html.twig') }}
+	<a href="{{ path('app_type_charge_index') }}">Retour à la liste</a>
 {% endblock %}

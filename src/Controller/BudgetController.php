@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\AppelFond;
 use App\Entity\Budget;
 use App\Entity\LigneBudget;
 use App\Form\BudgetType;
@@ -36,7 +35,7 @@ final class BudgetController extends AbstractController
         EntityManagerInterface $entityManager,
     ): Response {
         $budget = new Budget();
-        $budget->setLibelle('Budget prévisionnel ');
+        $budget->setLibelle('Budget prévisionnel - Exercice .... ');
         $budget->addLigne(
             new LigneBudget()
         );
@@ -44,6 +43,11 @@ final class BudgetController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            $nomExercice = $form->getData()->getExercice()->getNom();
+
+            $budget->setLibelle('Budget prévisionnel -  ' . $nomExercice);
+
             $budget->setVerrouille(false);
             $entityManager->persist($budget);
             $entityManager->flush();
@@ -121,17 +125,17 @@ final class BudgetController extends AbstractController
         GenerateurAppelFondService $generateur,
         GenerationAppelFondService $generationComptable,
         EntityManagerInterface $entityManager,
+        Request $request
     ): Response {
 
         if ($budget->isVerrouille()) {
-
             throw $this->createAccessDeniedException(
                 'Budget verrouillé'
             );
         }
 
         // =====================
-        // Génération appel métier
+        // Génération appel métier création des LignesAppelFond
         // =====================
 
         $appelFond = $generateur->generer(
@@ -144,8 +148,8 @@ final class BudgetController extends AbstractController
         // Génération comptable
         // =====================
 
-        $generationComptable
-            ->generer($appelFond);
+
+        $generationComptable->generer($appelFond);
 
         $this->addFlash(
             'success',
@@ -156,11 +160,14 @@ final class BudgetController extends AbstractController
 
         $entityManager->flush();
 
+        // 
+
+
         return $this->redirectToRoute(
-            'app_appel_fond_show',
-            [
-                'id' => $appelFond->getId()
-            ]
+            'app_appel_fond_index',
+            // [
+            //     'id' => $appelFond->getId()
+            // ]
         );
     }
 }

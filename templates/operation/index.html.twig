@@ -1,16 +1,138 @@
+{# templates/operation/index.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello OperationController!{% endblock %}
+{% block title %}Journal des Opérations
+{% endblock %}
 
 {% block body %}
+	<div class="container mt-4">
+		<div class="row align-items-center mb-4">
+			<div class="col-md-6">
+				<h2>📋 Journal des Opérations</h2>
+				{% if exerciceActuel %}
+					<p class="text-muted">
+						Exercice :
+						<strong>{{ exerciceActuel.nom }}</strong>
+						(du
+						{{ exerciceActuel.dateDebut|date('d/m/Y') }}
+						au
+						{{ exerciceActuel.dateFin|date('d/m/Y') }})
+					</p>
+				{% endif %}
+			</div>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+			{# Le menu de sélection de l'exercice #}
+			<div class="col-md-6 text-md-end">
+				<form method="get" action="{{ path('app_operation_index') }}" class="d-inline-block">
+					<div class="input-group">
+						<label class="input-group-text" for="exerciceSelect">Filtrer par exercice :</label>
+						<select name="exercice" id="exerciceSelect" class="form-select" onchange="this.form.submit()">
+							{% for exe in exercices %}
+								<option value="{{ exe.id }}" {{ exerciceActuel and exerciceActuel.id == exe.id ? 'selected' : '' }}>
+									{{ exe.nom }}
+								</option>
+							{% endfor %}
+						</select>
+					</div>
+				</form>
+			</div>
+		</div>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>C:/wamp64/www/comptaSyndic_V4/src/Controller/OperationController.php</code></li>
-        <li>Your template at <code>C:/wamp64/www/comptaSyndic_V4/templates/operation/index.html.twig</code></li>
-    </ul>
-</div>
-{% endblock %}
+		{# Ton tableau <table> actuel reste le même ici #}
+
+		<table class="table table-hover align-middle shadow-sm mt-3">
+			<thead class="table-dark">
+				<tr>
+					<th>Date</th>
+					<th>Type</th>
+					<th>Libellé / Pièce</th>
+					<th class="text-center">Statut</th>
+					<th>Montants</th>
+					<th class="text-center">Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for op in operations %}
+					{# ⚠️ On utilise .value pour tester la chaîne de l'Enum ('annule') #}
+					<tr class="{{ op.statut.value == 'annule' ? 'table-light text-muted opacity-75' : '' }}">
+						<td>{{ op.date|date('d/m/Y') }}</td>
+						<td>
+							{# Mappage de tes types issus de ton SQL #}
+							{% if op.type.value == 'paiement' %}
+								<span class="badge bg-success">Paiement Copro</span>
+							{% elseif op.type.value == 'appel_fonds' %}
+								<span class="badge bg-primary">Appel de fonds</span>
+							{% elseif op.type.value == 'charge' %}
+								<span class="badge bg-secondary">Facture Charge</span>
+							{% else %}
+								<span class="badge bg-dark">{{ op.type.value }}</span>
+							{% endif %}
+						</td>
+						<td>
+							<strong>{{ op.libelle }}</strong>
+							{% if op.piece %}
+								<br><small class="text-muted">N° Pièce :
+									{{ op.piece }}</small>
+							{% endif %}
+						</td>
+						<td
+							class="text-center">
+							{# ⚠️ .value ici aussi pour le badge de statut #}
+							{% if op.statut.value == 'valide' %}
+								<span class="badge bg-success-subtle text-success border border-success">Valide</span>
+							{% else %}
+								<span class="badge bg-danger-subtle text-danger border border-danger">Annulée</span>
+							{% endif %}
+						</td>
+						<td>
+							{% for ecriture in op.ecritures %}
+								<div>
+									{{ ecriture.compte }}
+									:
+									{{ ecriture.montant|number_format(2, ',', ' ') }}
+									€
+								</div>
+							{% endfor %}
+						</td>
+						<td>
+							<div class="d-flex gap-2">
+								{# 1. Lien ou bouton existant (ex: Voir / Modifier) #}
+								<a href="{{ path('app_operation_show', {'id': op.id}) }}" class="btn btn-sm btn-outline-primary">
+									<i class="fas fa-eye"></i>
+									Voir
+								</a>
+
+								{# 2. Gestion de l'annulation #}
+								{% if op.statut.value != 'annule' %}
+									{# ⚠️ Adapte 'annule' selon la chaîne exacte de ton Enum OperationStatut::ANNULE #}
+
+									<form
+										method="post" action="{{ path('app_operation_annuler', {'id': op.id}) }}" onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir annuler cette opération ? Cette action mettra à jour les soldes et affectations.');" style="display: inline;">
+
+										{# Le jeton CSRF indispensable pour le contrôleur #}
+										<input type="hidden" name="_token" value="{{ csrf_token('annuler' ~ op.id) }}">
+
+										<button type="submit" class="btn btn-sm btn-danger">
+											<i class="fas fa-undo"></i>
+											Annuler
+										</button>
+									</form>
+
+								{% else %}
+									{# Si l'opération est déjà annulée, on grise visuellement la ligne ou on affiche un badge #}
+									<span class="badge bg-secondary text-wrap" style=" width: 6rem;">
+										<i class="fas fa-ban"></i>
+										Opération Annulée
+									</span>
+								{% endif %}
+							</div>
+						</td>
+					</tr>
+				</div>
+			</tbody>
+		</td>
+	</td>
+</tr>{% else %}
+<tr>
+	<td colspan="5" class="text-center text-muted">Aucune opération enregistrée.</td>
+</tr>{% endfor %}</tbody></table></div>{% endblock %}

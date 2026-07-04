@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Repository\CompteRepository;
 use App\Repository\EcritureRepository;
+use App\Repository\ExerciceRepository;
+use App\Enum\OperationStatut;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -13,15 +15,30 @@ final class ComptabiliteController extends AbstractController
     #[Route('/comptabilite', name: 'app_comptabilite')]
     public function index(): Response
     {
-        return $this->render('comptabilite/index.html.twig', [
-            'controller_name' => 'ComptabiliteController',
-        ]);
+        return $this->render(
+            'comptabilite/index.html.twig',
+            [
+                'controller_name' => 'ComptabiliteController',
+            ]
+        );
     }
 
     #[Route('/balance', name: 'app_balance')]
-    public function balance(EcritureRepository $ecritureRepo): Response
-    {
-        $ecritures = $ecritureRepo->findAll();
+    public function balance(
+        ExerciceRepository $exerciceRepository,
+        EcritureRepository $ecritureRepo,
+    ): Response {
+
+        $exercice = $exerciceRepository->findActif();
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice actif trouvé'
+            );
+        }
+
+        $ecritures = $ecritureRepo->findBy(
+            ['exercice' => $exercice]
+        );
 
         $balance = [];
 
@@ -41,11 +58,15 @@ final class ComptabiliteController extends AbstractController
                 ];
             }
 
-            $balance[$numero]['debit'] +=
-                (float) $ecriture->getDebit();
+            //  Suppression des opérations non valides donc annulées
+            if ($ecriture->getOperation()->getStatut() == OperationStatut::VALIDE) {
 
-            $balance[$numero]['credit'] +=
-                (float) $ecriture->getCredit();
+                $balance[$numero]['debit'] +=
+                    (float) $ecriture->getDebit();
+
+                $balance[$numero]['credit'] +=
+                    (float) $ecriture->getCredit();
+            }
         }
 
         foreach ($balance as &$ligne) {
@@ -59,15 +80,24 @@ final class ComptabiliteController extends AbstractController
             'comptabilite/balance.html.twig',
             [
                 'balance' => $balance,
+                'exercice' => $exercice,
             ]
         );
     }
 
     #[Route('/grand-livre', name: 'app_grand_livre')]
     public function grandLivre(
+        ExerciceRepository $exerciceRepository,
         CompteRepository $compteRepo,
         EcritureRepository $ecritureRepo
     ): Response {
+
+        $exercice = $exerciceRepository->findActif();
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice actif trouvé'
+            );
+        }
 
         $comptes = $compteRepo->findBy(
             [],
@@ -79,8 +109,10 @@ final class ComptabiliteController extends AbstractController
         foreach ($comptes as $compte) {
 
             $ecritures = $ecritureRepo->findBy(
-                ['compte' => $compte],
-                ['id' => 'ASC']
+                [
+                    'exercice' => $exercice,
+                    'compte' => $compte
+                ]
             );
 
             $mouvements = [];
@@ -91,25 +123,29 @@ final class ComptabiliteController extends AbstractController
 
                 $operation = $ecriture->getOperation();
 
-                $debit = (float) $ecriture->getDebit();
-                $credit = (float) $ecriture->getCredit();
+                // Suppression des opérations annulées
+                if ($operation->getStatut() == OperationStatut::VALIDE) {
 
-                $solde += $debit;
-                $solde -= $credit;
+                    $debit = (float) $ecriture->getDebit();
+                    $credit = (float) $ecriture->getCredit();
 
-                $mouvements[] = [
-                    'exercice' => $ecriture->getExercice()->getNom(),
+                    $solde += $debit;
+                    $solde -= $credit;
 
-                    'date' => $operation->getDate(),
+                    $mouvements[] = [
+                        'exercice' => $ecriture->getExercice()->getNom(),
 
-                    'libelle' => $operation->getLibelle(),
+                        'date' => $operation->getDate(),
 
-                    'debit' => $debit,
+                        'libelle' => $operation->getLibelle(),
 
-                    'credit' => $credit,
+                        'debit' => $debit,
 
-                    'solde' => $solde,
-                ];
+                        'credit' => $credit,
+
+                        'solde' => $solde,
+                    ];
+                }
             }
 
             $grandLivre[] = [
@@ -133,6 +169,7 @@ final class ComptabiliteController extends AbstractController
         return $this->render(
             'comptabilite/grand_livre.html.twig',
             [
+                'exercice' => $exercice,
                 'grandLivre' => $grandLivre,
             ]
         );
@@ -140,12 +177,22 @@ final class ComptabiliteController extends AbstractController
 
     #[Route('/journal', name: 'app_journal')]
     public function journal(
+        ExerciceRepository $exerciceRepository,
         EcritureRepository $ecritureRepo
     ): Response {
 
+        $exercice = $exerciceRepository->findActif();
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice actif trouvé'
+            );
+        }
+
         $ecritures = $ecritureRepo->findBy(
-            [],
-            ['id' => 'ASC']
+            ['exercice' => $exercice],
+            [
+                'id' => 'ASC',
+            ]
         );
 
         $lignes = [];
@@ -154,31 +201,36 @@ final class ComptabiliteController extends AbstractController
 
             $operation = $ecriture->getOperation();
 
-            $compte = $ecriture->getCompte();
+            // Suppression des opérations annulées
+            if ($operation->getStatut() == OperationStatut::VALIDE) {
 
-            $lignes[] = [
-                'exercice' => $ecriture->getExercice()->getNom(),
+                $compte = $ecriture->getCompte();
 
-                'date' => $operation->getDate(),
+                $lignes[] = [
+                    'exercice' => $ecriture->getExercice()->getNom(),
 
-                'type' => $operation->getType()?->value,
+                    'date' => $operation->getDate(),
 
-                'libelle' => $operation->getLibelle(),
+                    'type' => $operation->getType()?->value,
 
-                'compte' => $compte->getNumero(),
+                    'libelle' => $operation->getLibelle(),
 
-                'compteLibelle' => $compte->getLibelle(),
+                    'compte' => $compte->getNumero(),
 
-                'debit' => (float) $ecriture->getDebit(),
+                    'compteLibelle' => $compte->getLibelle(),
 
-                'credit' => (float) $ecriture->getCredit(),
-            ];
+                    'debit' => (float) $ecriture->getDebit(),
+
+                    'credit' => (float) $ecriture->getCredit(),
+                ];
+            }
         }
 
         return $this->render(
             'comptabilite/journal.html.twig',
             [
                 'lignes' => $lignes,
+                'exercice' => $exercice,
             ]
         );
     }

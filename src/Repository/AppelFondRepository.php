@@ -16,28 +16,19 @@ class AppelFondRepository extends ServiceEntityRepository
         parent::__construct($registry, AppelFond::class);
     }
 
-    //    /**
-    //     * @return AppelFond[] Returns an array of AppelFond objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('a.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function countForYear(int $year): int
+    {
+        // On crée les bornes : 1er janvier et 31 décembre de l'année
+        $dateDebut = new \DateTime("$year-01-01 00:00:00");
+        $dateFin = new \DateTime("$year-12-31 23:59:59");
 
-    //    public function findOneBySomeField($value): ?AppelFond
-    //    {
-    //        return $this->createQueryBuilder('a')
-    //            ->andWhere('a.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        return (int) $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->where('a.dateAppel >= :debut')
+            ->andWhere('a.dateAppel <= :fin')
+            ->setParameter('debut', $dateDebut)
+            ->setParameter('fin', $dateFin)
+            ->getQuery()
+            ->getSingleScalarResult(); // Renvoie directement le chiffre (ex: 3)
+    }
 }

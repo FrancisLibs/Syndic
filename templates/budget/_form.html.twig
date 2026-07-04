@@ -11,36 +11,26 @@
 				{{ form_widget(
                     form.libelle,
                     {
-                        attr: {
-                            class: 'form-control'
-                        }
+                        attr: {class: 'form-control'}
                     }
                 ) }}
 				{{ form_errors(form.libelle) }}
-
+				<p>Le libellé sera complété automatiquement à l'enregistrement avec le nom de l'exercice</p>
 			</div>
 
 			<div class="col-md-4">
-
 				{{ form_label(form.copropriete) }}
-
 				{{ form_widget(
                     form.copropriete,
                     {
-                        attr: {
-                            class: 'form-select'
-                        }
+                        attr: {class: 'form-select'}
                     }
                 ) }}
-
 				{{ form_errors(form.copropriete) }}
-
 			</div>
 
 			<div class="col-md-4">
-
 				{{ form_label(form.exercice) }}
-
 				{{ form_widget(
                     form.exercice,
                     {
@@ -49,9 +39,7 @@
                         }
                     }
                 ) }}
-
 				{{ form_errors(form.exercice) }}
-
 			</div>
 
 		</div>

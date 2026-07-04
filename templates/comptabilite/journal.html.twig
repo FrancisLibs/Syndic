@@ -13,7 +13,7 @@
 			<div>
 
 				<h1 class="mb-0">
-					Journal comptable
+					Journal comptable - {{ exercice.nom }}
 				</h1>
 
 				<p class="text-muted">
@@ -33,7 +33,6 @@
 					<thead class="table-dark">
 
 						<tr>
-							<th>Exercice</th>
 							<th>Date</th>
 
 							<th>Type</th>
@@ -67,9 +66,6 @@
 							{% set totalCredit = totalCredit + ligne.credit %}
 
 							<tr>
-								<td>
-									{{ ligne.exercice }}
-								</td>	
 															
 								<td>
 									{{ ligne.date|date('d/m/Y') }}

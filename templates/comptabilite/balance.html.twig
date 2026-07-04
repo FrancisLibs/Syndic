@@ -12,7 +12,8 @@
 
 			<div>
 				<h1 class="mb-0">
-					Balance comptable
+					Balance comptable -
+					{{ exercice.nom }}
 				</h1>
 
 				<p class="text-muted">
@@ -32,9 +33,7 @@
 
 						<tr>
 
-							<th>
-								Compte
-							</th>
+							<th>Compte</th>
 
 							<th>
 								Libellé
@@ -99,11 +98,11 @@
 									{% if ligne.solde != 0 %}
 
 										<span class="
-																								                                        {{ ligne.solde > 0
-																								                                            ? 'text-danger'
-																								                                            : 'text-success'
-																								                                        }}
-																								                                    ">
+																																				                                        {{ ligne.solde > 0
+																																				                                            ? 'text-danger'
+																																				                                            : 'text-success'
+																																				                                        }}
+																																				                                    ">
 
 											{{ ligne.solde|number_format(2, ',', ' ') }}
 
@@ -154,12 +153,12 @@
 							<td class="text-end">
 
 								<span class="
-										                                    {{
-										                                        totalDebit == totalCredit
-										                                        ? 'text-success'
-										                                        : 'text-danger'
-										                                    }}
-										                                ">
+																				                                    {{
+																				                                        totalDebit == totalCredit
+																				                                        ? 'text-success'
+																				                                        : 'text-danger'
+																				                                    }}
+																				                                ">
 
 									{{
                                     (totalDebit - totalCredit)

@@ -1,42 +1,42 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Copropriete{% endblock %}
+{% block title %}Copropriete
+{% endblock %}
 
 {% block body %}
-    <h1>Copropriete</h1>
+	<h1>Copropriété</h1>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ copropriete.id }}</td>
-            </tr>
-            <tr>
-                <th>Nom</th>
-                <td>{{ copropriete.nom }}</td>
-            </tr>
-            <tr>
-                <th>Adresse</th>
-                <td>{{ copropriete.adresse }}</td>
-            </tr>
-            <tr>
-                <th>CodePostal</th>
-                <td>{{ copropriete.codePostal }}</td>
-            </tr>
-            <tr>
-                <th>Localité</th>
-                <td>{{ copropriete.localite }}</td>
-            </tr>
-            <tr>
-                <th>TantiemesBase</th>
-                <td>{{ copropriete.tantiemesBase }}</td>
-            </tr>
-        </tbody>
-    </table>
+	<table class="table">
+		<tbody>
+			<tr>
+				<th>Id</th>
+				<td>{{ copropriete.id }}</td>
+			</tr>
+			<tr>
+				<th>Nom</th>
+				<td>{{ copropriete.nom }}</td>
+			</tr>
+			<tr>
+				<th>Adresse</th>
+				<td>{{ copropriete.adresse }}</td>
+			</tr>
+			<tr>
+				<th>CodePostal</th>
+				<td>{{ copropriete.codePostal }}</td>
+			</tr>
+			<tr>
+				<th>Localité</th>
+				<td>{{ copropriete.localite }}</td>
+			</tr>
+			<tr>
+				<th>TantiemesBase</th>
+				<td>{{ copropriete.tantiemesBase }}</td>
+			</tr>
+		</tbody>
+	</table>
 
-    <a href="{{ path('app_copropriete_index') }}">back to list</a>
+	<a href="{{ path('app_copropriete_index') }}">Retour à la liste</a>
 
-    <a href="{{ path('app_copropriete_edit', {'id': copropriete.id}) }}">edit</a>
+	<a href="{{ path('app_copropriete_edit', {'id': copropriete.id}) }}">Modifier</a>
 
-    {{ include('copropriete/_delete_form.html.twig') }}
 {% endblock %}

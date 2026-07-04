@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Exercice;
+use App\Enum\ExerciceStatut;
 use App\Form\ExerciceType;
 use App\Repository\ExerciceRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Service\CalculChargesReellesService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -89,5 +91,89 @@ final class ExerciceController extends AbstractController
         }
 
         return $this->redirectToRoute('app_exercice_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route(
+        '/{id}/activer',
+        name: 'app_exercice_activer',
+        methods: ['POST']
+    )]
+    public function activer(
+        Exercice $exercice,
+        ExerciceRepository $repository,
+        EntityManagerInterface $entityManager
+    ): Response {
+
+        if ($exercice->getStatut() === ExerciceStatut::CLOTURE) {
+            throw new \LogicException(
+                'Impossible d\'activer un exercice clôturé'
+            );
+        }
+
+        foreach (
+            $repository->findAll()
+            as $autreExercice
+        ) {
+
+            if (
+                $autreExercice->getId() !== $exercice->getId()
+            ) {
+                $autreExercice->setActif(false);
+            }
+        }
+
+        $exercice->setActif(true);
+
+        $entityManager->flush();
+
+        return $this->redirectToRoute(
+            'app_exercice_index'
+        );
+    }
+
+    #[Route(
+        '/exercice/{id}/controle-charges',
+        name: 'app_exercice_controle_charges'
+    )]
+    public function controleCharges(
+        Exercice $exercice,
+        CalculChargesReellesService $service
+    ): Response {
+
+        $lignes = [];
+
+        foreach (
+            $exercice->getCopropriete()->getLots() as $lot
+        ) {
+
+            $copro = $lot->getCoproprietaireActuel();
+
+            if (!$copro) {
+                continue;
+            }
+
+            $id = $copro->getId();
+
+            if (isset($lignes[$id])) {
+                continue;
+            }
+
+            $calcul = $service->calculer($copro, $exercice);
+
+            $lignes[$id] = [
+                'copro' => $copro,
+                'appels' => $calcul['appels'],
+                'charges' => $calcul['charges'],
+                'ecart' => $calcul['ecart'],
+            ];
+        }
+
+        return $this->render(
+            'exercice/controle_charges.html.twig',
+            [
+                'exercice' => $exercice,
+                'lignes' => $lignes,
+            ]
+        );
     }
 }

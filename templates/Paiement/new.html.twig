@@ -1,8 +1,10 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-
-	<h1>Enregistrer un paiement</h1>
+	<div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+		<h1>Enregistrer un paiement</h1>
+		<h2>{{ exercice.nom }}</h2>
+	</div>
 
 	{{ form_start(form) }}
 
@@ -14,10 +16,6 @@
 
 		<div class="col-md-3">
 			{{ form_row(form.coproprietaire) }}
-		</div>
-
-		<div class="col-md-3">
-			{{ form_row(form.exercice) }}
 		</div>
 
 	</div>

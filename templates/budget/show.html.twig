@@ -4,7 +4,11 @@
 {% endblock %}
 
 {% block body %}
-	<h1>Budget</h1>
+	<div class="d-flex justify-content-start align-items-baseline mb-4 gap-3">
+		<h1>Budget</h1>
+		-
+		<h2>{{ budget.libelle }}</h2>
+	</div>
 
 	<form method="post" action="{{ path( 'app_budget_generer_appel', { id: budget.id } ) }}">
 		{% if not budget.isVerrouille() %}
@@ -17,19 +21,6 @@
 			</div>
 		{% endif %}
 	</form>
-
-	<table class="table">
-		<tbody>
-			<tr>
-				<th>Id</th>
-				<td>{{ budget.id }}</td>
-			</tr>
-			<tr>
-				<th>Libelle</th>
-				<td>{{ budget.libelle }}</td>
-			</tr>
-		</tbody>
-	</table>
 
 	<div class="card shadow-sm mt-4">
 
@@ -126,9 +117,12 @@
 	</div>
 
 
-	<a href="{{ path('app_budget_index') }}">back to list</a>
+	<a href="{{ path('app_budget_index') }}">Retour à la liste</a>
+	{% if not budget.isVerrouille() %}
 
-	<a href="{{ path('app_budget_edit', {'id': budget.id}) }}">edit</a>
+		<a href="{{ path('app_budget_edit', {'id': budget.id}) }}">Modifier</a>
+	{% endif %}
+
 
 	{# {{ include('budget/_delete_form.html.twig') }} #}
 {% endblock %}

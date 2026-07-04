@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Exercice;
 use App\Entity\FactureFournisseur;
 use App\Form\FactureFournisseurType;
+use App\Repository\ExerciceRepository;
 use App\Repository\FactureFournisseurRepository;
 use App\Service\GenerationFactureFournisseurService;
 use App\Service\ReglementFactureFournisseurService;
@@ -14,24 +16,27 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/facture/fournisseur')]
-final class FactureFournisseurController
-extends AbstractController
+final class FactureFournisseurController extends AbstractController
 {
     #[Route(
+        '/index',
         name: 'app_facture_fournisseur_index',
         methods: ['GET']
     )]
     public function index(
+        ExerciceRepository $exerciceRepository,
         FactureFournisseurRepository $repository
     ): Response {
+        $exercice = $exerciceRepository->findActif();
 
         return $this->render(
             'facture_fournisseur/index.html.twig',
             [
                 'factures' => $repository->findBy(
-                    [],
+                    ['exercice' => $exercice],
                     ['dateFacture' => 'DESC']
                 ),
+                'exercice' => $exercice,
             ]
         );
     }
@@ -44,9 +49,17 @@ extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $entityManager,
-        GenerationFactureFournisseurService $generationService
+        ExerciceRepository $exerciceRepository,
+        GenerationFactureFournisseurService $generationService,
     ): Response {
+
         $facture = new FactureFournisseur();
+
+        $exercice = $exerciceRepository->findActif();
+        
+        $anneeExercice= substr($exercice->getNom(), -4);
+       
+        $facture->setExercice($exercice);
 
         $facture->setDateFacture(new \DateTimeImmutable());
 
@@ -66,9 +79,8 @@ extends AbstractController
             // =====================
             // Génération comptable
             // =====================
-            $generationService->generer(
-                $facture
-            );
+
+            $generationService->generer($facture);
 
             return $this->redirectToRoute(
                 'app_facture_fournisseur_show',
@@ -81,6 +93,7 @@ extends AbstractController
         return $this->render(
             'facture_fournisseur/new.html.twig',
             [
+                'exercice' => $exercice,
                 'facture' => $facture,
                 'form' => $form,
             ]
@@ -95,7 +108,6 @@ extends AbstractController
     public function show(
         FactureFournisseur $facture
     ): Response {
-        // dd($facture);
         return $this->render(
             'facture_fournisseur/show.html.twig',
             [
@@ -144,7 +156,7 @@ extends AbstractController
             $entityManager->flush();
 
             return $this->redirectToRoute(
-                'app_facture_fournisseur_index'
+                'app_facture_fournisseur_index',
             );
         }
 

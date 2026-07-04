@@ -123,7 +123,6 @@ final class CompteController extends AbstractController
             $compte->setType(\App\Enum\CompteType::TIERS);
             $fournisseur->setCompte($compte);
 
-            dd($compte);
             $entityManager->persist($compte);
         }
         $entityManager->flush();

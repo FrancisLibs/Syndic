@@ -79,12 +79,10 @@
 		<tbody>
 
 			{% for affectation in paiement.affectations %}
-
 				<tr>
 
 					<td>
-						Appel #{{ affectation.ligneAppel.id }}
-					</td>
+						Appel #{{ affectation.ligneAppel.appelFond.id }}
 
 					<td>
 						{{ affectation.montant }}
@@ -109,8 +107,8 @@
 
 	</table>
 
-	<a href="{{ path('app_paiement_index') }}" class="btn btn-secondary">
-		Retour
+	<a href="{{ path('app_paiement_index') }}">
+		Retour à la liste des paiements
 	</a>
 
 {% endblock %}

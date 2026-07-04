@@ -16,28 +16,16 @@ class PaiementRepository extends ServiceEntityRepository
         parent::__construct($registry, Paiement::class);
     }
 
-    //    /**
-    //     * @return Paiement[] Returns an array of Paiement objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('p.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    // src/Repository/PaiementRepository.php
 
-    //    public function findOneBySomeField($value): ?Paiement
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function findPaiementsValides(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.operation', 'o') // On joint l'opération
+            // ->where('o.statut = :statut') // On filtre sur le statut
+            // ->setParameter('statut', \App\Enum\OperationStatut::VALIDE)
+            ->orderBy('p.datePaiement', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -12,6 +12,7 @@ class GenerationFactureFournisseurService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private GenerationRepartitionService $generationRepartitionService,
     ) {}
 
     public function generer(
@@ -38,47 +39,23 @@ class GenerationFactureFournisseurService
         // =====================
 
         $operation = new Operation();
-
-        $operation->setDate(
-            $facture->getDateFacture()
-        );
-
-        $operation->setLibelle(
-            $facture->getLibelle()
-        );
-
-        $operation->setPiece(
-            $facture->getNumero()
-        );
-
-        $operation->setType(
-            OperationType::CHARGE
-        );
+        $operation->setDate($facture->getDateFacture());
+        $operation->setLibelle($facture->getLibelle());
+        $operation->setPiece($facture->getNumero());
+        $operation->setTypeCharge($facture->getTypeCharge());
+        $operation->setFournisseur($facture->getFournisseur());
+        $operation->setType(OperationType::CHARGE);
 
         // =====================
         // Débit charge
         // =====================
 
         $debit = new Ecriture();
-
-        $debit->setCompte(
-            $compteCharge
-        );
-
-        $debit->setDebit(
-            $facture->getMontant()
-        );
-
+        $debit->setCompte($compteCharge);
+        $debit->setDebit($facture->getMontant());
         $debit->setCredit('0.00');
-
-        $debit->setDate(
-            $facture->getDateFacture()
-        );
-
-        $debit->setOperation(
-            $operation
-        );
-
+        $debit->setDate($facture->getDateFacture());
+        $debit->setOperation($operation);
         $debit->setExercice($facture->getExercice());
 
         // =====================
@@ -86,25 +63,11 @@ class GenerationFactureFournisseurService
         // =====================
 
         $credit = new Ecriture();
-
-        $credit->setCompte(
-            $compteFournisseur
-        );
-
+        $credit->setCompte($compteFournisseur);
         $credit->setDebit('0.00');
-
-        $credit->setCredit(
-            $facture->getMontant()
-        );
-
-        $credit->setDate(
-            $facture->getDateFacture()
-        );
-
-        $credit->setOperation(
-            $operation
-        );
-
+        $credit->setCredit($facture->getMontant());
+        $credit->setDate($facture->getDateFacture());
+        $credit->setOperation($operation);
         $credit->setExercice($facture->getExercice());
 
         // =====================
@@ -112,20 +75,25 @@ class GenerationFactureFournisseurService
         // =====================
 
         $operation->addEcriture($debit);
-
         $operation->addEcriture($credit);
 
         $facture->setOperation($operation);
         $facture->setComptabilisee(true);
 
         // =====================
+        // Génératio répartition
+        // =====================
+
+        $this->generationRepartitionService->generer(
+            $debit,
+            $facture
+        );
+
+        // =====================
         // Persist
         // =====================
 
-        $this->entityManager->persist(
-            $operation
-        );
-
+        $this->entityManager->persist($operation);
         $this->entityManager->flush();
     }
 }

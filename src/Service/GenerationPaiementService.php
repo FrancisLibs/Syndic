@@ -45,21 +45,10 @@ class GenerationPaiementService
 
         $operation = new Operation();
 
-        $operation->setDate(
-            $paiement->getDatePaiement()
-        );
-
-        $operation->setLibelle(
-            'Paiement copropriétaire'
-        );
-
-        $operation->setPiece(
-            $paiement->getReference()
-        );
-
-        $operation->setType(
-            OperationType::PAIEMENT
-        );
+        $operation->setDate($paiement->getDatePaiement());
+        $operation->setLibelle('Paiement copropriétaire');
+        $operation->setPiece($paiement->getReference());
+        $operation->setType(OperationType::PAIEMENT);
 
         // =====================
         // Débit banque
@@ -67,27 +56,12 @@ class GenerationPaiementService
 
         $debit = new Ecriture();
 
-        $debit->setCompte(
-            $compteBanque
-        );
-
-        $debit->setDebit(
-            $paiement->getMontant()
-        );
-
+        $debit->setCompte($compteBanque);
+        $debit->setDebit($paiement->getMontant());
         $debit->setCredit('0.00');
-
-        $debit->setDate(
-            $paiement->getDatePaiement()
-        );
-
-        $debit->setExercice(
-            $paiement->getExercice()
-        );
-
-        $debit->setOperation(
-            $operation
-        );
+        $debit->setDate($paiement->getDatePaiement());
+        $debit->setExercice($paiement->getExercice());
+        $debit->setOperation($operation);
 
         // =====================
         // Crédit lot
@@ -95,27 +69,13 @@ class GenerationPaiementService
 
         $credit = new Ecriture();
 
-        $credit->setCompte(
-            $compteCoproprietaire
-        );
-
+        $credit->setCompte($compteCoproprietaire);
+        $credit->setCoproprietaire($paiement->getCoproprietaire());
         $credit->setDebit('0.00');
-
-        $credit->setCredit(
-            $paiement->getMontant()
-        );
-
-        $credit->setDate(
-            $paiement->getDatePaiement()
-        );
-
-        $credit->setExercice(
-            $paiement->getExercice()
-        );
-
-        $credit->setOperation(
-            $operation
-        );
+        $credit->setCredit($paiement->getMontant());
+        $credit->setDate($paiement->getDatePaiement());
+        $credit->setExercice($paiement->getExercice());
+        $credit->setOperation($operation);
 
         // =====================
         // Liaison

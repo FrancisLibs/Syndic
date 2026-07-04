@@ -4,8 +4,10 @@
 
 {% block body %}
     <h1>Créer nouvelle FactureFournisseur</h1>
+<h2>{{ exercice.nom }}</h2>
 
     {{ include('facture_fournisseur/_form.html.twig') }}
 
-    <a href="{{ path('app_facture_fournisseur_index') }}">Retour à la liste</a>
+<a href="{{ path('app_facture_fournisseur_index') }}">Retour à la liste</a>
+
 {% endblock %}

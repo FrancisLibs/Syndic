@@ -4,13 +4,16 @@
 {% endblock %}
 
 {% block body %}
-	<h1>Lot index</h1>
+	<div class="d-flex justify-content-start align-items-baseline mb-3 gap-3">
+		<h1>Liste des lots</h1>
+		<h2>Total Tantièmes:
+			{{ totalTantiemes }}</h2>
+	</div>
 
 	<table class="table">
 		<thead>
 			<tr>
 				<th class="text-center">Reference</th>
-
 				<th class="text-center">Designation</th>
 				<th class="text-center">Tantiemes</th>
 				<th class="text-center">Coproprietaire</th>
@@ -27,21 +30,17 @@
 					<td class="text-center">{{ lot.coproprietaireActuel ? lot.coproprietaireActuel.nom : '—' }}</td>
 					<td class="text-center">{{ lot.copropriete }}</td>
 					<td class="text-center">
-						<a href="{{ path('app_lot_show', {'id': lot.id}) }}">show</a>
-						<a href="{{ path('app_lot_edit', {'id': lot.id}) }}">edit</a>
+						<a href="{{ path('app_lot_show', {'id': lot.id}) }}">Voir</a>
+						<a href="{{ path('app_lot_edit', {'id': lot.id}) }}">Modifier</a>
 					</td>
 				</tr>
 			{% else %}
 				<tr>
-					<td colspan="5">no records found</td>
+					<td colspan="6">Aucun lot trouvé</td>
 				</tr>
 			{% endfor %}
-			<div class="mb-3">
-				<label>Total Tantièmes:</label>
-				{{ totalTantiemes }}
-			</div>
 		</tbody>
 	</table>
 
-	<a href="{{ path('app_lot_new') }}">Create new</a>
+	<a href="{{ path('app_lot_new') }}">Créer un nouveau lot</a>
 {% endblock %}

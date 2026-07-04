@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit Exercice{% endblock %}
+{% block title %}Edit Exercice
+{% endblock %}
 
 {% block body %}
-    <h1>Edit Exercice</h1>
+	<h1>Modifier un exercice</h1>
 
-    {{ include('exercice/_form.html.twig', {'button_label': 'Update'}) }}
+	{{ include('exercice/_form.html.twig', {'button_label': 'Mettre à jour'}) }}
 
-    <a href="{{ path('app_exercice_index') }}">back to list</a>
+	<a href="{{ path('app_exercice_index') }}">Retour à la liste</a>
 
-    {{ include('exercice/_delete_form.html.twig') }}
 {% endblock %}

@@ -4,11 +4,11 @@
 {% endblock %}
 
 {% block body %}
-	<h1>Create new Budget</h1>
+	<h1 class="mb-4">Créer un nouveau budget</h1>
 
 	{{ include('budget/_form.html.twig') }}
 
-	<a href="{{ path('app_budget_index') }}">back to list</a>
+	<a href="{{ path('app_budget_index') }}">Retour à la liste</a>
 
 	<script src="{{ asset('assets/js/budget.js') }}"></script>
 

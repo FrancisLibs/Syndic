@@ -4,12 +4,16 @@
 {% endblock %}
 
 {% block body %}
-	<h1>FactureFournisseur index</h1>
+	<div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+		<h1>Liste Facture Fournisseurs</h1>
+		<h2>{{ exercice.nom }}</h2>
+	</div>
+
 
 	<table class="table">
 		<thead>
 			<tr>
-				<th>Id</th>
+				<th>Fournisseur</th>
 				<th>Numero</th>
 				<th>Libelle</th>
 				<th>DateFacture</th>
@@ -24,7 +28,7 @@
 		<tbody>
 			{% for facture in factures %}
 				<tr>
-					<td>{{ facture.id }}</td>
+					<td>{{ facture.fournisseur.nom }}</td>
 					<td>{{ facture.numero }}</td>
 					<td>{{ facture.libelle }}</td>
 					<td>{{ facture.dateFacture ? facture.dateFacture|date('Y-m-d') : '' }}</td>
@@ -34,7 +38,7 @@
 					<td>{{ facture.soldee ? 'Yes' : 'No' }}</td>
 					<td>{{ facture.comptabilisee ? 'Yes' : 'No' }}</td>
 					<td>
-						<a href="{{ path('app_facture_fournisseur_show', {'id': facture.id}) }}">show</a>
+						<a href="{{ path('app_facture_fournisseur_show', {'id': facture.id}) }}">Voir</a>
 
 						{% if not facture.comptabilisee %}
 							<a href="{{ path('app_facture_fournisseur_edit', {'id': facture.id}) }}">
@@ -45,11 +49,12 @@
 				</tr>
 			{% else %}
 				<tr>
-					<td colspan="10">no records found</td>
+					<td colspan="10">Aucune facture trouvée</td>
 				</tr>
 			{% endfor %}
 		</tbody>
 	</table>
 
-	<a href="{{ path('app_facture_fournisseur_new') }}">Create new</a>
+	<a href="{{ path('app_facture_fournisseur_new') }}">Nouvelle facture</a>
+
 {% endblock %}

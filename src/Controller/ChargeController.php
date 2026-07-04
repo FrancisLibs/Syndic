@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Ecriture;
 use App\Entity\Operation;
-use App\Enum\CompteType;
 use App\Enum\OperationType;
 use App\Form\ChargeType;
 use App\Repository\CompteRepository;

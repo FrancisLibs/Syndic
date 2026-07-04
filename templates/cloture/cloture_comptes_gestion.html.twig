@@ -1,0 +1,186 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Clôture des comptes de gestion
+{% endblock %}
+
+{% block body %}
+
+	<div class="container mt-4">
+
+		<h1>Clôture des comptes de gestion</h1>
+
+		<p class="text-muted">
+			Exercice
+			{{ exercice.nom }}
+		</p>
+
+		<a href="{{ path('app_cloture_workflow', { id: exercice.id }) }}" class="btn btn-outline-secondary mb-3">
+			← Retour à l'assistant
+		</a>
+
+		<div class="alert alert-info">
+			Cette page présente les écritures qui solderont les comptes de charges et de produits.
+		</div>
+
+		{% if cloture.generee %}
+			<div class="alert alert-success">
+				<strong>✓ Ces écritures ont déjà été générées.</strong>
+				<hr>
+				<p class="mb-1">
+					<strong>Date :</strong>
+					{{ cloture.operation.date|date('d/m/Y') }}
+				</p>
+				<p class="mb-0">
+					<strong>Libellé :</strong>
+					{{ cloture.operation.libelle }}
+				</p>
+			</div>
+		{% endif %}
+
+		{% set totalDebit = 0 %}
+		{% set totalCredit = 0 %}
+
+		{% set nombreLignes = cloture.lignes|length %}
+		{% set nombreComptesGestion = 0 %}
+		{% set nombreComptesResultat = 0 %}
+
+		{% for ligne in cloture.lignes %}
+			{% if ligne.compte.numero == '120000' %}
+				{% set nombreComptesResultat = nombreComptesResultat + 1 %}
+			{% else %}
+				{% set nombreComptesGestion = nombreComptesGestion + 1 %}
+			{% endif %}
+		{% endfor %}
+
+		<div class="card mb-3">
+			<div class="card-body">
+				<p class="mb-1">
+					<strong>{{ nombreLignes }}</strong>
+					comptes seront soldés.
+				</p>
+
+				<p class="mb-1">
+					<strong>{{ nombreComptesGestion }}</strong>
+					écritures concernent les comptes de gestion.
+				</p>
+
+				<p class="mb-0">
+					<strong>{{ nombreComptesResultat }}</strong>
+					écriture concerne le compte de résultat.
+				</p>
+			</div>
+		</div>
+
+		<table class="table table-striped table-bordered align-middle">
+			<thead>
+				<tr>
+					<th>Nature</th>
+					<th>Compte</th>
+					<th>Libellé</th>
+					<th class="text-end">Débit généré</th>
+					<th class="text-end">Crédit généré</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				{% for ligne in cloture.lignes %}
+					{% set totalDebit = totalDebit + ligne.debit %}
+					{% set totalCredit = totalCredit + ligne.credit %}
+
+					{% if ligne.compte.numero == '120000' %}
+						<tr class="table-secondary">
+							<td colspan="4">
+								<strong>Contrepartie du résultat</strong>
+							</td>
+						</tr>
+					{% endif %}
+
+					<tr>
+						<td>{{ ligne.compte.type.value }}</td>
+						<td>{{ ligne.compte.numero }}</td>
+						<td>{{ ligne.compte.libelle }}</td>
+
+						<td class="text-end">
+							{% if ligne.debit > 0 %}
+								{{ ligne.debit|number_format(2, ',', ' ') }}
+								€
+							{% else %}
+								-
+							{% endif %}
+						</td>
+
+						<td class="text-end">
+							{% if ligne.credit > 0 %}
+								{{ ligne.credit|number_format(2, ',', ' ') }}
+								€
+							{% else %}
+								-
+							{% endif %}
+						</td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="4" class="text-center text-muted">
+							Aucune écriture de clôture à générer.
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+
+			<tfoot>
+				<tr class="table-light">
+					<th colspan="2" class="text-end">
+						Totaux
+					</th>
+					<th class="text-end">
+						{{ totalDebit|number_format(2, ',', ' ') }}
+						€
+					</th>
+					<th class="text-end">
+						{{ totalCredit|number_format(2, ',', ' ') }}
+						€
+					</th>
+				</tr>
+			</tfoot>
+		</table>
+
+		{% if (totalDebit - totalCredit)|abs < 0.01 %}
+			<div class="alert alert-success">
+				✅ Les écritures de clôture sont équilibrées.
+			</div>
+		{% else %}
+			<div class="alert alert-danger">
+				❌ Les écritures de clôture ne sont pas équilibrées.
+			</div>
+		{% endif %}
+
+		<div class="card mt-3">
+			<div class="card-body">
+
+				<p>
+					Total des charges :
+					<strong>{{ cloture.charges|number_format(2, ',', ' ') }}
+						€</strong>
+				</p>
+
+				<p>
+					Total des produits :
+					<strong>{{ cloture.produits|number_format(2, ',', ' ') }}
+						€</strong>
+				</p>
+
+				<hr>
+
+				<p class="mb-0">
+					Résultat :
+					<strong>{{ cloture.resultat|number_format(2, ',', ' ') }}
+						€</strong>
+				</p>
+
+			</div>
+		</div>
+
+	</div>
+
+{% endblock %}

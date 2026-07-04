@@ -3,11 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\Coproprietaire;
-use App\Enum\OperationType;
 use App\Form\CoproprietaireType;
 use App\Repository\CoproprietaireRepository;
 use App\Repository\EcritureRepository;
-use App\Repository\OperationRepository;
+use App\Repository\ExerciceRepository;
 use App\Repository\RepartitionRepository;
 use App\Service\CompteCoproprietaireService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,11 +19,15 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CoproprietaireController extends AbstractController
 {
     #[Route(name: 'app_coproprietaire_index', methods: ['GET'])]
-    public function index(CoproprietaireRepository $coproprietaireRepository): Response
-    {
-        return $this->render('coproprietaire/index.html.twig', [
-            'coproprietaires' => $coproprietaireRepository->findAll(),
-        ]);
+    public function index(
+        CoproprietaireRepository $coproprietaireRepository
+    ): Response {
+        return $this->render(
+            'coproprietaire/index.html.twig',
+            [
+                'coproprietaires' => $coproprietaireRepository->findAll(),
+            ]
+        );
     }
 
     #[Route('/new', name: 'app_coproprietaire_new', methods: ['GET', 'POST'])]
@@ -66,6 +69,12 @@ final class CoproprietaireController extends AbstractController
     #[Route('/{id}', name: 'app_coproprietaire_show', methods: ['GET'])]
     public function show(Coproprietaire $coproprietaire): Response
     {
+        $totalCharges = 0;
+
+        foreach ($coproprietaire->getRepartitions() as $repartition) {
+            $totalCharges += (float) $repartition->getMontant();
+        }
+
         return $this->render(
             'coproprietaire/show.html.twig',
             [
@@ -103,7 +112,12 @@ final class CoproprietaireController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_coproprietaire_index', [], Response::HTTP_SEE_OTHER);
+        return
+            $this->redirectToRoute(
+                'app_coproprietaire_index',
+                [],
+                Response::HTTP_SEE_OTHER
+            );
     }
 
     #[Route('/{id}/releve', name: 'app_copro_releve', methods: ['GET'])]
@@ -169,21 +183,21 @@ final class CoproprietaireController extends AbstractController
         $totalPaiements = array_sum(array_column($mouvements, 'credit'));
         $solde = $totalCharges - $totalPaiements;
 
-        return $this->render('coproprietaire/releve.html.twig', [
-            'copro' => $copro,
-            'mouvements' => $mouvements,
-            'totalCharges' => $totalCharges,
-            'totalPaiements' => $totalPaiements,
-            'solde' => $solde,
-        ]);
+        return $this->render(
+            'coproprietaire/releve.html.twig',
+            [
+                'copro' => $copro,
+                'mouvements' => $mouvements,
+                'totalCharges' => $totalCharges,
+                'totalPaiements' => $totalPaiements,
+                'solde' => $solde,
+            ]
+        );
     }
 
-    #[Route(
-        '/{id}/etat-compte',
-        name: 'app_coproprietaire_etat_compte',
-        methods: ['GET']
-    )]
+    #[Route('/etat-compte/{copro}', name: 'app_coproprietaire_etat_compte', methods: ['GET'])]
     public function etatCompte(
+        ExerciceRepository $exerciceRepository,
         Coproprietaire $copro,
         EcritureRepository $ecritureRepo
     ): Response {
@@ -191,90 +205,184 @@ final class CoproprietaireController extends AbstractController
         $compte = $copro->getCompte();
 
         if (!$compte) {
+            throw $this->createNotFoundException('Aucun compte associé à ce copropriétaire');
+        }
 
-            throw $this->createNotFoundException(
-                'Aucun compte associé à ce copropriétaire'
-            );
+        $exercice = $exerciceRepository->findActif();
+        if (!$exercice) {
+            throw $this->createNotFoundException('Aucun exercice actif trouvé');
         }
 
         // =========================
         // Écritures du compte
         // =========================
-
         $ecritures = $ecritureRepo->findBy(
-            ['compte' => $compte],
+            [
+                'compte' => $compte,
+                'exercice' => $exercice
+            ],
             ['date' => 'ASC', 'id' => 'ASC']
         );
 
         $mouvements = [];
-
         $solde = 0;
 
         // =========================
         // Construction mouvements
         // =========================
-
         foreach ($ecritures as $ecriture) {
 
             $operation = $ecriture->getOperation();
 
-            $debit = (float) $ecriture->getDebit();
+            // 🛡️ SÉCURITÉ COMPTABLE : Si l'écriture est liée à une opération annulée, on passe à la suivante !
+            if ($operation && $operation->getStatut() === \App\Enum\OperationStatut::ANNULE) {
+                continue;
+            }
 
+            $debit = (float) $ecriture->getDebit();
             $credit = (float) $ecriture->getCredit();
 
             $solde += $debit;
-
             $solde -= $credit;
 
             $mouvements[] = [
                 'exercice' => $ecriture->getExercice()->getNom(),
-
                 'date' => $ecriture->getDate(),
-
                 'piece' => $operation?->getPiece(),
-
                 'libelle' => $operation?->getLibelle(),
-
                 'type' => $operation?->getType()?->value,
-
                 'debit' => $debit,
-
                 'credit' => $credit,
-
                 'solde' => $solde,
             ];
         }
 
         // =========================
-        // Totaux
+        // Totaux (Ils se basent sur $mouvements, donc ils seront justes !)
         // =========================
-
-        $totalDebit = array_sum(
-            array_column($mouvements, 'debit')
-        );
-
-        $totalCredit = array_sum(
-            array_column($mouvements, 'credit')
-        );
+        $totalDebit = array_sum(array_column($mouvements, 'debit'));
+        $totalCredit = array_sum(array_column($mouvements, 'credit'));
 
         // =========================
         // Render
         // =========================
-
         return $this->render(
             'coproprietaire/compte.html.twig',
             [
                 'copro' => $copro,
-
                 'compte' => $compte,
-
+                'exercice' => $exercice,
                 'mvt' => $mouvements,
-
                 'totalDebit' => $totalDebit,
-
                 'totalCredit' => $totalCredit,
-
                 'solde' => $solde,
+            ]
+        );
+    }
+
+    #[Route(
+        '/{copro}/charges',
+        name: 'app_coproprietaire_charges',
+        methods: ['GET']
+    )]
+    public function charges(
+        Coproprietaire $copro,
+        ExerciceRepository $exerciceRepository
+    ): Response {
+
+        $exercice = $exerciceRepository->findActif();
+
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice actif trouvé.'
+            );
+        }
+
+        // =========================
+        // Charges réparties
+        // =========================
+
+        $totaux = [];
+        $totalGeneral = 0.0;
+
+        foreach ($copro->getRepartitions() as $repartition) {
+
+            $ecriture = $repartition->getEcriture();
+
+            if (
+                !$ecriture
+                || !$ecriture->getExercice()
+                || $ecriture->getExercice()->getId() !== $exercice->getId()
+            ) {
+                continue;
+            }
+
+            $typeCharge = $ecriture
+                ->getOperation()
+                ?->getTypeCharge();
+
+            $libelle = $typeCharge?->getNom()
+                ?? 'Non classé';
+
+            $montant = (float) $repartition->getMontant();
+
+            if (!isset($totaux[$libelle])) {
+                $totaux[$libelle] = 0.0;
+            }
+
+            $totaux[$libelle] += $montant;
+
+            $totalGeneral += $montant;
+        }
+
+        ksort($totaux);
+
+        // =========================
+        // Appels de fonds
+        // =========================
+
+        $totalAppels = 0.0;
+
+        foreach ($copro->getLigneAppelFonds() as $ligne) {
+
+            $appel = $ligne->getAppelFond();
+
+            if (!$appel) {
+                continue;
+            }
+
+            $budget = $appel->getBudget();
+
+            if (
+                !$budget
+                || !$budget->getExercice()
+                || $budget->getExercice()->getId() !== $exercice->getId()
+            ) {
+                continue;
+            }
+
+            $totalAppels += (float) $ligne->getMontant();
+        }
+
+        // =========================
+        // Régularisation
+        // =========================
+
+        $regularisation = $totalGeneral - $totalAppels;
+
+        // =========================
+        // Affichage
+        // =========================
+
+        return $this->render(
+            'coproprietaire/charges.html.twig',
+            [
+                'copro' => $copro,
+                'exercice' => $exercice,
+                'totaux' => $totaux,
+                'totalGeneral' => $totalGeneral,
+                'totalAppels' => $totalAppels,
+                'regularisation' => $regularisation,
             ]
         );
     }

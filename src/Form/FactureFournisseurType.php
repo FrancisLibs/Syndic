@@ -2,7 +2,6 @@
 
 namespace App\Form;
 
-use App\Entity\Exercice;
 use App\Entity\FactureFournisseur;
 use App\Entity\Fournisseur;
 use App\Entity\TypeCharge;
@@ -83,18 +82,7 @@ class FactureFournisseurType extends AbstractType
                 [
                     'class' => TypeCharge::class,
                     'choice_label' => 'nom',
-                    'label' => 'Type de charge',
-                ]
-            )
-
-            ->add(
-                'exercice',
-                EntityType::class,
-                [
-                    'class' => Exercice::class,
-                    'choice_label' => 'nom',
-                    'label' => 'Exercice',
-                ]
+                    'label' => 'Type de charge',]
             );
     }
 

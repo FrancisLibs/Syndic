@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Ecriture;
+use App\Entity\Exercice;
 use App\Entity\Operation;
 use App\Enum\OperationType;
 use App\Form\PaiementFournisseurType;
@@ -16,23 +17,24 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class PaiementFournisseurController extends AbstractController
 {
-    #[Route('/paiement/fournisseur', name: 'app_paiement_fournisseur')]
-    public function index(): Response
+    #[Route('/paiement/fournisseur/{id}', name: 'app_paiement_fournisseur')]
+    public function index(Exercice $exercice): Response
     {
         return $this->render(
             'paiement_fournisseur/index.html.twig',
             [
-                'controller_name' => 'PaiementFournisseurController',
+                'exercice' => $exercice,
             ]
         );
     }
 
     #[Route(
-        '/paiement-fournisseur/new',
+        '/paiement-fournisseur/new/{id}',
         name: 'app_paiement_fournisseur_new',
         methods: ['GET', 'POST']
     )]
     public function new(
+        Exercice $exercice,
         Request $request,
         EntityManagerInterface $entityManager,
         CompteRepository $compteRepo,
@@ -41,6 +43,7 @@ final class PaiementFournisseurController extends AbstractController
 
         $operation = new Operation();
         $operation->setDate(new \DateTimeImmutable());
+        $operation->setExercice($exercice);
 
         $form = $this->createForm(PaiementFournisseurType::class, $operation);
 

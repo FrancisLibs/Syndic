@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Exercice index
+{% endblock %}
+
+{% block body %}
+	<div class="d-flex justify-content-start align-items-baseline gap-2">
+		<h1 class="me-5">
+			Régularisations
+		</h1>
+		<h2>
+			{{ exercice.nom }}
+		</h2>
+	</div>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Copropriétaire</th>
+				<th>Tantièmes</th>
+				<th>Appels</th>
+				<th>Charges réelles</th>
+				<th>Régularisation</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			{% for ligne in regularisations %}
+				<tr>
+					<td>{{ ligne.coproprietaire }}</td>
+					<td>{{ ligne.tantiemes }}</td>
+					<td>{{ ligne.totalAppele|number_format(2, ',', ' ') }}
+						€</td>
+					<td>{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
+						€</td>
+					<td>{{ ligne.resultat|number_format(2, ',', ' ') }}
+						€</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<form method="post" action="{{ path( 'app_cloture_generer_regularisations', { id: exercice.id } ) }}">
+		<button type="submit" class="btn btn-primary">
+			Ok pour le tableau. Générer les écritures de régularisation
+		</button>
+	</form>
+
+{% endblock %}

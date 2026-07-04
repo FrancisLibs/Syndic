@@ -5,113 +5,71 @@
 {% endblock %}
 
 {% block body %}
-
 	<div class="container mt-4">
-
 		<div class="d-flex justify-content-between align-items-center mb-4">
-
 			<div>
 				<h1>
 					{{ fournisseur.nom }}
 				</h1>
-
 				<p class="text-muted mb-0">
 					Compte :
 					{{ compte.numero }}
 				</p>
 			</div>
-
 			<a href="{{ path('app_fournisseur_index') }}" class="btn btn-outline-secondary">
-
-				Retour
-
+				Retour à la liste
 			</a>
-
 		</div>
-
 		<div class="row mb-4">
-
 			<div class="col-md-4">
-
 				<div class="card border-danger shadow-sm">
-
 					<div class="card-body text-center">
-
 						<h6 class="text-muted">
 							Total factures
 						</h6>
-
 						<h3 class="text-danger">
 							{{ totalCredit|number_format(2, ',', ' ') }}
 							€
 						</h3>
-
 					</div>
-
 				</div>
-
 			</div>
-
 			<div class="col-md-4">
-
 				<div class="card border-success shadow-sm">
-
 					<div class="card-body text-center">
-
 						<h6 class="text-muted">
 							Total paiements
 						</h6>
-
 						<h3 class="text-success">
 							{{ totalDebit|number_format(2, ',', ' ') }}
 							€
 						</h3>
-
 					</div>
-
 				</div>
-
 			</div>
-
 			<div class="col-md-4">
-
 				<div class="card shadow-sm">
-
 					<div class="card-body text-center">
-
 						<h6 class="text-muted">
 							Solde fournisseur
 						</h6>
-
 						<h3>
 							{{ solde|number_format(2, ',', ' ') }}
 							€
 						</h3>
-
 					</div>
-
 				</div>
-
 			</div>
-
 		</div>
-
 		<div class="card shadow-sm">
-
 			<div class="card-header bg-dark text-white">
-
 				<h5 class="mb-0">
 					Historique
 				</h5>
-
 			</div>
-
 			<div class="card-body p-0">
-
 				<table class="table table-hover mb-0">
-
 					<thead class="table-light">
-
 						<tr>
 							<th>Date</th>
 							<th>Libellé</th>
@@ -119,23 +77,16 @@
 							<th class="text-end">Crédit</th>
 							<th class="text-end">Solde</th>
 						</tr>
-
 					</thead>
-
 					<tbody>
-
 						{% for mvt in mouvements %}
-
 							<tr>
-
 								<td>
 									{{ mvt.date|date('d/m/Y') }}
 								</td>
-
 								<td>
 									{{ mvt.libelle }}
 								</td>
-
 								<td class="text-end">
 									{{ mvt.debit > 0
                                     ? mvt.debit|number_format(2, ',', ' ')
@@ -153,31 +104,17 @@
 								<td class="text-end fw-bold">
 									{{ mvt.solde|number_format(2, ',', ' ') }}
 								</td>
-
 							</tr>
-
 						{% else %}
-
 							<tr>
-
 								<td colspan="5" class="text-center py-4 text-muted">
-
 									Aucun mouvement
-
 								</td>
-
 							</tr>
-
 						{% endfor %}
-
 					</tbody>
-
 				</table>
-
 			</div>
-
 		</div>
-
 	</div>
-
 {% endblock %}

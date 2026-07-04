@@ -5,10 +5,10 @@
 		</a>
 		<div class="collapse navbar-collapse">
 			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-				{# ========================= #}
-				{# COMPTABILITÉ #}
-				{# ========================= #}
 
+				{# ========================= #}
+				{# COMPTABILITÉ              #}
+				{# ========================= #}
 					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Comptabilité
 					</a>
@@ -29,12 +29,19 @@
 							</a>
 						</li>
 						<li>
+							<a class="dropdown-item" href="{{ path('app_operation_index') }}">
+								<i class="bi bi-journal-text"></i>
+								Journal des opérations
+							</a>
+						</li>
+						<li>
 							<hr class="dropdown-divider">
 						</li>
 					</ul>
 				</li>
+
 				{# ========================= #}
-				{# EXPLOITATION #}
+				{# EXPLOITATION              #}
 				{# ========================= #}
 					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Exploitation
@@ -52,23 +59,37 @@
 							</a>
 						</li>
 						<li>
-							<a class="dropdown-item" href="{{ path('app_facture_fournisseur_index') }}">
+							<a class="dropdown-item" href="{{ path('app_facture_fournisseur_index', {'exercice': 1}) }}">
 								<i class="bi bi-receipt"></i>
 								Factures fournisseurs
 							</a>
 						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_paiement_index')}}">
+								<i class="bi bi-cash-coin"></i>
+								Paiements copropriétaires
+							</a>
+						</li>
 					</ul>
 				</li>
+
 				{# ========================= #}
-				{# TRÉSORERIE #}
+				{# TRÉSORERIE                #}
 				{# ========================= #}
 					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Trésorerie
 					</a>
+					<ul
+						class="dropdown-menu">
+						{# Ajoutez vos liens de trésorerie ici si nécessaire #}
+						<li>
+							<a class="dropdown-item" href="#">Suivi bancaire</a>
+						</li>
+					</ul>
 				</li>
 
 				{# ========================= #}
-				{# PARAMÉTRAGE #}
+				{# PARAMÉTRAGE               #}
 				{# ========================= #}
 					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Paramétrage
@@ -105,14 +126,13 @@
 					</ul>
 				</li>
 			</ul>
-			{# ========================= #}
-			{# ACTIONS RAPIDES #}
-			{# ========================= #}
 
+			{# ========================= #}
+			{# ACTIONS RAPIDES           #}
+			{# ========================= #}
 				<div class="d-flex gap-2"> <a href="{{ path('app_facture_fournisseur_new') }}" class="btn btn-light">
 					+ Facture fournisseur
 				</a>
-
 				<a href="{{ path('app_paiement_new') }}" class="btn btn-light">
 					+ Paiement copropriétaire
 				</a>

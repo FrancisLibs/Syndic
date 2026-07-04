@@ -16,28 +16,23 @@ class ExerciceRepository extends ServiceEntityRepository
         parent::__construct($registry, Exercice::class);
     }
 
-    //    /**
-    //     * @return Exercice[] Returns an array of Exercice objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('e')
-    //            ->andWhere('e.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('e.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findActif(): ?Exercice
+    {
+        return $this->findOneBy(
+            [
+                'actif' => true
+            ]
+        );
+    }
 
-    //    public function findOneBySomeField($value): ?Exercice
-    //    {
-    //        return $this->createQueryBuilder('e')
-    //            ->andWhere('e.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function findSuivant(Exercice $exercice): ?Exercice
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.dateDebut > :date')
+            ->setParameter('date', $exercice->getDateFin())
+            ->orderBy('e.dateDebut', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

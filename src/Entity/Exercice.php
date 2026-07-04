@@ -56,6 +56,14 @@ class Exercice
     #[ORM\OneToMany(targetEntity: Paiement::class, mappedBy: 'exercice')]
     private Collection $paiements;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $actif = false;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $cloture = false;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $regularisationsGenerees = false;
 
 
     public function __construct()
@@ -249,6 +257,42 @@ class Exercice
                 $paiement->setExercice(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isActif(): bool
+    {
+        return $this->actif;
+    }
+
+    public function setActif(bool $actif): static
+    {
+        $this->actif = $actif;
+
+        return $this;
+    }
+
+    public function isCloture(): bool
+    {
+        return $this->cloture;
+    }
+
+    public function setCloture(bool $cloture): static
+    {
+        $this->cloture = $cloture;
+
+        return $this;
+    }
+
+    public function isRegularisationsGenerees(): bool
+    {
+        return $this->regularisationsGenerees;
+    }
+
+    public function setRegularisationsGenerees(bool $regularisationsGenerees): static
+    {
+        $this->regularisationsGenerees = $regularisationsGenerees;
 
         return $this;
     }

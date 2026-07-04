@@ -4,7 +4,7 @@
 {% endblock %}
 
 {% block body %}
-	<h1>Budget index</h1>
+	<h1>Budgets</h1>
 
 	<table class="table">
 		<thead>
@@ -19,14 +19,15 @@
 			{% for budget in budgets %}
 				<tr>
 					<td class="text-left">{{ budget.libelle }}
-						{{ budget.exercice }}
 					</td>
 					<td class="text-center">
 						{{ budget.total|number_format(2, ',', ' ') }}€
 					</td>
 					<td class="text-center">
-						<a href="{{ path('app_budget_show', {'id': budget.id}) }}">show</a>
-						<a href="{{ path('app_budget_edit', {'id': budget.id}) }}">edit</a>
+						<a href="{{ path('app_budget_show', {'id': budget.id}) }}">Voir</a>
+						{% if not budget.isVerrouille() %}
+							<a href="{{ path('app_budget_edit', {'id': budget.id}) }}">Modifier</a>
+						{% endif %}
 					</td>
 					<td class="text-center">
 						<form method="post" action="{{ path( 'app_budget_generer_appel', { id: budget.id } ) }}">
@@ -36,7 +37,7 @@
 								</button>
 							{% else %}
 								<div>
-									Appel déjà généré.
+									Appel de fonds déjà généré.
 								</div>
 							{% endif %}
 						</form>
@@ -44,10 +45,10 @@
 				</tr>
 			{% else %}
 				<tr>
-					<td colspan="4">no records found</td>
+					<td colspan="4">Aucun budget trouvé</td>
 				</tr>
 			{% endfor %}
 		</tbody>
 	</table>
-	<a href="{{ path('app_budget_new') }}">Create new</a>
+	<a href="{{ path('app_budget_new') }}">Créer un nouveau budget</a>
 {% endblock %}

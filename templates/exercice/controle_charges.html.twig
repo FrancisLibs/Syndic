@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Exercice index
+{% endblock %}
+
+{% block body %}
+	<h1 class="me-5">Contrôle charges</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Copropriétaire</th>
+				<th class="text-end">Appels</th>
+				<th class="text-end">Charges réelles</th>
+				<th class="text-end">Écart</th>
+			</tr>
+		</thead>
+
+		<tbody>
+
+			{% for ligne in lignes %}
+				<tr>
+					<td>{{ ligne.copro }}</td>
+
+					<td class="text-end">
+						{{ ligne.appels|number_format(2, ',', ' ') }}
+					</td>
+
+					<td class="text-end">
+						{{ ligne.charges|number_format(2, ',', ' ') }}
+					</td>
+
+					<td class="text-end">
+						{{ ligne.ecart|number_format(2, ',', ' ') }}
+					</td>
+				</tr>
+			{% endfor %}
+
+		</tbody>
+	</table>
+{% endblock %}

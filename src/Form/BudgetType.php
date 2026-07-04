@@ -21,7 +21,13 @@ class BudgetType extends AbstractType
 
         $builder
 
-            ->add('libelle')
+            ->add(
+                'libelle',
+            null,
+            [
+                'disabled' => true,
+            ]
+                )
 
             ->add(
                 'copropriete',

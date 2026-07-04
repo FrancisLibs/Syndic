@@ -2,7 +2,11 @@
 
 {% block body %}
 
-	<h1>Paiements copropriétaires</h1>
+	<div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+		<h1>Paiements copropriétaires</h1>
+		<h2>{{ exercice.nom }}</h2>
+	</div>
+
 
 	<table class="table table-striped">
 
@@ -18,45 +22,36 @@
 
 		<tbody>
 
+			{# templates/paiement/index.html.twig (ou approchant) #}
+
 			{% for paiement in paiements %}
+				{# 1. Si l'opération est annulée, on barre le texte et on met un fond rouge léger #}
+				<tr {% if paiement.operation.statut.value == 'annule' %} class="table-light text-muted text-decoration-line-through" {% endif %}>
+					<td>{{ paiement.datePaiement|date('d/m/Y') }}</td>
+					<td>{{ paiement.coproprietaire.nom }}</td>
+					<td>{{ paiement.montant }}
+						€</td>
 
-				<tr>
-
+					{# 2. Colonne Statut #}
 					<td>
-						{{ paiement.datePaiement|date('d/m/Y') }}
+						{% if paiement.operation.statut.value == 'annule' %}
+							<span class="badge bg-danger">
+								<i class="fas fa-ban"></i>
+								Annulé</span>
+						{% else %}
+							<span class="badge bg-success">
+								<i class="fas fa-check"></i>
+								Validé</span>
+						{% endif %}
 					</td>
 
+					{# 3. Colonne Actions (On cache le bouton d'annulation si déjà annulé) #}
 					<td>
-						{{ paiement.coproprietaire }}
-					</td>
-
-					<td>
-						{{ paiement.montant|number_format(2, ',', ' ') }}
-						€
-					</td>
-
-					<td>
-						{{ paiement.reference }}
-					</td>
-
-					<td>
-
-						<a href="{{ path( 'app_paiement_show', { id: paiement.id } ) }}" class="btn btn-sm btn-primary">
-							Voir
-						</a>
-
-					</td>
-
-				</tr>
-
-			{% else %}
-
-				<tr>
-					<td colspan="5">
-						Aucun paiement enregistré
+						{% if paiement.operation.statut.value != 'annule' %}
+							{# Ton bouton pour annuler #}
+						{% endif %}
 					</td>
 				</tr>
-
 			{% endfor %}
 
 		</tbody>

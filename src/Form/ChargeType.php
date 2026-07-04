@@ -2,8 +2,6 @@
 
 namespace App\Form;
 
-use App\Entity\Compte;
-use App\Entity\Copropriete;
 use App\Entity\Fournisseur;
 use App\Entity\Operation;
 use App\Entity\TypeCharge;

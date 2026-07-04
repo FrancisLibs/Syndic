@@ -4,7 +4,7 @@
 {% endblock %}
 
 {% block body %}
-	<h1>Fournisseur index</h1>
+	<h1>Liste des fournisseurs</h1>
 
 	<table class="table">
 		<thead>
@@ -28,8 +28,8 @@
 					<td>{{ fournisseur.codePostal }}</td>
 					<td>{{ fournisseur.localite }}</td>
 					<td>
-						<a href="{{ path('app_fournisseur_show', {'id': fournisseur.id}) }}">show</a>
-						<a href="{{ path('app_fournisseur_edit', {'id': fournisseur.id}) }}">edit</a>
+						<a href="{{ path('app_fournisseur_show', {'id': fournisseur.id}) }}">Voir</a>
+						<a href="{{ path('app_fournisseur_edit', {'id': fournisseur.id}) }}">Modifier</a>
 						<a href="{{ path( 'app_fournisseur_compte', {id: fournisseur.id} ) }}" class="btn btn-sm btn-outline-primary">
 
 							Compte
@@ -40,11 +40,11 @@
 				</tr>
 			{% else %}
 				<tr>
-					<td colspan="7">no records found</td>
+					<td colspan="7">Aucun enregistrement trouvé</td>
 				</tr>
 			{% endfor %}
 		</tbody>
 	</table>
 
-	<a href="{{ path('app_fournisseur_new') }}">Create new</a>
+	<a href="{{ path('app_fournisseur_new') }}">Créer un nouveau fournisseur</a>
 {% endblock %}

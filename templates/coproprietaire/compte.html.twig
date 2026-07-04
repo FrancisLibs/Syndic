@@ -11,8 +11,8 @@
 		<div class="d-flex justify-content-between align-items-center mb-4">
 
 			<div>
-				<h1 class="mb-0">
-					État de compte
+				<h1 class="mb-0">État de compte -
+					{{ exercice.nom }}
 				</h1>
 
 				<H2 class="text-muted">
@@ -28,9 +28,9 @@
 				</div>
 
 				<div class="fs-4
-											{% if solde > 0 %} text-danger
-											{% elseif solde < 0 %} text-success
-											{% endif %}">
+																													{% if solde > 0 %} text-danger
+																													{% elseif solde < 0 %} text-success
+																													{% endif %}">
 					{{ solde|number_format(2, ',', ' ') }}
 					€
 				</div>
@@ -39,92 +39,48 @@
 		</div>
 
 		<div class="card shadow-sm">
-
 			<div class="card-body p-0">
-
 				<table class="table table-hover mb-0 align-middle">
-
 					<thead class="table-light">
-
 						<tr>
 							<th>Exercice</th>
-							<th>Date</th>
-							<th>Pièce</th>
-							<th>Type</th>
-							<th>Libellé</th>
-
-							<th class="text-end">
-								Débit
-							</th>
-
-							<th class="text-end">
-								Crédit
-							</th>
-
-							<th class="text-end">
-								Solde
-							</th>
+							<th class="text-center">Date</th>
+							<th class="text-center">Pièce</th>
+							<th class="text-center">Type</th>
+							<th class="text-center">Libellé</th>
+							<th class="text-center">Débit</th>
+							<th class="text-center">Crédit</th>
+							<th class="text-end">Solde</th>
 						</tr>
-
 					</thead>
-
 					<tbody>
-
 						{% for ligne in mvt %}
-
 							<tr>
-
-								<td>
-									{{ ligne.exercice }}
+								<td>{{ ligne.exercice }}</td>
+								<td class="text-center">{{ ligne.date|date('d/m/Y') }}</td>
+								<td class="text-center">{{ ligne.piece }}</td>
+								<td class="text-center">
+									<span class="badge bg-secondary">{{ ligne.type }}</span>
 								</td>
-
-								<td>
-									{{ ligne.date|date('d/m/Y') }}
-								</td>
-
-								<td>
-									{{ ligne.piece }}
-								</td>
-
-								<td>
-									<span class="badge bg-secondary">
-										{{ ligne.type }}
-									</span>
-								</td>
-
-								<td>
-									{{ ligne.libelle }}
-								</td>
-
-								<td class="text-end text-danger">
-
+								<td class="text-center">{{ ligne.libelle }}</td>
+								<td class="text-center text-danger">
 									{% if ligne.debit > 0 %}
 										{{ ligne.debit|number_format(2, ',', ' ') }}
 										€
 									{% endif %}
-
 								</td>
-
-								<td class="text-end text-success">
-
+								<td class="text-center text-success">
 									{% if ligne.credit > 0 %}
 										{{ ligne.credit|number_format(2, ',', ' ') }}
 										€
 									{% endif %}
-
 								</td>
-
 								<td class="text-end fw-bold">
-
 									{{ ligne.solde|number_format(2, ',', ' ') }}
 									€
-
 								</td>
-
 							</tr>
-
 						{% else %}
-
 							<tr>
 								<td colspan="7" class="text-center py-4 text-muted">
 									Aucun mouvement
@@ -136,38 +92,24 @@
 					</tbody>
 
 					<tfoot class="table-light">
-
 						<tr>
-
-							<th colspan="4" class="text-end">
-								Totaux
-							</th>
-
-							<th class="text-end text-danger">
+							<th colspan="5" class="text-end">totaux</th>
+							<th class="text-center text-danger">
 								{{ totalDebit|number_format(2, ',', ' ') }}
 								€
 							</th>
-
-							<th class="text-end text-success">
+							<th class="text-center text-success">
 								{{ totalCredit|number_format(2, ',', ' ') }}
 								€
 							</th>
-
-							<th class="text-end">
+							<th class="text-end fw-bold">
 								{{ solde|number_format(2, ',', ' ') }}
 								€
 							</th>
-
 						</tr>
-
 					</tfoot>
-
 				</table>
-
 			</div>
-
 		</div>
-
 	</div>
-
 {% endblock %}

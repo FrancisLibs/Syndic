@@ -32,16 +32,20 @@ class AppelFond
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     private ?string $montantTotal = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $numero = null;
-
     #[ORM\OneToMany(
         mappedBy: 'appelFond',
         targetEntity: LigneAppelFond::class,
-        cascade: ['persist'],
+        cascade: ['persist', 'remove'],
         orphanRemoval: true
     )]
     private Collection $ligneAppelFonds;
+
+    #[ORM\OneToOne(inversedBy: 'appelFond', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Operation $operation = null;
+
+    #[ORM\Column(length: 20)]
+    private ?string $numero = null;
 
     public function __construct()
     {
@@ -126,20 +130,6 @@ class AppelFond
         return $this;
     }
 
-    public function getNumero(): ?int
-    {
-        return $this->numero;
-    }
-
-    public function setNumero(
-        int $numero
-    ): static {
-
-        $this->numero = $numero;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, LigneAppelFond>
      */
@@ -182,5 +172,29 @@ class AppelFond
     {
         return $this->libelle
             ?? 'Nouvel appel de fonds';
+    }
+
+    public function getOperation(): ?Operation
+    {
+        return $this->operation;
+    }
+
+    public function setOperation(Operation $operation): static
+    {
+        $this->operation = $operation;
+
+        return $this;
+    }
+
+    public function getNumero(): ?string
+    {
+        return $this->numero;
+    }
+
+    public function setNumero(string $numero): static
+    {
+        $this->numero = $numero;
+
+        return $this;
     }
 }

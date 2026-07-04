@@ -3,7 +3,6 @@
 namespace App\Form;
 
 use App\Entity\Coproprietaire;
-use App\Entity\Exercice;
 use App\Entity\Paiement;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -21,7 +20,6 @@ class PaiementType extends AbstractType
     ): void {
 
         $builder
-
             ->add(
                 'datePaiement',
                 DateType::class,
@@ -31,7 +29,6 @@ class PaiementType extends AbstractType
                     'label' => 'Date paiement',
                 ]
             )
-
             ->add(
                 'coproprietaire',
                 EntityType::class,
@@ -41,17 +38,6 @@ class PaiementType extends AbstractType
                     'label' => 'Copropriétaire',
                 ]
             )
-
-            ->add(
-                'exercice',
-                EntityType::class,
-                [
-                    'class' => Exercice::class,
-                    'choice_label' => 'nom',
-                    'label' => 'Exercice',
-                ]
-            )
-
             ->add(
                 'montant',
                 MoneyType::class,
@@ -60,7 +46,6 @@ class PaiementType extends AbstractType
                     'label' => 'Montant',
                 ]
             )
-
             ->add(
                 'reference',
                 TextType::class,

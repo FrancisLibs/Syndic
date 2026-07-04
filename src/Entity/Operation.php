@@ -26,7 +26,13 @@ class Operation
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $piece = null;
 
-    #[ORM\OneToMany(mappedBy: 'operation', targetEntity: Ecriture::class, cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OneToMany(
+        mappedBy: 'operation',
+        targetEntity: Ecriture::class,
+        cascade: ['persist'],
+        orphanRemoval: true,
+        fetch: 'EAGER'
+    )]
     private Collection $ecritures;
 
     #[ORM\Column(type: 'string', length: 20, enumType: OperationType::class)]
@@ -45,9 +51,16 @@ class Operation
     #[ORM\OneToOne(mappedBy: 'operation', cascade: ['persist', 'remove'])]
     private ?Paiement $paiement = null;
 
+    #[ORM\Column(type: 'string', length: 20, enumType: OperationStatut::class)]
+    private OperationStatut $statut;
+
+    #[ORM\OneToOne(mappedBy: 'operation', cascade: ['persist', 'remove'])]
+    private ?AppelFond $appelFond = null;
+
     public function __construct()
     {
         $this->ecritures = new ArrayCollection();
+        $this->statut = OperationStatut::VALIDE;
     }
 
     public function getId(): ?int
@@ -141,8 +154,6 @@ class Operation
     {
         if (!$this->isEquilibree()) {
             throw new \LogicException('Operation non equilibree');
-
-            $this->statut = OperationStatut::VALIDE;
         }
 
         if (count($this->ecritures) < 2) {
@@ -211,6 +222,36 @@ class Operation
         }
 
         $this->paiement = $paiement;
+
+        return $this;
+    }
+
+    public function getStatut(): OperationStatut
+    {
+        // ✨ SÉCURITÉ REPRISE DE DONNÉES : Si une vieille ligne en BDD n'a pas de statut,
+        // on évite le crash PHP en renvoyant VALIDE par défaut.
+        return $this->statut ?? OperationStatut::VALIDE;
+    }
+
+    public function setStatut(OperationStatut $statut): static
+    {
+        $this->statut = $statut;
+        return $this;
+    }
+
+    public function getAppelFond(): ?AppelFond
+    {
+        return $this->appelFond;
+    }
+
+    public function setAppelFond(AppelFond $appelFond): static
+    {
+        // set the owning side of the relation if necessary
+        if ($appelFond->getOperation() !== $this) {
+            $appelFond->setOperation($this);
+        }
+
+        $this->appelFond = $appelFond;
 
         return $this;
     }

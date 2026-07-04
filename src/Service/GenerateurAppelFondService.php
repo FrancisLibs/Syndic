@@ -5,7 +5,7 @@ namespace App\Service;
 use App\Entity\AppelFond;
 use App\Entity\Budget;
 use App\Entity\LigneAppelFond;
-use App\Entity\Lot;
+use App\Repository\AppelFondRepository;
 use App\Repository\LotRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -14,12 +14,13 @@ class GenerateurAppelFondService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private LotRepository $lotRepository,
+        private AppelFondRepository $appelFondRepository,
     ) {}
 
     public function generer(
         Budget $budget,
         \DateTimeImmutable $dateAppel,
-        \DateTimeImmutable $dateEcheance
+        \DateTimeImmutable $dateEcheance,
     ): AppelFond {
 
         // =====================
@@ -39,18 +40,27 @@ class GenerateurAppelFondService
         // =====================
 
         $appelFond = new AppelFond();
-
         $appelFond->setBudget($budget);
-
         $appelFond->setLibelle('Appel de fonds - ' . $budget->getLibelle());
-
         $appelFond->setDateAppel($dateAppel);
-
         $appelFond->setDateEcheance(
             $dateEcheance
         );
 
         $appelFond->setMontantTotal($montantTotalBudget);
+
+        // 🌟 Automatisation du numéro (Ex: AF-2026-001)
+        $anneeEnCours = (int) $dateAppel->format('Y');
+
+        // 🌟 On appelle la méthode du Repository qu'on vient de créer
+        $totalAppelsCetteAnnee = $this->appelFondRepository->countForYear($anneeEnCours);
+
+        $prochainNumero = $totalAppelsCetteAnnee + 1;
+
+        // Génère la chaîne (ex: AF-2026-001)
+        $reference = "AF-" . $anneeEnCours . "-" . str_pad($prochainNumero, 3, "0", STR_PAD_LEFT);
+
+        $appelFond->setNumero($reference);
 
         $budget->setVerrouille(true);
 
@@ -58,11 +68,12 @@ class GenerateurAppelFondService
         // Lots copropriété
         // =====================
 
+        $copropriete = $budget->getCopropriete();
+
         $lots =
             $this->lotRepository->findBy(
                 [
-                    'copropriete' =>
-                    $budget->getCopropriete()
+                    'copropriete' => $copropriete
                 ]
             );
 
@@ -83,27 +94,20 @@ class GenerateurAppelFondService
         // =====================
 
         foreach ($lots as $lot) {
-
+            $tantiemeLot = $lot->getTantiemes();
             $montantLot
-                = (
-                    $montantTotalBudget
-                    * $lot->getTantiemes()
-                )
-                / $totalTantiemes;
+                = ($montantTotalBudget * $tantiemeLot) / $totalTantiemes;
 
             // =====================
             // Copropriétaires actifs
             // =====================
 
-            foreach (
-                $lot->getLotCoproprietaires()
-                as $lotCoproprietaire
-            ) {
+            foreach ($lot->getLotCoproprietaires() as $lotCoproprietaire) {
 
-                $dateFin = $lotCoproprietaire
-                    ->getDateFin();
+                $dateDebut = $lotCoproprietaire->getDateDebut();
+                $dateFin = $lotCoproprietaire->getDateFin();
 
-                if ($lotCoproprietaire->getDateDebut() > $dateAppel) {
+                if ($dateDebut > $dateAppel) {
                     continue;
                 }
 
@@ -119,20 +123,10 @@ class GenerateurAppelFondService
 
                 $ligne->setMontantRegle('0.00');
                 $ligne->setSoldee(false);
-
                 $ligne->setAppelFond($appelFond);
-
                 $ligne->setLot($lot);
-
-                $ligne->setCoproprietaire(
-                    $lotCoproprietaire
-                        ->getCoproprietaire()
-                );
-
-                $ligne->setPourcentage(
-                    $pourcentage
-                );
-
+                $ligne->setCoproprietaire($lotCoproprietaire->getCoproprietaire());
+                $ligne->setPourcentage($pourcentage);
                 $ligne->setMontant(round($montantCoproprietaire, 2));
 
                 $appelFond->addLigneAppelFond($ligne);
@@ -145,11 +139,8 @@ class GenerateurAppelFondService
         // Sauvegarde
         // =====================
 
-        $this->entityManager
-            ->persist($appelFond);
-
-        $this->entityManager
-            ->flush();
+        $this->entityManager->persist($appelFond);
+        $this->entityManager-> flush();
 
         return $appelFond;
     }

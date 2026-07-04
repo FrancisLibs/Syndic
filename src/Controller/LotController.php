@@ -4,11 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Lot;
 use App\Entity\LotCoproprietaire;
-use App\Enum\OperationType;
 use App\Form\LotType;
 use App\Repository\LotRepository;
-use App\Repository\OperationRepository;
-use App\Repository\RepartitionRepository;
 use App\Service\LotOwnershipManagerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -104,7 +101,6 @@ final class LotController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // dd($form->getData(), $form->get('coproprietaire')->getData(), $form->get('dateChangement')->getData());
 
             $copro = $form->get('coproprietaire')->getData();
             $datechgt = $form->get('dateChangement')->getData();
