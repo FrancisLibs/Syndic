@@ -16,6 +16,7 @@ use App\Enum\OperationType;
 use App\Enum\OperationStatut;
 use App\Enum\ExerciceStatut;
 use App\Enum\CompteType;
+use App\Service\ComptabiliteService;
 use App\Repository\ExerciceRepository;
 use App\Repository\CompteRepository;
 use App\Repository\EcritureRepository;
@@ -29,6 +30,7 @@ class ClotureExerciceService
     private CompteRepository $compteRepository;
     private EcritureRepository $ecritureRepository;
     private OperationRepository $operationRepository;
+    private ComptabiliteService $comptabiliteService;
 
     public function __construct(
         ExerciceRepository $exerciceRepository,
@@ -36,12 +38,14 @@ class ClotureExerciceService
         EntityManagerInterface $em,
         EcritureRepository $ecritureRepository,
         OperationRepository $operationRepository,
+        ComptabiliteService $comptabiliteService,   
     ) {
         $this->compteRepository = $compteRepository;
         $this->exerciceRepository = $exerciceRepository;
         $this->ecritureRepository = $ecritureRepository;
         $this->operationRepository = $operationRepository;
         $this->em = $em;
+        $this->comptabiliteService = $comptabiliteService;
     }
 
     /**
@@ -184,13 +188,7 @@ class ClotureExerciceService
             ->calculerSoldesComptesGestion($exercice);
 
         $compteResultat =
-            $this->compteRepository->findByNumero('120000');
-
-        if (!$compteResultat) {
-            throw new \LogicException(
-                'Le compte 120000 est introuvable.'
-            );
-        }
+            $this->compteRepository->findByNumeroOrFail('120000');
 
         $lignes = [];
 
@@ -281,7 +279,7 @@ class ClotureExerciceService
         }
 
         $operation =
-            $this->creerOperation(
+            $this->comptabiliteService->creerOperation(
                 $exercice->getDateFin(),
                 sprintf(
                     'Clôture des comptes de gestion - %s',
@@ -292,19 +290,26 @@ class ClotureExerciceService
 
         foreach ($cloture->lignes as $ligne) {
 
-            $ecriture = new Ecriture();
+            if ((float) $ligne->debit > 0) {
+                $this->comptabiliteService->creerDebit(
+                    $operation,
+                    $exercice,
+                    $ligne->compte,
+                    $ligne->debit
+                );
+            }
 
-            $ecriture
-                ->setCompte($ligne->compte)
-                ->setDebit($ligne->debit)
-                ->setCredit($ligne->credit)
-                ->setDate($exercice->getDateFin())
-                ->setExercice($exercice);
-
-            $operation->addEcriture($ecriture);
+            if ((float) $ligne->credit > 0) {
+                $this->comptabiliteService->creerCredit(
+                    $operation,
+                    $exercice,
+                    $ligne->compte,
+                    $ligne->credit
+                );
+            }
         }
 
-        $this->em->persist($operation);
+        $this->comptabiliteService->enregistrer($operation);
 
         $this->em->flush();
     }
@@ -522,23 +527,6 @@ class ClotureExerciceService
                 $this->em->flush();
             }
         );
-    }
-
-    private function creerOperation(
-        \DateTimeImmutable $date,
-        string $libelle,
-        OperationType $type
-    ): Operation {
-
-        $operation = new Operation();
-
-        $operation
-            ->setDate($date)
-            ->setLibelle($libelle)
-            ->setType($type)
-            ->setStatut(OperationStatut::VALIDE);
-
-        return $operation;
     }
 
     private function budgetsSontVerrouilles(

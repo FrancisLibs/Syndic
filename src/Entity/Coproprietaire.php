@@ -55,6 +55,12 @@ class Coproprietaire
     #[ORM\JoinColumn(nullable: false)]
     private ?Compte $compte = null;
 
+    #[ORM\OneToMany(
+        mappedBy: 'coproprietaire',
+        targetEntity: Paiement::class
+    )]
+    private Collection $paiements;
+
     public function __construct()
     {
         $this->lotCoproprietaires = new ArrayCollection();

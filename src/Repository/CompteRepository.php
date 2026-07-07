@@ -22,4 +22,24 @@ class CompteRepository extends ServiceEntityRepository
             'numero' => $numero,
         ]);
     }
+
+    public function findByNumeroOrFail(
+        string $numero
+    ): Compte {
+
+        $compte = $this->findOneBy([
+            'numero' => $numero,
+        ]);
+
+        if (!$compte) {
+            throw new \LogicException(
+                sprintf(
+                    'Le compte %s est introuvable.',
+                    $numero
+                )
+            );
+        }
+
+        return $compte;
+    }
 }

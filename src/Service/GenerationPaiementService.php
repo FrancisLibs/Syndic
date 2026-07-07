@@ -11,21 +11,13 @@ class GenerationPaiementService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private CompteRepository $compteRepository,
         private ComptabiliteService $comptabiliteService,
+        private CompteRepository $compteRepository,
     ) {}
 
     public function generer(Paiement $paiement): void
     {
-        $compteBanque = $this->compteRepository->findOneBy([
-            'numero' => '512000'
-        ]);
-
-        if (!$compteBanque) {
-            throw new \LogicException(
-                'Compte banque introuvable'
-            );
-        }
+        $compteBanque = $this->compteRepository->findByNumeroOrFail('512000');
 
         $coproprietaire = $paiement->getCoproprietaire();
         $compteCoproprietaire = $coproprietaire->getCompte();

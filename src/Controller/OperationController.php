@@ -12,6 +12,7 @@ use App\Repository\ExerciceRepository;
 use App\Repository\OperationRepository;
 use App\Repository\LotRepository;
 use App\Service\RepartitionService;
+use App\Service\ComptabiliteService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -76,83 +77,6 @@ final class OperationController extends AbstractController
             'operation' => $operation,
             'ecriture' => $ecritureCharge,
         ]);
-    }
-
-    #[Route('/operation/charge/new', name: 'operation_charge_new')]
-    public function newCharge(
-        Request $request,
-        EntityManagerInterface $em,
-        LotRepository $lotRepository,
-        RepartitionService $repartitionService,
-        ExerciceRepository $exerciceRepository
-    ) {
-        $operation = new Operation();
-        $operation->setDate(new \DateTimeImmutable());
-        $operation->setType(OperationType::CHARGE);
-        $operation->setLibelle('');
-
-        $form = $this->createForm(OperationFormType::class, $operation);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-
-            $montant = $form->get('montant')->getData();
-            $compteCharge = $form->get('compte')->getData();
-            // sécurisation
-            if ($operation->getType() !== OperationType::CHARGE) {
-                throw new \LogicException('Type invalide');
-            }
-
-            // création écriture
-            $ecriture = new Ecriture();
-            $ecriture->setOperation($operation);
-            $ecriture->setDebit($montant);
-            $ecriture->setCredit('0.00');
-
-            $ecriture->setCompte($compteCharge);
-
-            $exercice = $exerciceRepository->findOneBy(
-                ['statut' => 'ouvert'],
-            );
-
-            if (!$exercice) {
-                // Il est prudent de gérer le cas où aucun exercice n'est ouvert
-                throw new \Exception("Aucun exercice ouvert n'a été trouvé !");
-            }
-
-            $ecriture->setExercice($exercice);
-
-            $operation->addEcriture($ecriture);
-
-            $coproprieteSelectionnee = $form->get('copropriete')->getData();
-
-            // récupérer les lots
-            $lots = $lotRepository->findBy(
-                [
-                    'copropriete' => $coproprieteSelectionnee,
-                ]
-            );
-
-            // générer les répartitions
-            $repartitionService->generer($ecriture, $lots);
-
-            // sécurité finale
-            if (!$ecriture->isComptableValid()) {
-                throw new \LogicException('Écriture invalide');
-            }
-
-            $em->persist($operation);
-            $em->flush();
-
-            return $this->redirectToRoute('app_home');
-        }
-
-        return $this->render(
-            'operation/new_charge.html.twig',
-            [
-                'form' => $form,
-            ]
-        );
     }
 
     #[Route('/operation/{id}/annuler', name: 'app_operation_annuler', methods: ['POST'])]

@@ -3,9 +3,11 @@
 namespace App\Entity;
 
 use App\Repository\FournisseurRepository;
+use App\Entity\FactureFournisseur;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+
 
 #[ORM\Entity(repositoryClass: FournisseurRepository::class)]
 class Fournisseur
@@ -37,9 +39,16 @@ class Fournisseur
     #[ORM\OneToMany(targetEntity: Operation::class, mappedBy: 'fournisseur')]
     private Collection $operations;
 
+    #[ORM\OneToMany(
+        mappedBy: 'fournisseur',
+        targetEntity: FactureFournisseur::class
+    )]
+    private Collection $factures;
+
     public function __construct()
     {
         $this->operations = new ArrayCollection();
+        $this->factures = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -131,6 +140,32 @@ class Fournisseur
             // set the owning side to null (unless already changed)
             if ($operation->getFournisseur() === $this) {
                 $operation->setFournisseur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getFactures(): Collection
+    {
+        return $this->factures;
+    }
+
+    public function addFacture(FactureFournisseur $facture): static
+    {
+        if (!$this->factures->contains($facture)) {
+            $this->factures->add($facture);
+            $facture->setFournisseur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFacture(FactureFournisseur $facture): static
+    {
+        if ($this->factures->removeElement($facture)) {
+            if ($facture->getFournisseur() === $this) {
+                $facture->setFournisseur(null);
             }
         }
 

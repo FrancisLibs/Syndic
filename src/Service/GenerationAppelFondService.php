@@ -19,15 +19,8 @@ class GenerationAppelFondService
     {
         $exercice = $appelFond->getBudget()->getExercice();
 
-        $compteProduit = $this->compteRepository->findOneBy([
-            'numero' => '701000'
-        ]);
-
-        if (!$compteProduit) {
-            throw new \LogicException(
-                'Compte 701000 introuvable'
-            );
-        }
+        $compteProduit = $this->compteRepository
+            ->findByNumeroOrFail('701000');
 
         $operation = $this->comptabiliteService->creerOperation(
             $appelFond->getDateAppel(),

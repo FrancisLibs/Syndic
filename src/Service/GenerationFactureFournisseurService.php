@@ -2,9 +2,7 @@
 
 namespace App\Service;
 
-use App\Entity\Ecriture;
 use App\Entity\FactureFournisseur;
-use App\Entity\Operation;
 use App\Enum\OperationType;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -13,87 +11,67 @@ class GenerationFactureFournisseurService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private GenerationRepartitionService $generationRepartitionService,
+        private ComptabiliteService $comptabiliteService,
     ) {}
 
     public function generer(
         FactureFournisseur $facture
     ): void {
-        // =====================
-        // Compte charge
-        // =====================
-
         $compteCharge = $facture
             ->getTypeCharge()
             ->getCompte();
 
-        // =====================
-        // Compte fournisseur
-        // =====================
+        if (!$compteCharge) {
+            throw new \LogicException(
+                'Compte de charge introuvable.'
+            );
+        }
 
         $compteFournisseur = $facture
             ->getFournisseur()
             ->getCompte();
 
-        // =====================
-        // Operation
-        // =====================
+        if (!$compteFournisseur) {
+            throw new \LogicException(
+                'Compte fournisseur introuvable.'
+            );
+        }
 
-        $operation = new Operation();
-        $operation->setDate($facture->getDateFacture());
-        $operation->setLibelle($facture->getLibelle());
-        $operation->setPiece($facture->getNumero());
-        $operation->setTypeCharge($facture->getTypeCharge());
-        $operation->setFournisseur($facture->getFournisseur());
-        $operation->setType(OperationType::CHARGE);
+        $operation = $this->comptabiliteService->creerOperation(
+            $facture->getDateFacture(),
+            $facture->getLibelle(),
+            OperationType::CHARGE,
+            $facture->getNumero()
+        );
 
-        // =====================
-        // Débit charge
-        // =====================
+        $operation
+            ->setTypeCharge($facture->getTypeCharge())
+            ->setFournisseur($facture->getFournisseur());
 
-        $debit = new Ecriture();
-        $debit->setCompte($compteCharge);
-        $debit->setDebit($facture->getMontant());
-        $debit->setCredit('0.00');
-        $debit->setDate($facture->getDateFacture());
-        $debit->setOperation($operation);
-        $debit->setExercice($facture->getExercice());
+        $debit = $this->comptabiliteService->creerDebit(
+            $operation,
+            $facture->getExercice(),
+            $compteCharge,
+            $facture->getMontant()
+        );
 
-        // =====================
-        // Crédit fournisseur
-        // =====================
-
-        $credit = new Ecriture();
-        $credit->setCompte($compteFournisseur);
-        $credit->setDebit('0.00');
-        $credit->setCredit($facture->getMontant());
-        $credit->setDate($facture->getDateFacture());
-        $credit->setOperation($operation);
-        $credit->setExercice($facture->getExercice());
-
-        // =====================
-        // Liaison
-        // =====================
-
-        $operation->addEcriture($debit);
-        $operation->addEcriture($credit);
+        $this->comptabiliteService->creerCredit(
+            $operation,
+            $facture->getExercice(),
+            $compteFournisseur,
+            $facture->getMontant()
+        );
 
         $facture->setOperation($operation);
         $facture->setComptabilisee(true);
-
-        // =====================
-        // Génératio répartition
-        // =====================
 
         $this->generationRepartitionService->generer(
             $debit,
             $facture
         );
 
-        // =====================
-        // Persist
-        // =====================
+        $this->comptabiliteService->enregistrer($operation);
 
-        $this->entityManager->persist($operation);
         $this->entityManager->flush();
     }
 }

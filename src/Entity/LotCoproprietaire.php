@@ -33,17 +33,6 @@ class LotCoproprietaire
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $dateFin = null;
 
-    /**
-     * @var Collection<int, Paiement>
-     */
-    #[ORM\OneToMany(targetEntity: Paiement::class, mappedBy: 'lotCoproprietaire')]
-    private Collection $paiements;
-
-    public function __construct()
-    {
-        $this->paiements = new ArrayCollection();
-    }
-
     public function getId(): ?int
     {
         return $this->id;
@@ -105,36 +94,6 @@ class LotCoproprietaire
     public function setDateFin(?\DateTimeImmutable $dateFin): static
     {
         $this->dateFin = $dateFin;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Paiement>
-     */
-    public function getPaiements(): Collection
-    {
-        return $this->paiements;
-    }
-
-    public function addPaiement(Paiement $paiement): static
-    {
-        if (!$this->paiements->contains($paiement)) {
-            $this->paiements->add($paiement);
-            $paiement->setLotCoproprietaire($this);
-        }
-
-        return $this;
-    }
-
-    public function removePaiement(Paiement $paiement): static
-    {
-        if ($this->paiements->removeElement($paiement)) {
-            // set the owning side to null (unless already changed)
-            if ($paiement->getLotCoproprietaire() === $this) {
-                $paiement->setLotCoproprietaire(null);
-            }
-        }
 
         return $this;
     }

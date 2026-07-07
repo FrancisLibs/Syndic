@@ -45,12 +45,6 @@ class Lot
     private Collection $repartitions;
 
     /**
-     * @var Collection<int, Ecriture>
-     */
-    #[ORM\OneToMany(targetEntity: Ecriture::class, mappedBy: 'lot')]
-    private Collection $ecritures;
-
-    /**
      * @var Collection<int, Operation>
      */
     #[ORM\OneToMany(targetEntity: Operation::class, mappedBy: 'lot')]
@@ -62,20 +56,12 @@ class Lot
     #[ORM\OneToMany(targetEntity: LigneAppelFond::class, mappedBy: 'lot')]
     private Collection $ligneAppelFonds;
 
-    /**
-     * @var Collection<int, Paiement>
-     */
-    #[ORM\OneToMany(targetEntity: Paiement::class, mappedBy: 'lot')]
-    private Collection $paiements;
-
     public function __construct()
     {
         $this->repartitions = new ArrayCollection();
-        $this->ecritures = new ArrayCollection();
         $this->lotCoproprietaires = new ArrayCollection();
         $this->operations = new ArrayCollection();
         $this->ligneAppelFonds = new ArrayCollection();
-        $this->paiements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -202,36 +188,6 @@ class Lot
     }
 
     /**
-     * @return Collection<int, Ecriture>
-     */
-    public function getEcritures(): Collection
-    {
-        return $this->ecritures;
-    }
-
-    public function addEcriture(Ecriture $ecriture): static
-    {
-        if (!$this->ecritures->contains($ecriture)) {
-            $this->ecritures->add($ecriture);
-            $ecriture->setLot($this);
-        }
-
-        return $this;
-    }
-
-    public function removeEcriture(Ecriture $ecriture): static
-    {
-        if ($this->ecritures->removeElement($ecriture)) {
-            // set the owning side to null (unless already changed)
-            if ($ecriture->getLot() === $this) {
-                $ecriture->setLot(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, LotCoproprietaire>
      */
     public function getLotCoproprietaires(): Collection
@@ -337,36 +293,6 @@ class Lot
             // set the owning side to null (unless already changed)
             if ($ligneAppelFond->getLot() === $this) {
                 $ligneAppelFond->setLot(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Paiement>
-     */
-    public function getPaiements(): Collection
-    {
-        return $this->paiements;
-    }
-
-    public function addPaiement(Paiement $paiement): static
-    {
-        if (!$this->paiements->contains($paiement)) {
-            $this->paiements->add($paiement);
-            $paiement->setLot($this);
-        }
-
-        return $this;
-    }
-
-    public function removePaiement(Paiement $paiement): static
-    {
-        if ($this->paiements->removeElement($paiement)) {
-            // set the owning side to null (unless already changed)
-            if ($paiement->getLot() === $this) {
-                $paiement->setLot(null);
             }
         }
 

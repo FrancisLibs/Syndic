@@ -110,4 +110,20 @@ class EcritureRepository extends ServiceEntityRepository
             ->getQuery()
             ->getArrayResult();
     }
+
+    public function calculerTotalCharges(
+        Exercice $exercice
+    ): float {
+        $result = $this->createQueryBuilder('e')
+            ->select('SUM(e.debit) - SUM(e.credit)')
+            ->join('e.compte', 'c')
+            ->where('e.exercice = :exercice')
+            ->andWhere('c.type = :type')
+            ->setParameter('exercice', $exercice)
+            ->setParameter('type', 'charge')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (float) ($result ?? 0);
+    }
 }

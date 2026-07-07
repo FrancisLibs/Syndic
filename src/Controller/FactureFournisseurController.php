@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Exercice;
 use App\Entity\FactureFournisseur;
 use App\Form\FactureFournisseurType;
 use App\Repository\ExerciceRepository;
@@ -56,24 +55,20 @@ final class FactureFournisseurController extends AbstractController
         $facture = new FactureFournisseur();
 
         $exercice = $exerciceRepository->findActif();
-        
-        $anneeExercice= substr($exercice->getNom(), -4);
-       
+
+        $anneeExercice = substr($exercice->getNom(), -4);
+
         $facture->setExercice($exercice);
 
         $facture->setDateFacture(new \DateTimeImmutable());
 
-        $form = $this->createForm(
-            FactureFournisseurType::class,
-            $facture
-        );
+        $form = $this->createForm(FactureFournisseurType::class, $facture);
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
 
             $entityManager->persist($facture);
-
             $entityManager->flush();
 
             // =====================

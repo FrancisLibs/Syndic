@@ -23,7 +23,6 @@ class ComptabiliteService
         OperationType $type,
         ?string $piece = null,
     ): Operation {
-
         $operation = new Operation();
 
         $operation
@@ -98,11 +97,37 @@ class ComptabiliteService
         Operation $operation
     ): void {
 
-        if (!$operation->isEquilibree()) {
-            throw new \LogicException(
-                'L’opération comptable n’est pas équilibrée.'
-            );
+        foreach ($operation->getEcritures() as $ecriture) {
+
+            if (
+                (float) $ecriture->getDebit() < 0 ||
+                (float) $ecriture->getCredit() < 0
+            ) {
+                throw new \LogicException(
+                    'Une écriture comptable ne peut pas avoir un montant négatif.'
+                );
+            }
+
+            if (
+                (float) $ecriture->getDebit() > 0 &&
+                (float) $ecriture->getCredit() > 0
+            ) {
+                throw new \LogicException(
+                    'Une écriture ne peut pas être débitée et créditée simultanément.'
+                );
+            }
+
+            if (
+                (float) $ecriture->getDebit() === 0.0 &&
+                (float) $ecriture->getCredit() === 0.0
+            ) {
+                throw new \LogicException(
+                    'Une écriture comptable ne peut pas être vide.'
+                );
+            }
         }
+
+        $operation->valider();
 
         $this->em->persist($operation);
     }
