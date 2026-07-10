@@ -8,6 +8,7 @@ use App\Repository\ExerciceRepository;
 use App\Repository\FactureFournisseurRepository;
 use App\Service\GenerationFactureFournisseurService;
 use App\Service\ReglementFactureFournisseurService;
+use App\Service\ContexteExerciceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,9 +25,10 @@ final class FactureFournisseurController extends AbstractController
     )]
     public function index(
         ExerciceRepository $exerciceRepository,
-        FactureFournisseurRepository $repository
+        FactureFournisseurRepository $repository,
+        ContexteExerciceService $contexteExerciceService,
     ): Response {
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
 
         return $this->render(
             'facture_fournisseur/index.html.twig',
@@ -48,13 +50,13 @@ final class FactureFournisseurController extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $entityManager,
-        ExerciceRepository $exerciceRepository,
+        ContexteExerciceService $contexteExerciceService,
         GenerationFactureFournisseurService $generationService,
     ): Response {
 
         $facture = new FactureFournisseur();
 
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
 
         $anneeExercice = substr($exercice->getNom(), -4);
 

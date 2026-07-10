@@ -37,7 +37,7 @@
 					<td>{{ facture.montantRegle }}</td>
 					<td>{{ facture.soldee ? 'Yes' : 'No' }}</td>
 					<td>{{ facture.comptabilisee ? 'Yes' : 'No' }}</td>
-					<td>
+					<td class="d-flex gap-2">
 						<a href="{{ path('app_facture_fournisseur_show', {'id': facture.id}) }}">Voir</a>
 
 						{% if not facture.comptabilisee %}
@@ -45,6 +45,15 @@
 								Editer
 							</a>
 						{% endif %}
+						<div class="me-3">
+							{% if  not facture.soldee %}
+								<form method="post" action="{{ path( 'app_facture_fournisseur_regler', { id: facture.id } ) }}">
+									<button class="btn btn-success btn-sm">
+										Régler la facture
+									</button>
+								</form>
+							{% endif %}
+						</div>
 					</td>
 				</tr>
 			{% else %}

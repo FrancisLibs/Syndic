@@ -98,11 +98,11 @@
 									{% if ligne.solde != 0 %}
 
 										<span class="
-																																				                                        {{ ligne.solde > 0
-																																				                                            ? 'text-danger'
-																																				                                            : 'text-success'
-																																				                                        }}
-																																				                                    ">
+																																							{{ ligne.solde > 0
+																																								? 'text-danger'
+																																								: 'text-success'
+																																							}}
+																																						">
 
 											{{ ligne.solde|number_format(2, ',', ' ') }}
 
@@ -149,54 +149,37 @@
 							<td class="text-end">
 								{{ totalCredit|number_format(2, ',', ' ') }}
 							</td>
-
+							
 							<td class="text-end">
 
 								<span class="
-																				                                    {{
-																				                                        totalDebit == totalCredit
-																				                                        ? 'text-success'
-																				                                        : 'text-danger'
-																				                                    }}
-																				                                ">
-
 									{{
-                                    (totalDebit - totalCredit)
-                                    |number_format(2, ',', ' ')
-                                }}
+										totalDebit == totalCredit
+										? 'text-success'
+										: 'text-danger'
+									}}
+								">
+
+									{{ (totalDebit - totalCredit) |number_format(2, ',', ' ') }}
 
 								</span>
-
 							</td>
-
 						</tr>
-
 					</tfoot>
-
 				</table>
-
 			</div>
-
 		</div>
 
 		<div class="mt-3">
 
-			{% if totalDebit == totalCredit %}
-
+			{% if equilibree %}
 				<div class="alert alert-success">
-
-					Balance équilibrée : débits = crédits.
-
+					Balance équilibrée.
 				</div>
-
 			{% else %}
-
 				<div class="alert alert-danger">
-
 					Balance déséquilibrée : vérifier les écritures comptables.
-
 				</div>
-
 			{% endif %}
 
 		</div>

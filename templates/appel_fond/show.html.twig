@@ -8,70 +8,72 @@
 
 	<div class="card shadow-sm">
 		<div class="card-body">
-	<p>
-		<strong>Exercice :</strong>
-		{{ appel_fond.budget.exercice.nom }}
-	</p>
-	<p>
-		<strong>Date appel :</strong>
-		{{ appel_fond.dateAppel|date('d/m/Y') }}
-	</p>
-	<p>
-		<strong>Échéance :</strong>
-		{{ appel_fond.dateEcheance|date('d/m/Y') }}
-	</p>
-	<p>
-		<strong>Montant total :</strong>
-		{{ appel_fond.montantTotal }}
-		€
-	</p>
-</div></div><div class="card shadow-sm mt-4">
-<div class="card-header">
-	Répartition
-</div>
-<div class="card-body p-0">
-	<table class="table mb-0">
-		<thead>
-			<tr>
-				<th>Numero</th>
-				<th>Lot</th>
-				<th>Copropriétaire</th>
-				<th class="text-center">%</th>
-				<th class="text-center">Montant</th>
-				<th class="text-center">Montant réglé</th>
-				<th class="text-center">Soldée</th>
-			</tr>
-		</thead>
 
-		<tbody>
-			{% for ligne in appel_fond.ligneAppelFonds %}
-				<tr>
-					<td>
-						{{ ligne.lot.reference }}
-					</td>
-					<td>
-						{{ ligne.lot.designation }}
-					</td>
-					<td>
-						{{ ligne.coproprietaire }}
-					</td>
-					<td class="text-center">
-						{{ ligne.pourcentage }}
-						%
-					</td>
-					<td class="text-center">
-						{{ ligne.montant }}
-						€
-					</td>
-					<td class="text-center">
-						{{ ligne.montantRegle }}
-						€
-					</td>
-					<td class="text-center">
-						{{ligne.soldee ? 'Oui' : 'Non' }}
-					</td>
-				</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-</div></div><a href="{{ path('app_appel_fond_index') }}">Retour à la liste</a>{% endblock %}
+			<p>
+				<strong>Date appel :</strong>
+				{{ appel_fond.dateAppel|date('d/m/Y') }}
+			</p>
+			<p>
+				<strong>Échéance :</strong>
+				{{ appel_fond.dateEcheance|date('d/m/Y') }}
+			</p>
+			<p>
+				<strong>Montant total :</strong>
+				{{ appel_fond.montantTotal }}
+				€
+			</p>
+		</div>
+	</div>
+	<div class="card shadow-sm mt-4">
+		<div class="card-header">
+			Répartition
+		</div>
+		<div class="card-body p-0">
+			<table class="table mb-0">
+				<thead>
+					<tr>
+						<th>Numero</th>
+						<th>Lot</th>
+						<th>Copropriétaire</th>
+						<th class="text-center">%</th>
+						<th class="text-center">Montant</th>
+						<th class="text-center">Montant réglé</th>
+						<th class="text-center">Soldée</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					{% for ligne in appel_fond.ligneAppelFonds %}
+						<tr>
+							<td>
+								{{ ligne.lot.reference }}
+							</td>
+							<td>
+								{{ ligne.lot.designation }}
+							</td>
+							<td>
+								{{ ligne.coproprietaire }}
+							</td>
+							<td class="text-center">
+								{{ ligne.pourcentage }}
+								%
+							</td>
+							<td class="text-center">
+								{{ ligne.montant }}
+								€
+							</td>
+							<td class="text-center">
+								{{ ligne.montantRegle }}
+								€
+							</td>
+							<td class="text-center">
+								{{ligne.soldee ? 'Oui' : 'Non' }}
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<a href="{{ path('app_appel_fond_index') }}">Retour à la liste</a>
+{% endblock %}

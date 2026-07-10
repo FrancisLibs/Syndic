@@ -11,33 +11,28 @@
 			<table class="table">
 
 				<tbody>
-
 					<tr>
 						<th>ID</th>
 						<td>{{ paiement.id }}</td>
 					</tr>
-
 					<tr>
 						<th>Date</th>
 						<td>
 							{{ paiement.datePaiement|date('d/m/Y') }}
 						</td>
 					</tr>
-
 					<tr>
 						<th>Copropriétaire</th>
 						<td>
 							{{ paiement.coproprietaire }}
 						</td>
 					</tr>
-
 					<tr>
 						<th>Exercice</th>
 						<td>
 							{{ paiement.exercice }}
 						</td>
 					</tr>
-
 					<tr>
 						<th>Montant</th>
 						<td>
@@ -45,20 +40,15 @@
 							€
 						</td>
 					</tr>
-
 					<tr>
-						<th>Référence</th>
+						<th>Pièce justificative</th>
 						<td>
-							{{ paiement.reference ?: '-' }}
+							{{ paiement.piece }}
 						</td>
 					</tr>
-
 				</tbody>
-
 			</table>
-
 		</div>
-
 	</div>
 
 	<h2 class="mt-4">
@@ -83,6 +73,7 @@
 
 					<td>
 						Appel #{{ affectation.ligneAppel.appelFond.id }}
+					</td>
 
 					<td>
 						{{ affectation.montant }}
@@ -102,9 +93,7 @@
 				</tr>
 
 			{% endfor %}
-
 		</tbody>
-
 	</table>
 
 	<a href="{{ path('app_paiement_index') }}">

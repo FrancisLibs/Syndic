@@ -9,6 +9,7 @@ final class EtatCloture
     public function __construct(
         public readonly bool $exerciceActif,
         public readonly bool $exerciceCloture,
+        public readonly bool $exerciceTermine,
         public readonly bool $budgetsVerrouilles,
         public readonly bool $operationsEquilibrees,
         public readonly bool $regularisationsGenerees,
@@ -35,7 +36,8 @@ final class EtatCloture
             && !$this->exerciceCloture
             && $this->budgetsVerrouilles
             && $this->operationsEquilibrees
-            && !$this->regularisationsGenerees;
+            && !$this->regularisationsGenerees
+            && $this->exerciceTermine;
     }
 
     public function peutCalculerSoldesReportables(): bool
@@ -63,9 +65,24 @@ final class EtatCloture
         return
             $this->exerciceActif
             && !$this->exerciceCloture
+            && $this->exerciceTermine
+            && $this->budgetsVerrouilles
+            && $this->operationsEquilibrees
             && $this->regularisationsGenerees
+            && $this->anouveauxGeneres
             && $this->clotureComptesGestionGeneree
-            && $this->anouveauxGeneres;
+            && $this->exerciceSuivantExiste
+            && empty($this->erreurs);
+    }
+
+    public function peutCreerExerciceSuivant(): bool
+    {
+        return
+            $this->exerciceActif
+            && !$this->exerciceCloture
+            && $this->exerciceTermine
+            && $this->clotureComptesGestionGeneree
+            && !$this->exerciceSuivantExiste;
     }
 
     public function estBloque(): bool

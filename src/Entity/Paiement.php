@@ -28,7 +28,7 @@ class Paiement
     private ?string $montant = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $reference = null;
+    private ?string $piece = null;
 
     #[ORM\ManyToOne(inversedBy: 'paiements')]
     #[ORM\JoinColumn(nullable: false)]
@@ -87,14 +87,14 @@ class Paiement
         return $this;
     }
 
-    public function getReference(): ?string
+    public function getPiece(): ?string
     {
-        return $this->reference;
+        return $this->piece;
     }
 
-    public function setReference(?string $reference): static
+    public function setPiece(?string $piece): static
     {
-        $this->reference = $reference;
+        $this->piece = $piece;
 
         return $this;
     }

@@ -11,6 +11,33 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ClotureController extends AbstractController
 {
+
+    #[Route(
+        '/exercice/{id}/assistant-cloture',
+        name: 'app_cloture_workflow',
+        methods: ['GET']
+    )]
+    public function workflow(
+        Exercice $exercice,
+        ClotureExerciceService $service
+    ): Response {
+
+        $etat = $service->getEtatCloture($exercice);
+
+        $soldes = $service->calculerSoldesReportables($exercice);
+
+        $resultatExercice = $service->calculerResultatExercice($exercice);
+
+        return $this->render(
+            'cloture/workflow.html.twig',
+            [
+                'exercice' => $exercice,
+                'etat' => $etat,
+                'soldes' => $soldes,
+                'resultatExercice' => $resultatExercice,
+            ]
+        );
+    }
     #[Route(
         '/exercice/{id}/cloturer',
         name: 'app_cloture_exercice',
@@ -69,10 +96,10 @@ class ClotureController extends AbstractController
     )]
     public function genererRegularisations(
         Exercice $exercice,
-        ClotureExerciceService $service
+        RegularisationService $service
     ): Response {
         try {
-            $service->genererRegularisations($exercice);
+            $service->genererRegularisation($exercice);
 
             $this->addFlash(
                 'success',
@@ -107,36 +134,33 @@ class ClotureController extends AbstractController
     }
 
     #[Route(
-        '/exercice/{id}/assistant-cloture',
-        name: 'app_cloture_workflow',
-        methods: ['GET']
+        '/exercice/{id}/generer-a-nouveaux',
+        name: 'app_cloture_generer_anouveaux',
+        methods: ['POST'],
+        requirements: ['id' => '\d+']
     )]
-    public function workflow(
+    public function genererANouveaux(
         Exercice $exercice,
         ClotureExerciceService $service
     ): Response {
+        $service->genererANouveaux($exercice);
 
-        $etat = $service->getEtatCloture($exercice);
+        $this->addFlash(
+            'success',
+            'Les écritures d’à-nouveaux ont été générées.'
+        );
 
-        $soldes = $service->calculerSoldesReportables($exercice);
-
-        $resultatExercice = $service->calculerResultatExercice($exercice);
-
-        return $this->render(
-            'cloture/workflow.html.twig',
-            [
-                'exercice' => $exercice,
-                'etat' => $etat,
-                'soldes' => $soldes,
-                'resultatExercice' => $resultatExercice,
-            ]
+        return $this->redirectToRoute(
+            'app_cloture_workflow',
+            ['id' => $exercice->getId()]
         );
     }
 
     #[Route(
         '/exercice/{id}/soldes-reportables',
         name: 'app_cloture_soldes_reportables',
-        methods: ['GET']
+        methods: ['GET'],
+        requirements: ['id' => '\d+']
     )]
     public function soldesReportables(
         Exercice $exercice,
@@ -156,7 +180,8 @@ class ClotureController extends AbstractController
     #[Route(
         '/exercice/{id}/cloture-comptes-gestion',
         name: 'app_cloture_comptes_gestion',
-        methods: ['GET']
+        methods: ['GET'],
+        requirements: ['id' => '\d+']
     )]
     public function clotureComptesGestion(
         Exercice $exercice,
@@ -174,7 +199,8 @@ class ClotureController extends AbstractController
     #[Route(
         '/exercice/{id}/generer-cloture-comptes-gestion',
         name: 'app_cloture_generer_comptes_gestion',
-        methods: ['POST']
+        methods: ['POST'],
+        requirements: ['id' => '\d+']
     )]
     public function genererClotureComptesGestion(
         Exercice $exercice,
@@ -202,34 +228,28 @@ class ClotureController extends AbstractController
         );
     }
 
-    // #[Route(
-    //     '/exercice/{id}/generer-a-nouveaux',
-    //     name: 'app_cloture_generer_anouveaux',
-    //     methods: ['POST']
-    // )]
-    // public function genererANouveaux(
-    //     Exercice $exercice,
-    //     ClotureExerciceService $service
-    // ): Response {
-    //     try {
-    //         $service->genererANouveaux($exercice);
+    #[Route(
+        '/exercice/{id}/creer-exercice-suivant',
+        name: 'app_cloture_creer_exercice_suivant',
+        methods: ['POST']
+    )]
+    public function creerExerciceSuivant(
+        Exercice $exercice,
+        ClotureExerciceService $clotureService
+    ): Response {
 
-    //         $this->addFlash(
-    //             'success',
-    //             'Les écritures d’à-nouveaux ont été générées.'
-    //         );
-    //     } catch (\Throwable $e) {
-    //         $this->addFlash(
-    //             'danger',
-    //             $e->getMessage()
-    //         );
-    //     }
+        $clotureService->creerExerciceSuivant($exercice);
 
-    //     return $this->redirectToRoute(
-    //         'app_cloture_workflow',
-    //         [
-    //             'id' => $exercice->getId(),
-    //         ]
-    //     );
-    // }
+        $this->addFlash(
+            'success',
+            'Le nouvel exercice a été créé.'
+        );
+
+        return $this->redirectToRoute(
+            'app_cloture_workflow',
+            [
+                'id' => $exercice->getId()
+            ]
+        );
+    }
 }

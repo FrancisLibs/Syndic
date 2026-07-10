@@ -9,6 +9,7 @@ use App\Repository\EcritureRepository;
 use App\Repository\ExerciceRepository;
 use App\Repository\RepartitionRepository;
 use App\Service\CompteCoproprietaireService;
+use App\Service\ContexteExerciceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -84,8 +85,11 @@ final class CoproprietaireController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_coproprietaire_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Coproprietaire $coproprietaire, EntityManagerInterface $entityManager): Response
-    {
+    public function edit(
+        Request $request,
+        Coproprietaire $coproprietaire,
+        EntityManagerInterface $entityManager
+    ): Response {
         $form = $this->createForm(CoproprietaireType::class, $coproprietaire);
         $form->handleRequest($request);
 
@@ -105,8 +109,11 @@ final class CoproprietaireController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_coproprietaire_delete', methods: ['POST'])]
-    public function delete(Request $request, Coproprietaire $coproprietaire, EntityManagerInterface $entityManager): Response
-    {
+    public function delete(
+        Request $request,
+        Coproprietaire $coproprietaire,
+        EntityManagerInterface $entityManager
+    ): Response {
         if ($this->isCsrfTokenValid('delete' . $coproprietaire->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($coproprietaire);
             $entityManager->flush();
@@ -197,9 +204,9 @@ final class CoproprietaireController extends AbstractController
 
     #[Route('/etat-compte/{copro}', name: 'app_coproprietaire_etat_compte', methods: ['GET'])]
     public function etatCompte(
-        ExerciceRepository $exerciceRepository,
         Coproprietaire $copro,
-        EcritureRepository $ecritureRepo
+        EcritureRepository $ecritureRepo,
+        ContexteExerciceService $contexteExerciceService,
     ): Response {
 
         $compte = $copro->getCompte();
@@ -208,7 +215,7 @@ final class CoproprietaireController extends AbstractController
             throw $this->createNotFoundException('Aucun compte associé à ce copropriétaire');
         }
 
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
         if (!$exercice) {
             throw $this->createNotFoundException('Aucun exercice actif trouvé');
         }
@@ -287,14 +294,25 @@ final class CoproprietaireController extends AbstractController
     )]
     public function charges(
         Coproprietaire $copro,
-        ExerciceRepository $exerciceRepository
+        ContexteExerciceService $contexteExerciceService,
     ): Response {
 
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
 
         if (!$exercice) {
             throw $this->createNotFoundException(
-                'Aucun exercice actif trouvé.'
+                'Aucun exercice sélectionné.'
+            );
+        }
+
+        if (!$exercice->estTermine()) {
+            $this->addFlash(
+                'warning',
+                'La répartition des charges est disponible uniquement en fin d’exercice.'
+            );
+
+            return $this->redirectToRoute(
+                'app_coproprietaire_index'
             );
         }
 

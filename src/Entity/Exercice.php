@@ -296,4 +296,17 @@ class Exercice
 
         return $this;
     }
+
+    public function estTermine(): bool
+    {
+        return $this->dateFin <= new \DateTimeImmutable('today');
+    }
+
+    public function peutEtreCloture(): bool
+    {
+        return
+            $this->isActif()
+            && !$this->isCloture()
+            && $this->estTermine();
+    }
 }

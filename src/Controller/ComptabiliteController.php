@@ -6,6 +6,7 @@ use App\Repository\CompteRepository;
 use App\Repository\EcritureRepository;
 use App\Repository\ExerciceRepository;
 use App\Enum\OperationStatut;
+use App\Service\ContexteExerciceService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -27,9 +28,10 @@ final class ComptabiliteController extends AbstractController
     public function balance(
         ExerciceRepository $exerciceRepository,
         EcritureRepository $ecritureRepo,
+        ContexteExerciceService $contexteExerciceService,
     ): Response {
 
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
         if (!$exercice) {
             throw $this->createNotFoundException(
                 'Aucun exercice actif trouvé'
@@ -69,10 +71,18 @@ final class ComptabiliteController extends AbstractController
             }
         }
 
+        $totalDebit = 0.0;
+        $totalCredit = 0.0;
+
         foreach ($balance as &$ligne) {
-            $ligne['solde']
-                = $ligne['debit'] - $ligne['credit'];
+            $ligne['solde'] = $ligne['debit'] - $ligne['credit'];
+
+            $totalDebit += $ligne['debit'];
+            $totalCredit += $ligne['credit'];
         }
+        unset($ligne);
+
+        $equilibree = abs($totalDebit - $totalCredit) < 0.01;
 
         ksort($balance);
 
@@ -81,6 +91,9 @@ final class ComptabiliteController extends AbstractController
             [
                 'balance' => $balance,
                 'exercice' => $exercice,
+                'totalDebit' => $totalDebit,
+                'totalCredit' => $totalCredit,
+                'equilibree' => $equilibree,
             ]
         );
     }
@@ -89,10 +102,11 @@ final class ComptabiliteController extends AbstractController
     public function grandLivre(
         ExerciceRepository $exerciceRepository,
         CompteRepository $compteRepo,
-        EcritureRepository $ecritureRepo
+        EcritureRepository $ecritureRepo,
+        ContexteExerciceService $contexteExerciceService,
     ): Response {
 
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
         if (!$exercice) {
             throw $this->createNotFoundException(
                 'Aucun exercice actif trouvé'
@@ -111,7 +125,11 @@ final class ComptabiliteController extends AbstractController
             $ecritures = $ecritureRepo->findBy(
                 [
                     'exercice' => $exercice,
-                    'compte' => $compte
+                    'compte' => $compte,
+                ],
+                [
+                    'date' => 'ASC',
+                    'id' => 'ASC',
                 ]
             );
 
@@ -178,10 +196,11 @@ final class ComptabiliteController extends AbstractController
     #[Route('/journal', name: 'app_journal')]
     public function journal(
         ExerciceRepository $exerciceRepository,
-        EcritureRepository $ecritureRepo
+        EcritureRepository $ecritureRepo,
+        ContexteExerciceService $contexteExerciceService,
     ): Response {
 
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
         if (!$exercice) {
             throw $this->createNotFoundException(
                 'Aucun exercice actif trouvé'

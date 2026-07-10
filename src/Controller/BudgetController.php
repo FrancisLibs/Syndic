@@ -141,13 +141,12 @@ final class BudgetController extends AbstractController
         $appelFond = $generateur->generer(
             $budget,
             new \DateTimeImmutable(),
-            new \DateTimeImmutable('+30 days')
+            new \DateTimeImmutable('+120days')
         );
 
         // =====================
         // Génération comptable
         // =====================
-
 
         $generationComptable->generer($appelFond);
 
@@ -160,14 +159,8 @@ final class BudgetController extends AbstractController
 
         $entityManager->flush();
 
-        // 
-
-
         return $this->redirectToRoute(
             'app_appel_fond_index',
-            // [
-            //     'id' => $appelFond->getId()
-            // ]
         );
     }
 }

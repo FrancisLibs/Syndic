@@ -8,6 +8,7 @@ use App\Form\ExerciceType;
 use App\Repository\ExerciceRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\CalculChargesReellesService;
+use App\Service\ContexteExerciceService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,8 +29,11 @@ final class ExerciceController extends AbstractController
     }
 
     #[Route('/new', name: 'app_exercice_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ContexteExerciceService $contexteExercice,
+    ): Response {
         $exercice = new Exercice();
         $exercice->setNom('Exercice ' . (new \DateTime())->format('Y'));
         $exercice->setDateDebut(new \DateTimeImmutable('first day of January this year'));
@@ -38,8 +42,11 @@ final class ExerciceController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
             $entityManager->persist($exercice);
             $entityManager->flush();
+
+            $contexteExercice->setExercice($exercice);
 
             return $this->redirectToRoute('app_exercice_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -53,7 +60,7 @@ final class ExerciceController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_exercice_show', methods: ['GET'])]
+    #[Route('/{id}', name: 'app_exercice_show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Exercice $exercice): Response
     {
         return $this->render('exercice/show.html.twig', [
@@ -61,7 +68,7 @@ final class ExerciceController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_exercice_edit', methods: ['GET', 'POST'])]
+    #[Route('/{id}/edit', name: 'app_exercice_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
     public function edit(Request $request, Exercice $exercice, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(ExerciceType::class, $exercice);
@@ -82,7 +89,7 @@ final class ExerciceController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_exercice_delete', methods: ['POST'])]
+    #[Route('/{id}', name: 'app_exercice_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function delete(Request $request, Exercice $exercice, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete' . $exercice->getId(), $request->getPayload()->getString('_token'))) {
@@ -174,6 +181,34 @@ final class ExerciceController extends AbstractController
                 'exercice' => $exercice,
                 'lignes' => $lignes,
             ]
+        );
+    }
+
+    #[Route(
+        '/changer-exercice',
+        name: 'app_changer_exercice',
+        methods: ['POST']
+    )]
+    public function changerExercice(
+        Request $request,
+        ExerciceRepository $exerciceRepository,
+        ContexteExerciceService $contexteExercice
+    ): Response {
+        $exerciceId = $request->request->getInt('exercice_id');
+
+        $exercice = $exerciceRepository->find($exerciceId);
+
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Exercice introuvable.'
+            );
+        }
+
+        $contexteExercice->setExercice($exercice);
+
+        return $this->redirect(
+            $request->headers->get('referer')
+                ?? $this->generateUrl('app_exercice_index')
         );
     }
 }

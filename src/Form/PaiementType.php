@@ -47,11 +47,11 @@ class PaiementType extends AbstractType
                 ]
             )
             ->add(
-                'reference',
+                'piece',
                 TextType::class,
                 [
                     'required' => false,
-                    'label' => 'Référence',
+                    'label' => 'Pièce justificative',
                 ]
             );
     }

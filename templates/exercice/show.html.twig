@@ -18,11 +18,11 @@
 			</tr>
 			<tr>
 				<th>DateDebut</th>
-				<td>{{ exercice.dateDebut ? exercice.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
+				<td>{{ exercice.dateDebut ? exercice.dateDebut|date('d-m-Y H:i:s') : '' }}</td>
 			</tr>
 			<tr>
 				<th>DateFin</th>
-				<td>{{ exercice.dateFin ? exercice.dateFin|date('Y-m-d H:i:s') : '' }}</td>
+				<td>{{ exercice.dateFin ? exercice.dateFin|date('d-m-Y H:i:s') : '' }}</td>
 			</tr>
 			<tr>
 				<th>Statut</th>
@@ -32,7 +32,5 @@
 	</table>
 
 	<a href="{{ path('app_exercice_index') }}">Retour à la liste</a>
-	<a href="{{ path('app_exercice_edit', {'id': exercice.id}) }}">Modifier</a>
-	<a href="{{ path('app_cloture_regularisations', { id: exercice.id }) }}" class="btn btn-warning"> Régularisations</a>
 
 {% endblock %}

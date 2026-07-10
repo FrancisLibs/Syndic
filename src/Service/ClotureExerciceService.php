@@ -129,16 +129,17 @@ class ClotureExerciceService
                 ->aNouveauxExistent($exerciceSuivant);
         }
 
-        $estBloque =
-            !$exercice->isActif()
-            || $exercice->isCloture()
-            || !$budgetsVerrouilles
-            || !$operationsEquilibrees
-            || !empty($erreurs);
+        if (!$exercice->estTermine()) {
+            $erreurs[] = sprintf(
+                'L’exercice ne peut pas être clôturé avant sa date de fin : %s.',
+                $exercice->getDateFin()->format('d/m/Y')
+            );
+        }
 
         return new EtatCloture(
             exerciceActif: $exercice->isActif(),
             exerciceCloture: $exercice->isCloture(),
+            exerciceTermine: $exercice->estTermine(),
             budgetsVerrouilles: $budgetsVerrouilles,
             operationsEquilibrees: $operationsEquilibrees,
             regularisationsGenerees: $exercice->isRegularisationsGenerees(),
@@ -430,68 +431,6 @@ class ClotureExerciceService
         );
     }
 
-    // public function genererANouveaux(
-    //     Exercice $exercice
-    // ): void {
-    //     $nouvelExercice =
-    //         $this->exerciceRepository->findSuivant($exercice);
-
-    //     if (!$nouvelExercice) {
-    //         throw new \LogicException(
-    //             'Aucun exercice suivant n’existe. Créez d’abord le nouvel exercice.'
-    //         );
-    //     }
-
-    //     if (
-    //         $this->operationRepository
-    //         ->aNouveauxExistent($nouvelExercice)
-    //     ) {
-    //         throw new \LogicException(
-    //             'Les à-nouveaux ont déjà été générés.'
-    //         );
-    //     }
-
-    //     $anouveaux =
-    //         $this->calculerANouveaux($exercice);
-
-    //     if (empty($anouveaux->lignes)) {
-    //         return;
-    //     }
-
-    //     if (!$anouveaux->estEquilibre()) {
-    //         throw new \LogicException(
-    //             'Les écritures d’à-nouveaux ne sont pas équilibrées.'
-    //         );
-    //     }
-
-    //     $operation =
-    //         $this->creerOperation(
-    //             $nouvelExercice->getDateDebut(),
-    //             sprintf(
-    //                 'À-nouveaux - %s',
-    //                 $nouvelExercice->getNom()
-    //             ),
-    //             OperationType::A_NOUVEAU
-    //         );
-
-    //     foreach ($anouveaux->lignes as $ligne) {
-    //         $ecriture = new Ecriture();
-
-    //         $ecriture
-    //             ->setCompte($ligne->compte)
-    //             ->setCoproprietaire($ligne->coproprietaire)
-    //             ->setDebit($ligne->debit)
-    //             ->setCredit($ligne->credit)
-    //             ->setDate($nouvelExercice->getDateDebut())
-    //             ->setExercice($nouvelExercice);
-
-    //         $operation->addEcriture($ecriture);
-    //     }
-
-    //     $this->em->persist($operation);
-    //     $this->em->flush();
-    // }
-
     public function cloturerExercice(
         Exercice $exercice
     ): void {
@@ -583,17 +522,19 @@ class ClotureExerciceService
         }
     }
 
-    private function creerNouvelExercice(Exercice $exercice): Exercice
-    {
+    private function creerNouvelExercice(
+        Exercice $exercice
+    ): Exercice {
         $nouveau = new Exercice();
 
-        $anneeExercice =  new \DateTime()->format('Y') + 1;
-        settype($anneeExercice, 'string');
-        $nom = ('Exercice ' . $anneeExercice);
-
-        // 🛡️ Sécurisation avec "clone" pour éviter de corrompre les dates4
+        // Sécurisation avec "clone" pour éviter de modifier les dates de l'exercice courant
         $dateDebut = (clone $exercice->getDateFin())->modify('+1 day');
         $dateFin = (clone $dateDebut)->modify('+1 year')->modify('-1 day');
+
+        $nom = sprintf(
+            'Exercice %s',
+            $dateDebut->format('Y')
+        );
 
         $nouveau
             ->setNom($nom)
@@ -607,5 +548,89 @@ class ClotureExerciceService
         $this->em->flush();
 
         return $nouveau;
+    }
+
+    public function creerExerciceSuivant(
+        Exercice $exercice
+    ): Exercice {
+
+        $suivant = $this->exerciceRepository
+            ->findSuivant($exercice);
+
+        if ($suivant) {
+            return $suivant;
+        }
+
+        return $this->creerNouvelExercice($exercice);
+    }
+
+    public function genererANouveaux(
+        Exercice $exercice
+    ): void {
+        $nouvelExercice =
+            $this->exerciceRepository->findSuivant($exercice);
+
+        if (!$nouvelExercice) {
+            throw new \LogicException(
+                'Aucun exercice suivant n’existe.'
+            );
+        }
+
+        if (
+            $this->operationRepository
+            ->aNouveauxExistent($nouvelExercice)
+        ) {
+            throw new \LogicException(
+                'Les à-nouveaux ont déjà été générés.'
+            );
+        }
+
+        $anouveaux = $this->calculerANouveaux($exercice);
+
+        if (empty($anouveaux->lignes)) {
+            return;
+        }
+
+        if (!$anouveaux->estEquilibre()) {
+            throw new \LogicException(
+                'Les écritures d’à-nouveaux ne sont pas équilibrées.'
+            );
+        }
+
+        $operation =
+            $this->comptabiliteService->creerOperation(
+                $nouvelExercice->getDateDebut(),
+                sprintf(
+                    'À-nouveaux - %s',
+                    $nouvelExercice->getNom()
+                ),
+                OperationType::A_NOUVEAU
+            );
+
+        foreach ($anouveaux->lignes as $ligne) {
+            if ((float) $ligne->debit > 0) {
+                $this->comptabiliteService->creerDebit(
+                    $operation,
+                    $nouvelExercice,
+                    $ligne->compte,
+                    $ligne->debit,
+                    $ligne->coproprietaire
+                );
+            }
+
+            if ((float) $ligne->credit > 0) {
+                $this->comptabiliteService->creerCredit(
+                    $operation,
+                    $nouvelExercice,
+                    $ligne->compte,
+                    $ligne->credit,
+                    $ligne->coproprietaire
+                );
+            }
+        }
+
+        $this->comptabiliteService->enregistrer($operation);
+
+        $this->em->flush();
     }
 }

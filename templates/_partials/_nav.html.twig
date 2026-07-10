@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 	<div class="container-fluid">
 		<a class="navbar-brand" href="#">
-			MaCopro : 14 RUE NEUVE
+			MaCopro
 		</a>
 		<div class="collapse navbar-collapse">
 			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
@@ -59,7 +59,7 @@
 							</a>
 						</li>
 						<li>
-							<a class="dropdown-item" href="{{ path('app_facture_fournisseur_index', {'exercice': 1}) }}">
+							<a class="dropdown-item" href="{{ path('app_facture_fournisseur_index') }}">
 								<i class="bi bi-receipt"></i>
 								Factures fournisseurs
 							</a>
@@ -126,19 +126,37 @@
 					</ul>
 				</li>
 			</ul>
+			<div class="d-flex gap-5">
+				{# ========================= #}
+				{# ACTIONS RAPIDES           #}
+				{# ========================= #}
 
-			{# ========================= #}
-			{# ACTIONS RAPIDES           #}
-			{# ========================= #}
-				<div class="d-flex gap-2"> <a href="{{ path('app_facture_fournisseur_new') }}" class="btn btn-light">
-					+ Facture fournisseur
-				</a>
-				<a href="{{ path('app_paiement_new') }}" class="btn btn-light">
-					+ Paiement copropriétaire
-				</a>
-				<a class="btn btn-light" href="{{ path('app_coproprietaire_index') }}">
-					Copropriétaires
-				</a>
+					<div class="d-flex gap-2"> <a href="{{ path('app_facture_fournisseur_new') }}" class="btn btn-light btn-sm">
+						+ Facture fournisseur
+					</a>
+					<a href="{{ path('app_paiement_new') }}" class="btn btn-light btn-sm">
+						+ Paiement copropriétaire
+					</a>
+					<a class="btn btn-light btn-sm" href="{{ path('app_coproprietaire_index') }}">
+						Copropriétaires
+					</a>
+				</div>
+
+				{# ========================= #}
+				{# EXERCICE COURANT          #}
+				{# ========================= #}
+					{% if contexte.exercices is not empty %}
+						<form method="post" action="{{ path('app_changer_exercice') }}" class="d-flex align-items-center gap-2"> <select name="exercice_id" class="form-select form-select-sm" onchange="this.form.submit();">
+							{% for exercice in contexte.exercices %}
+								<option value="{{ exercice.id }}" {{ contexte.exercice and exercice.id == contexte.exercice.id ? 'selected' : '' }}>
+									{{ exercice.nom }}
+								</option>
+							{% endfor %}
+						</select>
+					</form>
+				{% else %}
+					<span class="navbar-text text-white">Aucun exercice</span>
+				{% endif %}
 			</div>
 		</div>
 	</div>

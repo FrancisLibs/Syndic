@@ -20,33 +20,28 @@
 			{% for exercice in exercices %}
 				<tr>
 					<td>{{ exercice.nom }}</td>
-					<td>{{ exercice.dateDebut ? exercice.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
-					<td>{{ exercice.dateFin ? exercice.dateFin|date('Y-m-d H:i:s') : '' }}</td>
+					<td>{{ exercice.dateDebut ? exercice.dateDebut|date('d-m-Y H:i:s') : '' }}</td>
+					<td>{{ exercice.dateFin ? exercice.dateFin|date('d-m-Y H:i:s') : '' }}</td>
 					<td>{{ exercice.statut.value }}</td>
 					<td class="d-flex align-items-center gap-2">
-						<a class="btn btn-sm btn-outline-primary" href="{{ path('app_exercice_show', {'id': exercice.id}) }}">Voir</a>
-						<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_exercice_edit', {'id': exercice.id}) }}">Modifier</a>
+						<a class="btn btn-sm btn-outline-primary" href="{{ path('app_exercice_show', {'id': exercice.id}) }}">
+							Voir
+						</a>
+						{# <a class="btn btn-sm btn-outline-secondary" href="{{ path('app_exercice_edit', {'id': exercice.id}) }}">Modifier</a> #}
 						{% if exercice.actif %}
 							<span class="badge bg-success">
 								Actif
 							</span>
-						{% else %}
-							<form method="post" action="{{ path( 'app_exercice_activer', {id: exercice.id} ) }}">
-								<button class="btn btn-sm btn-primary">
-									Activer
-								</button>
-							</form>
 						{% endif %}
+
 						{% if exercice.cloture %}
 							<span class="badge bg-warning">
-								cloturé
+								Clôturé
 							</span>
 						{% else %}
-							<form method="post" action="{{ path( 'app_cloture_exercice', {id: exercice.id} ) }}">
-								<button class="btn btn-sm btn-danger">
-									clôturer
-								</button>
-							</form>
+							<a class="btn btn-sm btn-outline-danger" href="{{ path('app_cloture_workflow', { id: exercice.id }) }}">
+								Assistant de clôture
+							</a>
 						{% endif %}
 					</td>
 				</tr>
@@ -57,5 +52,9 @@
 			{% endfor %}
 		</tbody>
 	</table>
-	<a class="btn btn-primary" href="{{ path('app_exercice_new') }}">Créer un nouvel exercice</a>
+	{% if exercices is empty %}
+		<a class="btn btn-primary" href="{{ path('app_exercice_new') }}">
+			Créer le premier exercice
+		</a>
+	{% endif %}
 {% endblock %}

@@ -8,6 +8,7 @@ use App\Repository\ExerciceRepository;
 use App\Repository\PaiementRepository;
 use App\Service\AffectationPaiementService;
 use App\Service\GenerationPaiementService;
+use App\Service\ContexteExerciceService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,10 +26,11 @@ extends AbstractController
     )]
     public function index(
         ExerciceRepository $exerciceRepository,
-        PaiementRepository $paiementRepository
+        PaiementRepository $paiementRepository,
+        ContexteExerciceService $contexteExerciceService
     ): Response {
 
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
         $paiements = $paiementRepository->findPaiementsValides();
 
         return $this->render(
@@ -50,12 +52,12 @@ extends AbstractController
         EntityManagerInterface $entityManager,
         GenerationPaiementService $generationService,
         AffectationPaiementService $affectationService,
-        ExerciceRepository $exerciceRepository
+        ContexteExerciceService $contexteExerciceService,
     ): Response {
 
         $paiement = new Paiement();
 
-        $exercice = $exerciceRepository->findActif();
+        $exercice = $contexteExerciceService->getExercice();
 
         if (!$exercice) {
             throw $this->createNotFoundException(
@@ -68,6 +70,8 @@ extends AbstractController
         $paiement->setDatePaiement(
             new \DateTimeImmutable()
         );
+
+        $paiement->setPiece('Relevé bancaire : RB');
 
         $form = $this->createForm(
             PaiementType::class,

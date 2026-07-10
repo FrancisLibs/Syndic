@@ -158,6 +158,8 @@ class RegularisationService
 
         $this->comptabiliteService->enregistrer($operation);
 
+        $exercice->setRegularisationsGenerees(true);
+
         $this->em->flush();
     }
 }

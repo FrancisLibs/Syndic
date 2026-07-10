@@ -26,7 +26,7 @@ class GenerationPaiementService
             $paiement->getDatePaiement(),
             'Paiement copropriétaire',
             OperationType::PAIEMENT,
-            $paiement->getReference()
+            $paiement->getPiece()
         );
 
         $this->comptabiliteService->creerDebit(
