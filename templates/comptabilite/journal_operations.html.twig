@@ -9,32 +9,16 @@
 		<div class="row align-items-center mb-4">
 			<div class="col-md-6">
 				<h2>📋 Journal des Opérations</h2>
-				{% if exerciceActuel %}
+				{% if exercice %}
 					<p class="text-muted">
 						Exercice :
-						<strong>{{ exerciceActuel.nom }}</strong>
+						<strong>{{ exercice.nom }}</strong>
 						(du
-						{{ exerciceActuel.dateDebut|date('d/m/Y') }}
+						{{ exercice.dateDebut|date('d/m/Y') }}
 						au
-						{{ exerciceActuel.dateFin|date('d/m/Y') }})
+						{{ exercice.dateFin|date('d/m/Y') }})
 					</p>
 				{% endif %}
-			</div>
-
-			{# Le menu de sélection de l'exercice #}
-			<div class="col-md-6 text-md-end">
-				<form method="get" action="{{ path('app_operation_index') }}" class="d-inline-block">
-					<div class="input-group">
-						<label class="input-group-text" for="exerciceSelect">Filtrer par exercice :</label>
-						<select name="exercice" id="exerciceSelect" class="form-select" onchange="this.form.submit()">
-							{% for exe in exercices %}
-								<option value="{{ exe.id }}" {{ exerciceActuel and exerciceActuel.id == exe.id ? 'selected' : '' }}>
-									{{ exe.nom }}
-								</option>
-							{% endfor %}
-						</select>
-					</div>
-				</form>
 			</div>
 		</div>
 

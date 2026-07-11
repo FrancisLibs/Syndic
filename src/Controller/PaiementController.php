@@ -25,13 +25,19 @@ extends AbstractController
         methods: ['GET']
     )]
     public function index(
-        ExerciceRepository $exerciceRepository,
         PaiementRepository $paiementRepository,
         ContexteExerciceService $contexteExerciceService
     ): Response {
-
         $exercice = $contexteExerciceService->getExercice();
-        $paiements = $paiementRepository->findPaiementsValides();
+
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice sélectionné.'
+            );
+        }
+
+        $paiements = $paiementRepository
+            ->findPaiementsValidesByExercice($exercice);
 
         return $this->render(
             'paiement/index.html.twig',
@@ -52,18 +58,26 @@ extends AbstractController
         EntityManagerInterface $entityManager,
         GenerationPaiementService $generationService,
         AffectationPaiementService $affectationService,
-        ContexteExerciceService $contexteExerciceService,
+        ExerciceRepository $exerciceRepository
     ): Response {
 
-        $paiement = new Paiement();
 
-        $exercice = $contexteExerciceService->getExercice();
+
+        $exercice = $exerciceRepository->findActif();
 
         if (!$exercice) {
             throw $this->createNotFoundException(
                 'Aucun exercice actif trouvé.'
             );
         }
+
+        if ($exercice->isCloture()) {
+            throw new \LogicException(
+                'Impossible d’enregistrer un paiement sur un exercice clôturé.'
+            );
+        }
+
+        $paiement = new Paiement();
 
         $paiement->setExercice($exercice);
 
@@ -81,6 +95,9 @@ extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            // Sécurité : on réimpose l’exercice actif
+            $paiement->setExercice($exercice);
 
             $entityManager->persist($paiement);
             $entityManager->flush();

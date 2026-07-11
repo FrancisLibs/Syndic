@@ -59,14 +59,17 @@ class OperationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function findOperationsByExercice(Exercice $exercice): array
-    {
+    public function findOperationsByExercice(
+        Exercice $exercice
+    ): array {
         return $this->createQueryBuilder('o')
-            ->where('o.date >= :debut')
-            ->andWhere('o.date <= :fin')
-            ->setParameter('debut', $exercice->getDateDebut())
-            ->setParameter('fin', $exercice->getDateFin())
+            ->innerJoin('o.ecritures', 'e')
+            ->addSelect('e')
+            ->andWhere('e.exercice = :exercice')
+            ->setParameter('exercice', $exercice)
+            ->distinct()
             ->orderBy('o.date', 'DESC')
+            ->addOrderBy('o.id', 'DESC')
             ->getQuery()
             ->getResult();
     }

@@ -195,7 +195,6 @@ final class ComptabiliteController extends AbstractController
 
     #[Route('/journal', name: 'app_journal')]
     public function journal(
-        ExerciceRepository $exerciceRepository,
         EcritureRepository $ecritureRepo,
         ContexteExerciceService $contexteExerciceService,
     ): Response {
@@ -203,7 +202,7 @@ final class ComptabiliteController extends AbstractController
         $exercice = $contexteExerciceService->getExercice();
         if (!$exercice) {
             throw $this->createNotFoundException(
-                'Aucun exercice actif trouvé'
+                'Aucun exercice sélectionné.'
             );
         }
 
@@ -227,19 +226,12 @@ final class ComptabiliteController extends AbstractController
 
                 $lignes[] = [
                     'exercice' => $ecriture->getExercice()->getNom(),
-
                     'date' => $operation->getDate(),
-
                     'type' => $operation->getType()?->value,
-
                     'libelle' => $operation->getLibelle(),
-
                     'compte' => $compte->getNumero(),
-
                     'compteLibelle' => $compte->getLibelle(),
-
                     'debit' => (float) $ecriture->getDebit(),
-
                     'credit' => (float) $ecriture->getCredit(),
                 ];
             }

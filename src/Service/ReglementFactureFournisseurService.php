@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\FactureFournisseur;
 use App\Enum\OperationType;
 use App\Repository\CompteRepository;
+use App\Repository\ExerciceRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class ReglementFactureFournisseurService
@@ -12,6 +13,7 @@ class ReglementFactureFournisseurService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CompteRepository $compteRepository,
+        private ExerciceRepository $exerciceRepository,
         private ComptabiliteService $comptabiliteService,
     ) {}
 
@@ -20,7 +22,16 @@ class ReglementFactureFournisseurService
     ): void {
         if ($facture->isSoldee()) {
             throw new \LogicException(
-                'Facture déjà soldée'
+                'Facture déjà soldée.'
+            );
+        }
+
+        $exerciceActif = $this->exerciceRepository
+            ->findActif();
+
+        if (!$exerciceActif) {
+            throw new \LogicException(
+                'Aucun exercice actif trouvé.'
             );
         }
 
@@ -39,6 +50,14 @@ class ReglementFactureFournisseurService
 
         $date = new \DateTimeImmutable();
 
+        $montantReglement = $facture->getResteAPayer();
+
+        if ($montantReglement <= 0) {
+            throw new \LogicException(
+                'Aucun montant ne reste à régler.'
+            );
+        }
+
         $operation = $this->comptabiliteService->creerOperation(
             $date,
             'Règlement facture ' . $facture->getNumero(),
@@ -52,25 +71,28 @@ class ReglementFactureFournisseurService
 
         $this->comptabiliteService->creerDebit(
             $operation,
-            $facture->getExercice(),
+            $exerciceActif,
             $compteFournisseur,
-            $facture->getMontant()
+            $montantReglement
         );
 
         $this->comptabiliteService->creerCredit(
             $operation,
-            $facture->getExercice(),
+            $exerciceActif,
             $compteBanque,
-            $facture->getMontant()
+            $montantReglement
         );
 
         $facture->setMontantRegle(
-            $facture->getMontant()
+            $facture->getMontantRegle()
+            + $montantReglement
         );
 
         $facture->setSoldee(true);
 
-        $this->comptabiliteService->enregistrer($operation);
+        $this->comptabiliteService->enregistrer(
+            $operation
+        );
 
         $this->entityManager->flush();
     }

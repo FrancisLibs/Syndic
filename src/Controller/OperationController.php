@@ -2,17 +2,11 @@
 
 namespace App\Controller;
 
-use App\Entity\Ecriture;
 use App\Entity\Operation;
 use App\Entity\FactureFournisseur;
-use App\Enum\OperationType;
 use App\Enum\OperationStatut;
-use App\Form\OperationFormType;
-use App\Repository\ExerciceRepository;
+use App\Service\ContexteExerciceService;
 use App\Repository\OperationRepository;
-use App\Repository\LotRepository;
-use App\Service\RepartitionService;
-use App\Service\ComptabiliteService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,41 +17,33 @@ final class OperationController extends AbstractController
 {
     // src/Controller/OperationController.php
 
-    #[Route('/operation', name: 'app_operation_index', methods: ['GET'])]
+    #[Route(
+        '/operation',
+        name: 'app_operation_index',
+        methods: ['GET']
+    )]
     public function index(
-        Request $request,
         OperationRepository $operationRepository,
-        ExerciceRepository $exerciceRepository
+        ContexteExerciceService $contexteExerciceService,
     ): Response {
+        $exercice = $contexteExerciceService->getExercice();
 
-        // 1. On récupère tous les exercices pour alimenter le menu déroulant de la vue
-        $exercices = $exerciceRepository->findBy([], ['dateDebut' => 'DESC']);
-
-        // 2. On détermine l'exercice à afficher
-        $exerciceId = $request->query->get('exercice');
-        $exerciceActuel = null;
-
-        if ($exerciceId) {
-            $exerciceActuel = $exerciceRepository->find($exerciceId);
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice sélectionné.'
+            );
         }
 
-        // Si aucun exercice n'est sélectionné ou trouvé, on cherche l'exercice "Ouvert" ou le plus récent
-        if (!$exerciceActuel) {
-            $exerciceActuel = $exerciceRepository->findOneBy(['actif' => true])
-                ?? $exerciceRepository->findOneBy([], ['dateDebut' => 'DESC']);
-        }
+        $operations = $operationRepository
+            ->findOperationsByExercice($exercice);
 
-        // 3. On récupère les opérations filtrées par les dates de cet exercice
-        $operations = [];
-        if ($exerciceActuel) {
-            $operations = $operationRepository->findOperationsByExercice($exerciceActuel);
-        }
-
-        return $this->render('operation/index.html.twig', [
-            'operations' => $operations,
-            'exerciceActuel' => $exerciceActuel,
-            'exercices' => $exercices,
-        ]);
+        return $this->render(
+            'comptabilite/journal_operations.html.twig',
+            [
+                'operations' => $operations,
+                'exercice' => $exercice,
+            ]
+        );
     }
 
     #[Route('/operation/{id}', name: 'app_operation_show')]
@@ -168,7 +154,7 @@ final class OperationController extends AbstractController
                     foreach ($appelFond->getLigneAppelFonds() as $ligne) {
                         $em->remove($ligne);
                     }
-                    
+
                     $budget = $appelFond->getBudget();
                     if ($budget) {
                         $budget->setVerrouille(false);

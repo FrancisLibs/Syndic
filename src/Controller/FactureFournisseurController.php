@@ -24,19 +24,22 @@ final class FactureFournisseurController extends AbstractController
         methods: ['GET']
     )]
     public function index(
-        ExerciceRepository $exerciceRepository,
         FactureFournisseurRepository $repository,
         ContexteExerciceService $contexteExerciceService,
     ): Response {
         $exercice = $contexteExerciceService->getExercice();
 
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice sélectionné.'
+            );
+        }
+        $factures = $repository->findPourExercice($exercice);
+
         return $this->render(
             'facture_fournisseur/index.html.twig',
             [
-                'factures' => $repository->findBy(
-                    ['exercice' => $exercice],
-                    ['dateFacture' => 'DESC']
-                ),
+                'factures' => $factures,
                 'exercice' => $exercice,
             ]
         );
@@ -52,23 +55,46 @@ final class FactureFournisseurController extends AbstractController
         EntityManagerInterface $entityManager,
         ContexteExerciceService $contexteExerciceService,
         GenerationFactureFournisseurService $generationService,
+        ExerciceRepository $exerciceRepository
     ): Response {
 
+        $exercice = $exerciceRepository->findActif();
+
+        if (!$exercice) {
+            $this->addFlash(
+                'danger',
+                'Aucun exercice actif. La création d’une facture est impossible.'
+            );
+
+            return $this->redirectToRoute(
+                'app_facture_fournisseur_index'
+            );
+        }
+
+        if ($exercice->isCloture()) {
+            $this->addFlash(
+                'danger',
+                'Impossible d’enregistrer une facture sur un exercice clôturé.'
+            );
+
+            return $this->redirectToRoute(
+                'app_facture_fournisseur_index'
+            );
+        }
+
+
         $facture = new FactureFournisseur();
-
-        $exercice = $contexteExerciceService->getExercice();
-
-        $anneeExercice = substr($exercice->getNom(), -4);
-
         $facture->setExercice($exercice);
-
         $facture->setDateFacture(new \DateTimeImmutable());
-
         $form = $this->createForm(FactureFournisseurType::class, $facture);
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            // Sécurité : l’exercice actif est réimposé
+            // même si le formulaire est modifié manuellement.
+            $facture->setExercice($exercice);
+
 
             $entityManager->persist($facture);
             $entityManager->flush();
@@ -78,6 +104,11 @@ final class FactureFournisseurController extends AbstractController
             // =====================
 
             $generationService->generer($facture);
+
+            $this->addFlash(
+                'success',
+                'La facture fournisseur a été enregistrée.'
+            );
 
             return $this->redirectToRoute(
                 'app_facture_fournisseur_show',
@@ -100,7 +131,8 @@ final class FactureFournisseurController extends AbstractController
     #[Route(
         '/{id}',
         name: 'app_facture_fournisseur_show',
-        methods: ['GET']
+        methods: ['GET'],
+        requirements: ['id' => '\d+']
     )]
     public function show(
         FactureFournisseur $facture
@@ -116,7 +148,8 @@ final class FactureFournisseurController extends AbstractController
     #[Route(
         '/{id}/edit',
         name: 'app_facture_fournisseur_edit',
-        methods: ['GET', 'POST']
+        methods: ['GET', 'POST'],
+        requirements: ['id' => '\d+']
     )]
     public function edit(
         Request $request,
@@ -169,7 +202,8 @@ final class FactureFournisseurController extends AbstractController
     #[Route(
         '/{id}',
         name: 'app_facture_fournisseur_delete',
-        methods: ['POST']
+        methods: ['POST'],
+        requirements: ['id' => '\d+']
     )]
     public function delete(
         Request $request,
@@ -204,7 +238,8 @@ final class FactureFournisseurController extends AbstractController
     #[Route(
         '/{id}/regler',
         name: 'app_facture_fournisseur_regler',
-        methods: ['POST']
+        methods: ['POST'],
+        requirements: ['id' => '\d+']
     )]
     public function regler(
         FactureFournisseur $facture,

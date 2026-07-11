@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Paiement;
+use App\Entity\Exercice;
+use App\Enum\OperationStatut;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -18,13 +20,14 @@ class PaiementRepository extends ServiceEntityRepository
 
     // src/Repository/PaiementRepository.php
 
-    public function findPaiementsValides(): array
-    {
+    public function findPaiementsValidesByExercice(
+        Exercice $exercice
+    ): array {
         return $this->createQueryBuilder('p')
-            ->join('p.operation', 'o') // On joint l'opération
-            // ->where('o.statut = :statut') // On filtre sur le statut
-            // ->setParameter('statut', \App\Enum\OperationStatut::VALIDE)
+            ->andWhere('p.exercice = :exercice')
+            ->setParameter('exercice', $exercice)
             ->orderBy('p.datePaiement', 'DESC')
+            ->addOrderBy('p.id', 'DESC')
             ->getQuery()
             ->getResult();
     }

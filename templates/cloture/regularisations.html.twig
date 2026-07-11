@@ -4,45 +4,45 @@
 {% endblock %}
 
 {% block body %}
-	<div class="d-flex justify-content-start align-items-baseline gap-2">
-		<h1 class="me-5">
-			Régularisations
-		</h1>
-		<h2>
+	<div class="container mt-4">
+
+		<h1>Régularisations</h1>
+
+		<p class="text-muted">
+			Exercice
 			{{ exercice.nom }}
-		</h2>
-	</div>
+		</p>
 
-	<table class="table">
-		<thead>
-			<tr>
-				<th>Copropriétaire</th>
-				<th>Tantièmes</th>
-				<th>Appels</th>
-				<th>Charges réelles</th>
-				<th>Régularisation</th>
-			</tr>
-		</thead>
+		<a href="{{ path('app_cloture_workflow', { id: exercice.id }) }}" class="btn btn-outline-secondary mb-3">
+			← Retour à l'assistant
+		</a>
 
-		<tbody>
-			{% for ligne in regularisations %}
+		<table class="table">
+			<thead>
 				<tr>
-					<td>{{ ligne.coproprietaire }}</td>
-					<td>{{ ligne.tantiemes }}</td>
-					<td>{{ ligne.totalAppele|number_format(2, ',', ' ') }}
-						€</td>
-					<td>{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
-						€</td>
-					<td>{{ ligne.resultat|number_format(2, ',', ' ') }}
-						€</td>
+					<th>Copropriétaire</th>
+					<th>Tantièmes</th>
+					<th>Appels</th>
+					<th>Charges réelles</th>
+					<th>Régularisation</th>
 				</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-	<form method="post" action="{{ path( 'app_cloture_generer_regularisations', { id: exercice.id } ) }}">
-		<button type="submit" class="btn btn-primary">
-			Ok pour le tableau. Générer les écritures de régularisation
-		</button>
-	</form>
+			</thead>
+
+			<tbody>
+				{% for ligne in regularisations %}
+					<tr>
+						<td>{{ ligne.coproprietaire }}</td>
+						<td>{{ ligne.tantiemes }}</td>
+						<td>{{ ligne.totalAppele|number_format(2, ',', ' ') }}
+							€</td>
+						<td>{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
+							€</td>
+						<td>{{ ligne.resultat|number_format(2, ',', ' ') }}
+							€</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
 
 {% endblock %}
