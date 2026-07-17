@@ -34,6 +34,7 @@ final class FactureFournisseurController extends AbstractController
                 'Aucun exercice sélectionné.'
             );
         }
+
         $factures = $repository->findPourExercice($exercice);
 
         return $this->render(

@@ -2,9 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\CompteurEau;
 use App\Entity\Lot;
 use App\Entity\LotCoproprietaire;
 use App\Form\LotType;
+use App\Form\CompteurEauType;
 use App\Repository\LotRepository;
 use App\Service\LotOwnershipManagerService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -132,5 +134,64 @@ final class LotController extends AbstractController
         }
 
         return $this->redirectToRoute('app_lot_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route(
+        '/{id}/compteur',
+        name: 'app_lot_compteur',
+        methods: ['GET', 'POST']
+    )]
+    public function compteur(
+        Lot $lot,
+        Request $request,
+        EntityManagerInterface $entityManager,
+    ): Response {
+
+        $compteur = $lot->getCompteurEau();
+
+        if (!$compteur) {
+            $compteur = new CompteurEau();
+            $compteur->setLot($lot);
+        }
+
+        $form = $this->createForm(
+            CompteurEauType::class,
+            $compteur,
+            [
+                'avec_lot' => false,
+            ]
+        );
+
+        $form->handleRequest($request);
+
+        if (
+            $form->isSubmitted()
+            && $form->isValid()
+        ) {
+
+            $entityManager->persist($compteur);
+            $entityManager->flush();
+
+            $this->addFlash(
+                'success',
+                'Le compteur a été enregistré.'
+            );
+
+            return $this->redirectToRoute(
+                'app_lot_show',
+                [
+                    'id' => $lot->getId(),
+                ]
+            );
+        }
+
+        return $this->render(
+            'lot/compteur.html.twig',
+            [
+                'lot' => $lot,
+                'form' => $form,
+                'compteur' => $compteur,
+            ]
+        );
     }
 }

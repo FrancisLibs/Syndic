@@ -65,6 +65,18 @@ class Exercice
     #[ORM\Column(options: ['default' => false])]
     private bool $regularisationsGenerees = false;
 
+    #[ORM\OneToMany(
+        mappedBy: 'exercice',
+        targetEntity: ReleveCompteur::class
+    )]
+    private Collection $relevesCompteur;
+
+    #[ORM\OneToOne(
+        mappedBy: 'exercice',
+        cascade: ['persist', 'remove']
+    )]
+    private ?ApprobationComptes $approbationComptes = null;
+
 
     public function __construct()
     {
@@ -72,6 +84,7 @@ class Exercice
         $this->budgets = new ArrayCollection();
         $this->factureFournisseurs = new ArrayCollection();
         $this->paiements = new ArrayCollection();
+        $this->relevesCompteur = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -308,5 +321,53 @@ class Exercice
             $this->isActif()
             && !$this->isCloture()
             && $this->estTermine();
+    }
+
+    /**
+     * @return Collection<int, ReleveCompteur>
+     */
+    public function getRelevesCompteur(): Collection
+    {
+        return $this->relevesCompteur;
+    }
+
+    public function addReleveCompteur(
+        ReleveCompteur $releveCompteur
+    ): static {
+        if (!$this->relevesCompteur->contains($releveCompteur)) {
+            $this->relevesCompteur->add($releveCompteur);
+            $releveCompteur->setExercice($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReleveCompteur(
+        ReleveCompteur $releveCompteur
+    ): static {
+        if ($this->relevesCompteur->removeElement($releveCompteur)) {
+            if ($releveCompteur->getExercice() === $this) {
+                $releveCompteur->setExercice(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getApprobationComptes(): ?ApprobationComptes
+    {
+        return $this->approbationComptes;
+    }
+
+    public function setApprobationComptes(ApprobationComptes $approbationComptes): static
+    {
+        // set the owning side of the relation if necessary
+        if ($approbationComptes->getExercice() !== $this) {
+            $approbationComptes->setExercice($this);
+        }
+
+        $this->approbationComptes = $approbationComptes;
+
+        return $this;
     }
 }

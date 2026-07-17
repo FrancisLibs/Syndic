@@ -42,8 +42,8 @@ class InitPlanComptableCommand extends Command
             ],
 
             [
-                'numero' => '120000',
-                'libelle' => 'Résultat exercice',
+                'numero' => '489000',
+                'libelle' => 'Excédent ou insuffisance sur charges courantes',
                 'type' => CompteType::PASSIF,
             ],
 

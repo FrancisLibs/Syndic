@@ -113,7 +113,7 @@ INSERT INTO `compte` (`id`, `numero`, `libelle`, `type`) VALUES
 (41, '450006', 'Copropriétaire Robichon & Ferre', 'tiers'),
 (42, '102000', 'Fonds de réserve (Avances)', 'passif'),
 (43, '105000', 'Fonds de travaux (Loi ALUR)', 'passif'),
-(44, '120000', 'Résultat de l exercice', 'passif'),
+(44, '489000', 'Résultat de l exercice', 'passif'),
 (45, '450000', 'Compte collectif Copropriétaires', 'tiers'),
 (46, '512000', 'Compte bancaire principal', 'banque'),
 (47, '601000', 'Eau froide (Compteurs généraux)', 'charge'),

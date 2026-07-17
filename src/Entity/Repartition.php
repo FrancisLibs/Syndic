@@ -19,7 +19,7 @@ class Repartition
     private ?Lot $lot = null;
 
     #[ORM\ManyToOne(inversedBy: 'repartitions')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Ecriture $ecriture = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
@@ -31,6 +31,12 @@ class Repartition
     #[ORM\ManyToOne(inversedBy: 'repartitions')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Coproprietaire $coproprietaire = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Exercice $exercice = null;
+
+    
 
     public function getId(): ?int
     {
@@ -109,6 +115,18 @@ class Repartition
     public function setCoproprietaire(?Coproprietaire $coproprietaire): static
     {
         $this->coproprietaire = $coproprietaire;
+
+        return $this;
+    }
+
+    public function getExercice(): ?Exercice
+    {
+        return $this->exercice;
+    }
+
+    public function setExercice(?Exercice $exercice): static
+    {
+        $this->exercice = $exercice;
 
         return $this;
     }

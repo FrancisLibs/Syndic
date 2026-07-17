@@ -1,0 +1,239 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Relevés des compteurs d’eau
+{% endblock %}
+
+{% block body %}
+	<div class="d-flex justify-content-between align-items-baseline mb-4">
+		<div class="d-flex align-items-baseline gap-3">
+			<h1>Relevés des compteurs d’eau</h1>
+
+			<h2 class="fs-4 text-muted">
+				{{ exercice.nom }}
+			</h2>
+		</div>
+	</div>
+
+	{% if lignes is empty %}
+		<div class="alert alert-warning">
+			Aucun compteur d’eau actif n’a été trouvé.
+		</div>
+	{% else %}
+		<form
+			method="post"
+			action="{{ path('app_eau_releves') }}"
+			id="form-releves"
+		>
+			<input
+				type="hidden"
+				name="_token"
+				value="{{ csrf_token('releves_eau') }}"
+			>
+
+			<div class="card mb-4">
+				<div class="card-body">
+					<div class="row align-items-end">
+						<div class="col-md-4">
+							<label
+								for="date_releve"
+								class="form-label"
+							>
+								Date du relevé
+							</label>
+
+							<input
+								type="date"
+								id="date_releve"
+								name="date_releve"
+								class="form-control"
+								value="{{ dateReleve|date('Y-m-d') }}"
+								required
+							>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="table-responsive">
+				<table class="table table-bordered table-hover align-middle">
+					<thead class="table-light">
+						<tr>
+							<th>Type</th>
+							<th>Lots</th>
+							<th>Référence</th>
+							<th class="text-end">Ancien index</th>
+							<th style="width: 180px;">
+								Nouvel index
+							</th>
+							<th class="text-end">
+								Consommation
+							</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						{% for ligne in lignes %}
+							{% set compteur = ligne.compteur %}
+							{% set releve = ligne.releveCourant %}
+
+							<tr>
+								<td>
+									{% if compteur.general %}
+										<span class="badge text-bg-primary">
+											Général
+										</span>
+									{% else %}
+										<span class="badge text-bg-secondary">
+											Individuel
+										</span>
+									{% endif %}
+								</td>
+
+								<td>
+									{% if compteur.general %}
+										—
+									{% elseif compteur.lot.designation %}
+										{{ compteur.lot.designation }}
+									{% else %}
+										<span class="text-danger">
+											Aucun lot
+										</span>
+									{% endif %}
+								</td>
+
+								<td>
+									{{ compteur.reference }}
+								</td>
+
+								<td
+									class="text-end ancien-index"
+									data-ancien-index="{{ ligne.ancienIndex ?? '' }}"
+								>
+									{% if ligne.ancienIndex is not null %}
+										{{ ligne.ancienIndex }}
+									{% else %}
+										<span class="text-muted">
+											Non renseigné
+										</span>
+									{% endif %}
+								</td>
+
+								<td>
+									<input
+										type="number"
+										name="releves[{{ compteur.id }}]"
+										class="form-control nouvel-index"
+										value="{{ releve ? releve.valeurIndex : '' }}"
+										min="{{ ligne.ancienIndex ?? 0 }}"
+										step="1"
+										inputmode="numeric"
+										data-ancien-index="{{ ligne.ancienIndex ?? '' }}"
+										data-consommation-id="consommation-{{ compteur.id }}"
+										aria-label="Nouvel index du compteur {{ compteur.reference }}"
+									>
+								</td>
+
+								<td
+									id="consommation-{{ compteur.id }}"
+									class="text-end consommation"
+								>
+									{% if
+										releve
+										and ligne.ancienIndex is not null
+									%}
+										{{ releve.valeurIndex - ligne.ancienIndex }}
+										m³
+									{% else %}
+										—
+									{% endif %}
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+
+			<div class="d-flex justify-content-end mt-4">
+				<button
+					type="submit"
+					class="btn btn-primary"
+				>
+					Enregistrer les relevés
+				</button>
+			</div>
+		</form>
+	{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+	{{ parent() }}
+
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const champsIndex = document.querySelectorAll(
+				'.nouvel-index'
+			);
+
+			champsIndex.forEach((champ) => {
+				const calculerConsommation = () => {
+					const consommationElement =
+						document.getElementById(
+							champ.dataset.consommationId
+						);
+
+					const ancienIndexBrut =
+						champ.dataset.ancienIndex;
+
+					const nouvelIndexBrut =
+						champ.value.trim();
+
+					if (
+						ancienIndexBrut === ''
+						|| nouvelIndexBrut === ''
+					) {
+						consommationElement.textContent = '—';
+						consommationElement.classList.remove(
+							'text-danger'
+						);
+
+						return;
+					}
+
+					const ancienIndex =
+						Number.parseInt(ancienIndexBrut, 10);
+
+					const nouvelIndex =
+						Number.parseInt(nouvelIndexBrut, 10);
+
+					if (
+						Number.isNaN(ancienIndex)
+						|| Number.isNaN(nouvelIndex)
+					) {
+						consommationElement.textContent = '—';
+
+						return;
+					}
+
+					const consommation =
+						nouvelIndex - ancienIndex;
+
+					consommationElement.textContent =
+						`${consommation} m³`;
+
+					consommationElement.classList.toggle(
+						'text-danger',
+						consommation < 0
+					);
+				};
+
+				champ.addEventListener(
+					'input',
+					calculerConsommation
+				);
+
+				calculerConsommation();
+			});
+		});
+	</script>
+{% endblock %}

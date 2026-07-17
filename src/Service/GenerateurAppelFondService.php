@@ -89,21 +89,26 @@ class GenerateurAppelFondService
                 $lot->getTantiemes();
         }
 
+        if ($totalTantiemes <= 0) {
+            throw new \LogicException(
+                'Le total des tantièmes est invalide.'
+            );
+        }
+
         // =====================
         // Répartition
         // =====================
 
+        $lignesARepartir = [];
+
         foreach ($lots as $lot) {
             $tantiemeLot = $lot->getTantiemes();
-            $montantLot
-                = ($montantTotalBudget * $tantiemeLot) / $totalTantiemes;
 
-            // =====================
-            // Copropriétaires actifs
-            // =====================
+            $montantLot =
+                ($montantTotalBudget * $tantiemeLot)
+                / $totalTantiemes;
 
             foreach ($lot->getLotCoproprietaires() as $lotCoproprietaire) {
-
                 $dateDebut = $lotCoproprietaire->getDateDebut();
                 $dateFin = $lotCoproprietaire->getDateFin();
 
@@ -115,24 +120,71 @@ class GenerateurAppelFondService
                     continue;
                 }
 
-                $pourcentage = (float) $lotCoproprietaire->getPourcentage();
+                $pourcentage =
+                    (float) $lotCoproprietaire->getPourcentage();
 
-                $montantCoproprietaire = $montantLot * $pourcentage / 100;
+                $montantBrut =
+                    $montantLot * $pourcentage / 100;
 
-                $ligne = new LigneAppelFond();
-
-                $ligne->setMontantRegle('0.00');
-                $ligne->setSoldee(false);
-                $ligne->setAppelFond($appelFond);
-                $ligne->setLot($lot);
-                $ligne->setCoproprietaire($lotCoproprietaire->getCoproprietaire());
-                $ligne->setPourcentage($pourcentage);
-                $ligne->setMontant(round($montantCoproprietaire, 2));
-
-                $appelFond->addLigneAppelFond($ligne);
-
-                $this->entityManager->persist($ligne);
+                $lignesARepartir[] = [
+                    'lot' => $lot,
+                    'coproprietaire' =>
+                    $lotCoproprietaire->getCoproprietaire(),
+                    'pourcentage' => $pourcentage,
+                    'montantBrut' => $montantBrut,
+                ];
             }
+        }
+
+        if ($lignesARepartir === []) {
+            throw new \LogicException(
+                'Aucun copropriétaire actif trouvé à la date de l’appel.'
+            );
+        }
+
+        $totalGenere = 0.0;
+        $dernierIndex = count($lignesARepartir) - 1;
+
+        foreach ($lignesARepartir as $index => $donnees) {
+            if ($index === $dernierIndex) {
+                $montant = round(
+                    $montantTotalBudget - $totalGenere,
+                    2
+                );
+            } else {
+                $montant = round(
+                    $donnees['montantBrut'],
+                    2
+                );
+
+                $totalGenere += $montant;
+            }
+
+            $ligne = new LigneAppelFond();
+
+            $ligne
+                ->setMontantRegle('0.00')
+                ->setSoldee(false)
+                ->setAppelFond($appelFond)
+                ->setLot($donnees['lot'])
+                ->setCoproprietaire(
+                    $donnees['coproprietaire']
+                )
+                ->setPourcentage(
+                    $donnees['pourcentage']
+                )
+                ->setMontant(
+                    number_format(
+                        $montant,
+                        2,
+                        '.',
+                        ''
+                    )
+                );
+
+            $appelFond->addLigneAppelFond($ligne);
+
+            $this->entityManager->persist($ligne);
         }
 
         // =====================
@@ -140,7 +192,7 @@ class GenerateurAppelFondService
         // =====================
 
         $this->entityManager->persist($appelFond);
-        $this->entityManager-> flush();
+        $this->entityManager->flush();
 
         return $appelFond;
     }

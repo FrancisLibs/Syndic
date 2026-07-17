@@ -56,6 +56,12 @@ class Lot
     #[ORM\OneToMany(targetEntity: LigneAppelFond::class, mappedBy: 'lot')]
     private Collection $ligneAppelFonds;
 
+    #[ORM\OneToOne(
+        mappedBy: 'lot',
+        targetEntity: CompteurEau::class
+    )]
+    private ?CompteurEau $compteurEau = null;
+
     public function __construct()
     {
         $this->repartitions = new ArrayCollection();
@@ -295,7 +301,26 @@ class Lot
                 $ligneAppelFond->setLot(null);
             }
         }
+        return $this;
+    }
 
+    public function getCompteurEau(): ?CompteurEau
+    {
+        return $this->compteurEau;
+    }
+
+    public function setCompteurEau(
+        ?CompteurEau $compteurEau
+    ): static {
+        // unset the owning side of the relation if necessary
+        if ($compteurEau === null && $this->compteurEau !== null) {
+            $this->compteurEau->setLot(null);
+        }
+        // set the owning side of the relation if necessary
+        if ($compteurEau !== null && $compteurEau->getLot() !== $this) {
+            $compteurEau->setLot($this);
+        }
+        $this->compteurEau = $compteurEau;
         return $this;
     }
 }

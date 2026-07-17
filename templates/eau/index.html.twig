@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}CompteurEau index
+{% endblock %}
+
+{% block body %}
+	<h1>CompteurEau index</h1>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Id</th>
+				<th>Référence</th>
+				<th>IndexInitial</th>
+				<th>Actif</th>
+				<th>Lot</th>
+				<th>actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for compteur in compteurs %}
+				<tr>
+					<td>{{ compteur.id }}</td>
+					<td>{{ compteur.reference }}</td>
+					<td>{{ compteur.indexInitial }}</td>
+					<td>{{ compteur.actif ? 'Yes' : 'No' }}</td>
+					<td>
+						{% if compteur.lot is null %}
+							-
+						{% else %}
+							{{ compteur.lot.designation }}
+						{% endif %}
+					</td>
+					<td>
+						<a href="{{ path('app_compteur_eau_show', {'id': compteur.id}) }}">show</a>
+						<a href="{{ path('app_compteur_eau_edit', {'id': compteur.id}) }}">edit</a>
+					</td>
+				</tr>
+			</tbody>
+		</tbody>
+	</tr>
+{% else %}
+	<tr>
+		<td colspan="5">no records found</td>
+	</tr>
+{% endfor %}</tbody></table><a href="{{ path('app_compteur_eau_new') }}">Create new</a>{% endblock %}

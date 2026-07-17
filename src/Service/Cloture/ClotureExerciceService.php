@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Service;
+namespace App\Service\Cloture;
 
 use App\Entity\Exercice;
 use App\Entity\Coproprietaire;
 use App\Entity\Operation;
-use App\Entity\Ecriture;
 use App\Dto\Cloture\SoldeReportable;
 use App\Dto\Cloture\EtatCloture;
 use App\Dto\Cloture\ResultatExercice;
@@ -13,7 +12,6 @@ use App\Dto\Cloture\ClotureComptesGestion;
 use App\Dto\Cloture\ClotureCompteGestionLigne;
 use App\Dto\Cloture\ANouveaux;
 use App\Enum\OperationType;
-use App\Enum\OperationStatut;
 use App\Enum\ExerciceStatut;
 use App\Enum\CompteType;
 use App\Service\ComptabiliteService;
@@ -142,7 +140,6 @@ class ClotureExerciceService
             exerciceTermine: $exercice->estTermine(),
             budgetsVerrouilles: $budgetsVerrouilles,
             operationsEquilibrees: $operationsEquilibrees,
-            regularisationsGenerees: $exercice->isRegularisationsGenerees(),
             anouveauxGeneres: $anouveauxGeneres,
             clotureComptesGestionGeneree: $clotureComptesGestionGeneree,
             exerciceSuivantExiste: $exerciceSuivant !== null,
@@ -189,7 +186,7 @@ class ClotureExerciceService
             ->calculerSoldesComptesGestion($exercice);
 
         $compteResultat =
-            $this->compteRepository->findByNumeroOrFail('120000');
+            $this->compteRepository->findByNumeroOrFail('489000');
 
         $lignes = [];
 

@@ -1,0 +1,243 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Bilan des consommations d’eau
+{% endblock %}
+
+{% block body %}
+	<div class="d-flex justify-content-between align-items-baseline mb-4">
+		<div class="d-flex align-items-baseline gap-3">
+			<h1>Bilan des consommations d’eau</h1>
+
+			<h2 class="fs-4 text-muted">
+				{{ exercice.nom }}
+			</h2>
+		</div>
+
+		<a href="{{ path('app_eau_releves') }}" class="btn btn-outline-primary">
+			Modifier les relevés
+		</a>
+	</div>
+
+	{% if bilan.consommations is empty %}
+		<div class="alert alert-warning">
+			Aucun compteur actif n’a été trouvé.
+		</div>
+	{% else %}
+		{% if not bilan.complete %}
+			<div class="alert alert-warning">
+				<strong>Relevés incomplets.</strong>
+
+				Certaines consommations ne peuvent pas encore être
+																				calculées.
+			</div>
+		{% endif %}
+
+		{% if bilan.ecartNegatif %}
+			<div class="alert alert-danger">
+				<strong>Écart incohérent.</strong>
+
+				La consommation totale des compteurs individuels
+																				dépasse celle du compteur général. Vérifiez les
+																				index saisis.
+			</div>
+		{% endif %}
+
+		<div class="row g-4 mb-4">
+			<div class="col-md-4">
+				<div class="card h-100">
+					<div class="card-body text-center">
+						<h2 class="fs-5 text-muted">
+							Consommation générale
+						</h2>
+
+						<p class="display-6 mb-0">
+							{% if bilan.consommationGenerale is not null %}
+								{{ bilan.consommationGenerale }}
+								m³
+							{% else %}
+								—
+							{% endif %}
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-4">
+				<div class="card h-100">
+					<div class="card-body text-center">
+						<h2 class="fs-5 text-muted">
+							Consommation des lots
+						</h2>
+
+						<p class="display-6 mb-0">
+							{{ bilan.consommationLots }}
+							m³
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-4">
+				<div class="card h-100
+																														{% if bilan.ecartNegatif %}
+																															border-danger
+																														{% endif %}
+																													">
+					<div class="card-body text-center">
+						<h2 class="fs-5 text-muted">
+							Consommation des communs
+						</h2>
+
+						<p class="display-6 mb-0
+																																								{% if bilan.ecartNegatif %}
+																																									text-danger
+																																								{% endif %}
+																																							">
+							{% if bilan.consommationCommuns is not null %}
+								{{ bilan.consommationCommuns }}
+								m³
+							{% else %}
+								—
+							{% endif %}
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+			<div class="card-header">
+				<h2 class="fs-5 mb-0">
+					Détail des compteurs
+				</h2>
+			</div>
+
+			<div class="table-responsive">
+				<table class="table table-hover align-middle mb-0">
+					<thead class="table-light">
+						<tr>
+							<th>Type</th>
+							<th>Lot</th>
+							<th>Référence</th>
+							<th class="text-end">
+								Ancien index
+							</th>
+							<th class="text-end">
+								Nouvel index
+							</th>
+							<th class="text-end">
+								Consommation
+							</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						{% for ligne in bilan.consommations %}
+							<tr>
+								<td>
+									{% if ligne.compteurGeneral %}
+										<span class="badge text-bg-primary">
+											Général
+										</span>
+									{% else %}
+										<span class="badge text-bg-secondary">
+											Individuel
+										</span>
+									{% endif %}
+								</td>
+
+								<td>
+									{% if ligne.compteurGeneral %}
+										—
+									{% elseif ligne.lot %}
+										{{ ligne.lot.reference }}
+									{% else %}
+										<span class="text-danger">
+											Aucun lot
+										</span>
+									{% endif %}
+								</td>
+
+								<td>
+									{{ ligne.reference }}
+								</td>
+
+								<td class="text-end">
+									{% if ligne.ancienIndex is not null %}
+										{{ ligne.ancienIndex }}
+									{% else %}
+										<span class="text-muted">
+											—
+										</span>
+									{% endif %}
+								</td>
+
+								<td class="text-end">
+									{% if ligne.nouvelIndex is not null %}
+										{{ ligne.nouvelIndex }}
+									{% else %}
+										<span class="text-muted">
+											—
+										</span>
+									{% endif %}
+								</td>
+
+								<td class="text-end">
+									{% if ligne.consommation is not null %}
+										{{ ligne.consommation }}
+										m³
+									{% else %}
+										<span class="text-warning">
+											Incomplète
+										</span>
+									{% endif %}
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+
+					<tfoot class="table-light">
+						<tr>
+							<th colspan="5">
+								Total des compteurs individuels
+							</th>
+
+							<th class="text-end">
+								{{ bilan.consommationLots }}
+								m³
+							</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		</div>
+
+		{% if bilan.compteursIncomplets is not empty %}
+			<div class="card border-warning">
+				<div class="card-header">
+					<h2 class="fs-5 mb-0">
+						Compteurs incomplets
+					</h2>
+				</div>
+
+				<div class="card-body">
+					<ul class="mb-0">
+						{% for ligne in bilan.compteursIncomplets %}
+							{# {{ dump (ligne) }} #}
+							<li>
+								Compteur
+								<strong>{{ ligne.reference }}</strong>
+
+								{% if ligne.lot %}
+									— Lot
+									{{ ligne.lot.reference }}
+								{% endif %}
+							</li>
+						{% endfor %}
+					</ul>
+				</div>
+			</div>
+		{% endif %}
+	{% endif %}
+{% endblock %}

@@ -70,6 +70,51 @@
 								Paiements copropriétaires
 							</a>
 						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_repartition_charges')}}">
+								<i class="bi bi-cash-coin"></i>
+								Répartition charges
+							</a>
+						</li>
+					</ul>
+				</li>
+
+				{# ========================= #}
+				{# Gestion eau                #}
+				{# ========================= #}
+
+					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarEau" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						Eau
+					</a>
+
+					<ul class="dropdown-menu" aria-labelledby="navbarEau">
+						<li>
+							<a class="dropdown-item" href="{{ path('app_eau_compteur_general') }}">
+								Compteur général
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_eau_releves') }} " >
+								Relevés
+							</a>
+						</li>
+
+						<li>
+							<a class="dropdown-item" href="{{ path('app_eau_consommations') }}">
+								Consommations
+							</a>
+						</li>
+
+						<li>
+							<a class="dropdown-item disabled" href="#" aria-disabled="true">
+								Répartition
+							</a>
+						</li>
+						<li>
+							<a class="dropdown-item" href="{{ path('app_eau_calcul') }}">
+								Calcul de l'eau
+							</a>
+						</li>
 					</ul>
 				</li>
 

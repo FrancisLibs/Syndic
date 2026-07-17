@@ -46,7 +46,7 @@
 		{% set nombreComptesResultat = 0 %}
 
 		{% for ligne in cloture.lignes %}
-			{% if ligne.compte.numero == '120000' %}
+			{% if ligne.compte.numero == '489000' %}
 				{% set nombreComptesResultat = nombreComptesResultat + 1 %}
 			{% else %}
 				{% set nombreComptesGestion = nombreComptesGestion + 1 %}
@@ -88,7 +88,7 @@
 					{% set totalDebit = totalDebit + ligne.debit %}
 					{% set totalCredit = totalCredit + ligne.credit %}
 
-					{% if ligne.compte.numero == '120000' %}
+					{% if ligne.compte.numero == '489000' %}
 						<tr class="table-secondary">
 							<td colspan="4">
 								<strong>Contrepartie du résultat</strong>

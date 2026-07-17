@@ -58,7 +58,7 @@
 					<div class="list-group mb-3">
 
 						<a href="{{ path('app_cloture_regularisations', { id: exercice.id }) }}" class="list-group-item list-group-item-action">
-							📄 Régularisations
+							📄 Répartition des charges
 						</a>
 
 						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="list-group-item list-group-item-action">
@@ -78,6 +78,12 @@
 					<button class="btn btn-outline-secondary" disabled>
 						📕 Dossier complet de clôture PDF
 					</button>
+
+					<hr>
+
+					<a href="{{ path('app_assemblee_generale', { id: exercice.id }) }}" class="btn btn-primary">
+						Préparer l'Assemblée Générale
+					</a>
 
 				</div>
 
@@ -109,6 +115,11 @@
 						</li>
 
 						<li class="list-group-item">
+							{{ etat.exerciceTermine ? '✅' : '❌' }}
+							Date de fin atteinte
+						</li>
+
+						<li class="list-group-item">
 							{{ etat.budgetsVerrouilles ? '✅' : '❌' }}
 							Budgets verrouillés
 						</li>
@@ -121,132 +132,74 @@
 					</ul>
 
 					{% if etat.estBloque %}
+
 						<div class="alert alert-danger mt-3 mb-0">
-							<strong>La clôture est bloquée.</strong>
+
+							<strong>
+								La clôture est bloquée.
+							</strong>
 
 							<ul class="mb-0 mt-2">
 								{% for erreur in etat.erreurs %}
 									<li>{{ erreur }}</li>
 								{% endfor %}
 							</ul>
+
 						</div>
+
 					{% else %}
+
 						<div class="alert alert-success mt-3 mb-0">
 							Les vérifications préalables sont satisfaites.
 						</div>
+
 					{% endif %}
 
 				</div>
 
 			</div>
 
-			{# 2. Régularisations #}
+			{# 2. Contrôle des répartitions #}
 			<div class="card mb-3">
 
 				<div class="card-header">
-					<strong>2. Régularisations</strong>
+					<strong>2. Contrôle des répartitions</strong>
 				</div>
 
 				<div class="card-body">
 
-					{% if etat.regularisationsGenerees %}
+					<p>
+						Les charges réparties entre les copropriétaires peuvent être
+																		contrôlées avant la clôture.
+					</p>
 
-						<div class="alert alert-success">
-							✅ Les régularisations ont été générées.
-						</div>
+					<p class="text-muted">
+						Aucune écriture comptable de régularisation n'est générée
+																		à cette étape.
+					</p>
 
-						<a href="{{ path('app_cloture_regularisations', { id: exercice.id }) }}" class="btn btn-outline-primary">
-							Consulter les régularisations
-						</a>
-
-					{% elseif etat.peutGenererRegularisations %}
-
-						<div class="alert alert-warning">
-							Les régularisations ne sont pas encore générées.
-						</div>
-
-						<a href="{{ path('app_cloture_regularisations', { id: exercice.id }) }}" class="btn btn-outline-secondary">
-							Afficher le détail
-						</a>
-
-						<form method="post" action="{{ path('app_cloture_generer_regularisations', { id: exercice.id }) }}" class="d-inline">
-							<button type="submit" class="btn btn-primary" onclick="return confirm('Confirmer la génération des régularisations ?')">
-								Générer les régularisations
-							</button>
-						</form>
-
-					{% else %}
-
-						<div class="alert alert-secondary mb-0">
-							Les régularisations ne sont pas encore disponibles.
-						</div>
-
-					{% endif %}
+					<a href="{{ path('app_cloture_regularisations', { id: exercice.id }) }}" class="btn btn-outline-primary">
+						Consulter les répartitions
+					</a>
 
 				</div>
 
 			</div>
 
-			{# 3. Soldes reportables #}
+			{# 3. Résultat de l'exercice #}
 			<div class="card mb-3">
 
 				<div class="card-header">
-					<strong>3. Soldes reportables</strong>
-				</div>
-
-				<div class="card-body">
-
-					{% set totalDebit = 0 %}
-					{% set totalCredit = 0 %}
-
-					{% for solde in soldes %}
-						{% set totalDebit = totalDebit + solde.debit %}
-						{% set totalCredit = totalCredit + solde.credit %}
-					{% endfor %}
-
-					<p>
-						Nombre de comptes à reporter :
-						<strong>{{ soldes|length }}</strong>
-					</p>
-
-					<p>
-						Total débit :
-						<strong>{{ totalDebit|number_format(2, ',', ' ') }}
-							€</strong>
-					</p>
-
-					<p>
-						Total crédit :
-						<strong>{{ totalCredit|number_format(2, ',', ' ') }}
-							€</strong>
-					</p>
-
-					{% if soldes is empty %}
-						<div class="alert alert-secondary mb-0">
-							Aucun solde à reporter.
-						</div>
-					{% else %}
-						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="btn btn-outline-primary">
-							Afficher le détail
-						</a>
-					{% endif %}
-
-				</div>
-
-			</div>
-
-			{# 4. Résultat #}
-			<div class="card mb-3">
-
-				<div class="card-header">
-					<strong>4. Résultat de l'exercice</strong>
+					<strong>3. Résultat de l'exercice</strong>
 				</div>
 
 				<div class="card-body">
 
 					<table class="table table-sm mb-3">
+
 						<tr>
 							<th>Charges</th>
+
 							<td class="text-end">
 								{{ resultatExercice.charges|number_format(2, ',', ' ') }}
 								€
@@ -255,6 +208,7 @@
 
 						<tr>
 							<th>Produits</th>
+
 							<td class="text-end">
 								{{ resultatExercice.produits|number_format(2, ',', ' ') }}
 								€
@@ -262,41 +216,61 @@
 						</tr>
 
 						<tr class="table-light">
-							<th>Résultat</th>
+							<th>Solde en attente de répartition</th>
+
 							<td class="text-end">
-								<strong>{{ resultatExercice.resultat|number_format(2, ',', ' ') }}
-									€</strong>
+								<strong>
+									{{ resultatExercice.resultat|number_format(2, ',', ' ') }}
+									€
+								</strong>
 							</td>
 						</tr>
+
 					</table>
 
 					{% if resultatExercice.estEquilibre %}
-						<div class="alert alert-success">
-							Le résultat de l'exercice est équilibré.
+
+						<div class="alert alert-success mb-0">
+							Les charges et les produits sont équilibrés.
 						</div>
+
 					{% elseif resultatExercice.estExcedentaire %}
-						<div class="alert alert-warning">
-							Excédent de
-							<strong>{{ resultatExercice.resultat|number_format(2, ',', ' ') }}
-								€</strong>.
+
+						<div class="alert alert-warning mb-0">
+							Excédent de provisions de
+							<strong>
+								{{ resultatExercice.resultat|number_format(2, ',', ' ') }}
+								€
+							</strong>.
+														
+																					Ce montant sera transféré au compte 489000 lors de la
+																					clôture des comptes de gestion.
 						</div>
+
 					{% else %}
-						<div class="alert alert-warning">
-							Déficit de
-							<strong>{{ (-resultatExercice.resultat)|number_format(2, ',', ' ') }}
-								€</strong>.
+
+						<div class="alert alert-warning mb-0">
+							Insuffisance de provisions de
+							<strong>
+								{{ (-resultatExercice.resultat)|number_format(2, ',', ' ') }}
+								€
+							</strong>.
+														
+																					Ce montant sera transféré au compte 489000 lors de la
+																					clôture des comptes de gestion.
 						</div>
+
 					{% endif %}
 
 				</div>
 
 			</div>
 
-			{# 5. Clôture des comptes de gestion #}
+			{# 4. Clôture des comptes de gestion #}
 			<div class="card mb-3">
 
 				<div class="card-header">
-					<strong>5. Clôture des comptes de gestion</strong>
+					<strong>4. Clôture des comptes de gestion</strong>
 				</div>
 
 				<div class="card-body">
@@ -304,7 +278,8 @@
 					{% if etat.clotureComptesGestionGeneree %}
 
 						<div class="alert alert-success">
-							✅ Les écritures de clôture des comptes de gestion ont été générées.
+							✅ Les comptes de charges et de produits ont été soldés
+																					par le compte 489000.
 						</div>
 
 						<a href="{{ path('app_cloture_comptes_gestion', { id: exercice.id }) }}" class="btn btn-outline-primary">
@@ -314,15 +289,21 @@
 					{% elseif etat.peutGenererClotureComptesGestion() %}
 
 						<div class="alert alert-warning">
-							Les écritures de clôture ne sont pas encore générées.
+							Les écritures de clôture des comptes de gestion ne sont
+																					pas encore générées.
 						</div>
+
+						<p>
+							Cette opération soldera les comptes de classes 6 et 7
+																					par le compte 489000.
+						</p>
 
 						<a href="{{ path('app_cloture_comptes_gestion', { id: exercice.id }) }}" class="btn btn-outline-secondary">
 							Afficher le détail
 						</a>
 
 						<form method="post" action="{{ path('app_cloture_generer_comptes_gestion', { id: exercice.id }) }}" class="d-inline">
-							<button type="submit" class="btn btn-primary" onclick="return confirm('Confirmer la génération des écritures de clôture ?')">
+							<button type="submit" class="btn btn-primary" onclick="return confirm('Confirmer la génération des écritures de clôture des comptes de gestion ?')">
 								Générer les écritures
 							</button>
 						</form>
@@ -330,7 +311,8 @@
 					{% else %}
 
 						<div class="alert alert-secondary mb-0">
-							Les écritures de clôture ne sont pas encore disponibles.
+							Les écritures de clôture des comptes de gestion ne peuvent
+																					pas encore être générées.
 						</div>
 
 					{% endif %}
@@ -339,11 +321,11 @@
 
 			</div>
 
-			{# 6. Exercice suivant #}
+			{# 5. Exercice suivant #}
 			<div class="card mb-3">
 
 				<div class="card-header">
-					<strong>6. Exercice suivant</strong>
+					<strong>5. Exercice suivant</strong>
 				</div>
 
 				<div class="card-body">
@@ -354,19 +336,23 @@
 							✅ L'exercice suivant est disponible.
 						</div>
 
-						<table class="table table-sm mb-3">
+						<table class="table table-sm mb-0">
+
 							<tr>
 								<th>Exercice</th>
 								<td>{{ etat.exerciceSuivant.nom }}</td>
 							</tr>
+
 							<tr>
 								<th>Période</th>
+
 								<td>
 									{{ etat.exerciceSuivant.dateDebut|date('d/m/Y') }}
 									→
 									{{ etat.exerciceSuivant.dateFin|date('d/m/Y') }}
 								</td>
 							</tr>
+
 						</table>
 
 					{% elseif etat.peutCreerExerciceSuivant() %}
@@ -376,21 +362,20 @@
 						</div>
 
 						<p>
-							Vous pouvez maintenant créer l’exercice suivant.
+							La clôture des comptes de gestion est terminée.
+																					L'exercice suivant peut maintenant être créé.
 						</p>
 
 						<form method="post" action="{{ path('app_cloture_creer_exercice_suivant', { id: exercice.id }) }}" class="d-inline">
-
 							<button type="submit" class="btn btn-primary" onclick="return confirm('Créer l’exercice suivant ?')">
-								Créer l’exercice suivant
+								Créer l'exercice suivant
 							</button>
-
 						</form>
 
 					{% else %}
 
 						<div class="alert alert-secondary mb-0">
-							L’exercice suivant ne peut pas encore être créé.
+							L'exercice suivant ne peut pas encore être créé.
 						</div>
 
 					{% endif %}
@@ -399,11 +384,11 @@
 
 			</div>
 
-			{# 7. À-nouveaux #}
+			{# 6. À-nouveaux #}
 			<div class="card mb-3">
 
 				<div class="card-header">
-					<strong>7. À-nouveaux</strong>
+					<strong>6. À-nouveaux</strong>
 				</div>
 
 				<div class="card-body">
@@ -411,21 +396,35 @@
 					{% if etat.anouveauxGeneres %}
 
 						<div class="alert alert-success">
-							✅ Les écritures d’à-nouveaux ont été générées.
+							✅ Les écritures d'à-nouveaux ont été générées dans
+																					l'exercice suivant.
 						</div>
 
 						<a href="{{ path('app_cloture_anouveaux', { id: exercice.id }) }}" class="btn btn-outline-primary">
 							Consulter les écritures générées
 						</a>
 
+						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+							Consulter les soldes reportables
+						</a>
+
 					{% elseif etat.peutGenererANouveaux() %}
 
 						<div class="alert alert-warning">
-							Les écritures d’à-nouveaux ne sont pas encore générées.
+							Les écritures d'à-nouveaux ne sont pas encore générées.
 						</div>
+
+						<p>
+							Les comptes de bilan, dont le compte 489000, seront
+																					repris dans l'exercice suivant.
+						</p>
 
 						<a href="{{ path('app_cloture_anouveaux', { id: exercice.id }) }}" class="btn btn-outline-secondary">
 							Afficher le détail
+						</a>
+
+						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+							Consulter les soldes reportables
 						</a>
 
 						<form method="post" action="{{ path('app_cloture_generer_anouveaux', { id: exercice.id }) }}" class="d-inline">
@@ -436,9 +435,13 @@
 
 					{% else %}
 
-						<div class="alert alert-secondary mb-0">
-							Les à-nouveaux ne sont pas encore disponibles.
+						<div class="alert alert-secondary">
+							Les à-nouveaux ne peuvent pas encore être générés.
 						</div>
+
+						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+							Consulter les soldes reportables
+						</a>
 
 					{% endif %}
 
@@ -446,26 +449,26 @@
 
 			</div>
 
-			{# 8. Clôture définitive #}
+			{# 7. Clôture définitive #}
 			<div class="card mb-3">
 
 				<div class="card-header">
-					<strong>8. Clôture définitive</strong>
+					<strong>7. Clôture définitive</strong>
 				</div>
 
 				<div class="card-body">
 
-					{% if etat.exerciceCloture %}
-
-						<div class="alert alert-success mb-0">
-							✅ L'exercice est définitivement clôturé.
-						</div>
-
-					{% elseif etat.peutCloturer() %}
+					{% if etat.peutCloturer() %}
 
 						<div class="alert alert-warning">
-							Toutes les étapes sont terminées. L'exercice peut être clôturé.
+							Toutes les étapes techniques sont terminées.
+																					L'exercice peut être clôturé.
 						</div>
+
+						<p>
+							Le solde du compte 489000 restera en attente jusqu'à
+																					l'approbation des comptes par l'Assemblée Générale.
+						</p>
 
 						<form method="post" action="{{ path('app_cloture_exercice', { id: exercice.id }) }}" class="d-inline">
 							<button type="submit" class="btn btn-danger" onclick="return confirm('Confirmer la clôture définitive de l’exercice ?')">

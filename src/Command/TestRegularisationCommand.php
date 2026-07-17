@@ -3,7 +3,7 @@
 namespace App\Command;
 
 use App\Repository\ExerciceRepository;
-use App\Service\RegularisationService;
+use App\Service\Cloture\SimulationRegularisationService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,7 +15,7 @@ class TestRegularisationCommand extends Command
 {
     public function __construct(
         private ExerciceRepository $exerciceRepository,
-        private RegularisationService $regularisationService
+        private SimulationRegularisationService $simulationRegularisationService,
     ) {
         parent::__construct();
     }
@@ -34,7 +34,7 @@ class TestRegularisationCommand extends Command
 
         $io->title("Simulation de la régularisation : " . $exercice->getNom());
 
-        $simulation = $this->regularisationService->simulerRegularisation($exercice);
+        $simulation = $this->simulationRegularisationService->simulerRegularisation($exercice);
         $io->text("Total des charges réelles de l'exercice : " . $simulation['totalChargesGlobales'] . " €");
         $io->newLine();
 
@@ -53,10 +53,6 @@ class TestRegularisationCommand extends Command
             ['Copropriétaire', 'Tantièmes', 'Total Appelé', 'Quote-part Réelle', 'Régularisation'],
             $rows
         );
-
-        // Décommente la ligne ci-dessous quand tu seras prêt à insérer les écritures en BDD :
-        // $this->regularisationService->genererRegularisation($exercice);
-        // $io->success("Régularisation enregistrée avec succès !");
 
         return Command::SUCCESS;
     }

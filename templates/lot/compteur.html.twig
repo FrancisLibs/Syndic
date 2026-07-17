@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Compteur d'eau
+{% endblock %}
+
+{% block body %}
+
+<div class="container">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h1 class="mb-0">
+                Compteur d'eau
+            </h1>
+
+            <p class="text-muted mb-0">
+                Lot {{ lot.reference }}
+            </p>
+
+        </div>
+
+        <a
+            class="btn btn-outline-secondary"
+            href="{{ path(
+                'app_lot_show',
+                {
+                    id: lot.id
+                }
+            ) }}"
+        >
+            Retour
+        </a>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            {{ form_start(form) }}
+
+                <div class="row">
+
+                    <div class="col-md-6">
+
+                        {{ form_row(form.numero) }}
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        {{ form_row(form.indexInitial) }}
+
+                    </div>
+
+                </div>
+
+                {{ form_row(form.actif) }}
+
+                <div class="mt-4 d-flex gap-2">
+
+                    <button
+                        class="btn btn-primary"
+                    >
+                        Enregistrer
+                    </button>
+
+                    <a
+                        class="btn btn-outline-secondary"
+                        href="{{ path(
+                            'app_lot_show',
+                            {
+                                id: lot.id
+                            }
+                        ) }}"
+                    >
+                        Annuler
+                    </a>
+
+                </div>
+
+            {{ form_end(form) }}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

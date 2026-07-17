@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Exercice index
+{% block title %}
+	Régularisations
 {% endblock %}
 
 {% block body %}
@@ -21,28 +22,75 @@
 			<thead>
 				<tr>
 					<th>Copropriétaire</th>
-					<th>Tantièmes</th>
-					<th>Appels</th>
-					<th>Charges réelles</th>
-					<th>Régularisation</th>
+					<th class="text-end">Tantièmes</th>
+					<th class="text-end">Appels</th>
+					<th class="text-end">Charges réelles</th>
+					<th class="text-end">Régularisation</th>
 				</tr>
 			</thead>
 
 			<tbody>
-				{% for ligne in regularisations %}
+				{% for ligne in simulation.lignes %}
 					<tr>
 						<td>{{ ligne.coproprietaire }}</td>
-						<td>{{ ligne.tantiemes }}</td>
-						<td>{{ ligne.totalAppele|number_format(2, ',', ' ') }}
-							€</td>
-						<td>{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
-							€</td>
-						<td>{{ ligne.resultat|number_format(2, ',', ' ') }}
-							€</td>
+
+						<td class="text-end">
+							{{ ligne.tantiemes }}
+						</td>
+
+						<td class="text-end">
+							{{ ligne.totalAppele|number_format(2, ',', ' ') }}
+							€
+						</td>
+
+						<td class="text-end">
+							{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
+							€
+						</td>
+
+						<td class="text-end
+							{% if ligne.estCrediteur %}
+								text-success
+							{% elseif ligne.estDebiteur %}
+								text-danger
+							{% endif %}
+															">
+							{{ ligne.regularisation|number_format(2, ',', ' ') }}
+							€
+						</td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="5" class="text-center text-muted">
+							Aucune régularisation à afficher.
+						</td>
 					</tr>
 				{% endfor %}
 			</tbody>
-		</table>
-	</div>
 
+			<tfoot class="table-light fw-bold">
+				<tr>
+					<td colspan="2">
+						Totaux
+					</td>
+
+					<td class="text-end">
+						{{ simulation.totalAppels|number_format(2, ',', ' ') }}
+						€
+					</td>
+
+					<td class="text-end">
+						{{ simulation.totalCharges|number_format(2, ',', ' ') }}
+						€
+					</td>
+
+					<td class="text-end">
+						{{ simulation.regularisationGlobale|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+
+	</div>
 {% endblock %}

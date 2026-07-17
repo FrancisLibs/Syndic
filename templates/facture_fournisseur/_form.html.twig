@@ -2,37 +2,40 @@
 <div class="container">
 	<div class="row">
 		<div class="col-3">
-{{ form_row(form.numero) }}</div>
+			{{ form_row(form.numero) }}</div>
 
-<div class="col-3">
-	{{ form_row(form.fournisseur) }}
-</div>
+		<div class="col-3">
+			{{ form_row(form.fournisseur) }}
+		</div>
 
-</div>
-<div class="row">
-<div class="col-6">
-	{{ form_row(form.typeCharge) }}
+	</div>
+	<div class="row">
+		<div class="col-6">
+			{{ form_row(form.typeCharge) }}
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-6">
+			{{ form_row(form.libelle) }}
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-2">
+			{{ form_row(form.dateFacture) }}
+		</div>
+		<div class="col-2">
+			{{ form_row(form.dateEcheance) }}
+		</div>
+	</div>
+	<div class="row d-flex align-items-center">
+		<div class="col-2">
+			{{ form_row(form.montant) }}
+		</div>
+		<div class="col-6 mt-3">
+			<button class="btn btn-primary">{{ button_label|default('Valider') }}</button>
+		</div>
 
-</div></div><div class="row">
-<div class="col-6">
-	{{ form_row(form.libelle) }}
-
-</div></div><div class="row">
-<div class="col-2">
-	{{ form_row(form.dateFacture) }}
-</div>
-<div class="col-2">
-	{{ form_row(form.dateEcheance) }}
-
-</div></div><div class="row d-flex align-items-center">
-<div class="col-2">
-	{{ form_row(form.montant) }}
-</div>
-<div class="col-6 mt-3">
-	<button class="btn btn-primary">{{ button_label|default('Valider') }}</button>
-</div>
-
-</div>
+	</div>
 </div>
 
 

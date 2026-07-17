@@ -76,6 +76,9 @@ class FactureFournisseur
     #[ORM\JoinColumn(nullable: false)]
     private ?Exercice $exercice = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $volumeEau = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -241,6 +244,18 @@ class FactureFournisseur
     ): static {
 
         $this->comptabilisee = $comptabilisee;
+
+        return $this;
+    }
+
+    public function getVolumeEau(): ?int
+    {
+        return $this->volumeEau;
+    }
+
+    public function setVolumeEau(?int $volumeEau): static
+    {
+        $this->volumeEau = $volumeEau;
 
         return $this;
     }

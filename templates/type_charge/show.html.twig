@@ -5,7 +5,6 @@
 
 {% block body %}
 	<h1>Type de Charge</h1>
-
 	<table class="table">
 		<tbody>
 			<tr>
@@ -23,6 +22,20 @@
 			<tr>
 				<th>Compte</th>
 				<td>{{ type_charge.compte }}</td>
+			</tr>
+			<tr>
+				<th>Charge d'eau</th>
+				<td>
+					{% if type_charge.estEau %}
+						<span class="badge text-bg-primary">
+							Oui
+						</span>
+					{% else %}
+						<span class="text-muted">
+							Non
+						</span>
+					{% endif %}
+				</td>
 			</tr>
 		</tbody>
 	</table>

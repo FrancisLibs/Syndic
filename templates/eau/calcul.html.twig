@@ -1,0 +1,169 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Calcul de l'eau
+{% endblock %}
+
+{% block body %}
+
+	<div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+		<h1>Calcul de l'eau</h1>
+		<h2>{{ exercice.nom }}</h2>
+	</div>
+
+	<table class="table table-sm">
+
+		<tr>
+			<th>Montant des factures</th>
+			<td>
+				{{ calcul.montantTotalFactures|number_format(2, ',', ' ') }}
+				€
+			</td>
+		</tr>
+
+		<tr>
+			<th>Consommation générale</th>
+			<td>
+				{{ calcul.consommationGenerale }}
+				m³
+			</td>
+		</tr>
+
+		<tr>
+			<th>Consommation des lots</th>
+			<td>
+				{{ calcul.consommationLots }}
+				m³
+			</td>
+		</tr>
+
+		<tr>
+			<th>Consommation des communs</th>
+			<td>
+				{{ calcul.consommationCommune }}
+				m³
+			</td>
+		</tr>
+
+		<tr>
+			<th>Prix du m³</th>
+			<td>
+				{{ calcul.prixM3|number_format(6, ',', ' ') }}
+				€
+			</td>
+		</tr>
+
+	</table>
+
+	<h3 class="mt-5">
+		Répartition par lot
+	</h3>
+
+	<table class="table table-striped">
+
+		<thead>
+			<tr>
+				<th>Lot</th>
+				<th>Consommation</th>
+				<th>Part individuelle</th>
+				<th>Part commune</th>
+				<th>Total</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			{% for lot in calcul.lots %}
+				<tr>
+					<td>{{ lot.reference }}</td>
+					<td>{{ lot.consommation }}</td>
+					<td>{{ lot.partIndividuelle|number_format(2, ',', ' ') }}
+						€</td>
+					<td>{{ lot.partCommune|number_format(2, ',', ' ') }}
+						€</td>
+					<td>
+						<strong>{{ lot.montantTotal|number_format(2, ',', ' ') }}
+							€</strong>
+					</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+
+		<tfoot>
+			<tr class="fw-bold">
+				<td>Totaux</td>
+				<td>{{ calcul.consommationLots }}
+					m³</td>
+				<td>
+					{{ calcul.totalPartIndividuelle|number_format(2, ',', ' ') }}
+					€
+				</td>
+				<td>
+					{{ calcul.totalPartCommune|number_format(2, ',', ' ') }}
+					€
+				</td>
+				<td>
+					{{ calcul.montantTotalReparti|number_format(2, ',', ' ') }}
+					€
+				</td>
+			</tr>
+		</tfoot>
+
+	</table>
+
+	{% if calcul.equilibre %}
+		<div class="alert alert-success">
+			Calcul équilibré.
+		</div>
+
+		{% if chargesEauGenerees %}
+
+			<div class="alert alert-info mt-4">
+				Les charges d'eau ont été réparties entre les copropriétaires.
+			</div>
+
+		{% elseif calcul.equilibre %}
+
+			<form method="post" action="{{ path('app_eau_generer_repartition') }}" class="mt-4">
+				<input type="hidden" name="_token" value="{{ csrf_token('generer_repartition_eau') }}">
+
+				<button class="btn btn-success">
+					Générer les charges d'eau
+				</button>
+			</form>
+
+		{% else %}
+
+			<div class="alert alert-warning mt-4">
+				Les charges ne peuvent pas être générées tant que le calcul n’est pas équilibré.
+			</div>
+
+		{% endif %}
+	{% else %}
+		<div class="alert alert-warning">
+			Un ajustement des arrondis est nécessaire.
+		</div>
+	{% endif %}
+
+	<hr>
+
+	<table class="table table-borderless w-auto">
+
+		<tr>
+			<th>Total réparti</th>
+			<td>
+				{{ calcul.montantTotalReparti|number_format(2, ',', ' ') }}
+				€
+			</td>
+		</tr>
+
+		<tr>
+			<th>Écart</th>
+			<td>
+				{{ calcul.ecartArrondi|number_format(2, ',', ' ') }}
+				€
+			</td>
+		</tr>
+
+	</table>
+
+{% endblock %}

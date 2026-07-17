@@ -43,6 +43,8 @@ final class ExerciceController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
+            $exercice->setActif(true);
+
             $entityManager->persist($exercice);
             $entityManager->flush();
 

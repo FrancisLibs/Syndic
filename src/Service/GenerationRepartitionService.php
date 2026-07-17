@@ -17,57 +17,112 @@ class GenerationRepartitionService
         Ecriture $ecritureCharge,
         FactureFournisseur $facture
     ): void {
-
         $copropriete = $facture
             ->getExercice()
             ->getCopropriete();
 
-        $lots = $copropriete->getLots();
+        $lots = $copropriete->getLots()->toArray();
 
-        if (count($lots) === 0) {
-            return;
+        if ($lots === []) {
+            throw new \LogicException(
+                'Aucun lot n’est défini pour cette copropriété.'
+            );
         }
 
         $totalTantiemes = 0;
-        $totalReparti = 0;
 
         foreach ($lots as $lot) {
-            $totalTantiemes += $lot->getTantiemes();
+            $tantiemes = $lot->getTantiemes();
+
+            if ($tantiemes === null || $tantiemes <= 0) {
+                throw new \LogicException(
+                    sprintf(
+                        'Les tantièmes du lot %s sont invalides.',
+                        $lot->getReference()
+                    )
+                );
+            }
+
+            $totalTantiemes += $tantiemes;
         }
 
-        foreach ($lots as $lot) {
+        if ($totalTantiemes <= 0) {
+            throw new \LogicException(
+                'Le total des tantièmes est invalide.'
+            );
+        }
 
-            $copro = $lot->getCoproprietaireActuel(
+        /*
+         * On prépare uniquement les lots ayant un copropriétaire
+         * à la date de la facture.
+         */
+        $lotsARepartir = [];
+
+        foreach ($lots as $lot) {
+            $coproprietaire = $lot->getCoproprietaireActuel(
                 $facture->getDateFacture()
             );
 
-            if (!$copro) {
-                continue;
+            if ($coproprietaire === null) {
+                throw new \LogicException(
+                    sprintf(
+                        'Aucun copropriétaire actif pour le lot %s à la date du %s.',
+                        $lot->getReference(),
+                        $facture->getDateFacture()->format('d/m/Y')
+                    )
+                );
             }
 
-            $montant = round(
-                (
-                    (float) $facture->getMontant()
-                    * $lot->getTantiemes()
-                ) / $totalTantiemes,
-                2
-            );
+            $lotsARepartir[] = [
+                'lot' => $lot,
+                'coproprietaire' => $coproprietaire,
+            ];
+        }
 
-            $totalReparti += $montant;
+        $montantFacture = (float) $facture->getMontant();
+        $totalReparti = 0.0;
+        $dernierIndex = count($lotsARepartir) - 1;
+
+        foreach ($lotsARepartir as $index => $ligne) {
+            $lot = $ligne['lot'];
+            $coproprietaire = $ligne['coproprietaire'];
+
+            if ($index === $dernierIndex) {
+                /*
+                 * Le dernier lot absorbe l’éventuel écart
+                 * causé par les arrondis.
+                 */
+                $montant = round(
+                    $montantFacture - $totalReparti,
+                    2
+                );
+            } else {
+                $montant = round(
+                    $montantFacture
+                        * $lot->getTantiemes()
+                        / $totalTantiemes,
+                    2
+                );
+
+                $totalReparti += $montant;
+            }
 
             $repartition = new Repartition();
-            $repartition->setLot($lot);
-            $repartition->setCoproprietaire($copro);
-            $repartition->setEcriture($ecritureCharge);
-            $repartition->setTantiemes($lot->getTantiemes());
-            $repartition->setMontant(
-                number_format(
-                    $montant,
-                    2,
-                    '.',
-                    ''
-                )
-            );
+
+            $repartition
+                ->setLot($lot)
+                ->setCoproprietaire($coproprietaire)
+                ->setEcriture($ecritureCharge)
+                ->setExercice($facture->getExercice())
+                ->setTantiemes($lot->getTantiemes())
+                ->setMontant(
+                    number_format(
+                        $montant,
+                        2,
+                        '.',
+                        ''
+                    )
+                );
 
             $this->em->persist($repartition);
         }

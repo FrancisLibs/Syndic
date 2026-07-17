@@ -5,8 +5,12 @@
 {% block body %}
     <h1>Edit FactureFournisseur</h1>
 
-    {{ include('facture_fournisseur/_form.html.twig', {'button_label': 'Update'}) }}
+    {{ include('facture_fournisseur/_form.html.twig', {'button_label': 'Modifier'}) }}
 
     <a href="{{ path('app_facture_fournisseur_index') }}">back to list</a>
 
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{{ asset('assets/js/factureFournisseur.js') }}"></script>
 {% endblock %}

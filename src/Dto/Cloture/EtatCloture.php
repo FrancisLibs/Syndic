@@ -12,7 +12,6 @@ final class EtatCloture
         public readonly bool $exerciceTermine,
         public readonly bool $budgetsVerrouilles,
         public readonly bool $operationsEquilibrees,
-        public readonly bool $regularisationsGenerees,
         public readonly bool $anouveauxGeneres,
         public readonly bool $clotureComptesGestionGeneree,
         public readonly bool $exerciceSuivantExiste,
@@ -25,19 +24,10 @@ final class EtatCloture
         return
             $this->exerciceActif
             && !$this->exerciceCloture
-            && $this->regularisationsGenerees
-            && !$this->clotureComptesGestionGeneree;
-    }
-
-    public function peutGenererRegularisations(): bool
-    {
-        return
-            $this->exerciceActif
-            && !$this->exerciceCloture
+            && $this->exerciceTermine
             && $this->budgetsVerrouilles
             && $this->operationsEquilibrees
-            && !$this->regularisationsGenerees
-            && $this->exerciceTermine;
+            && !$this->clotureComptesGestionGeneree;
     }
 
     public function peutCalculerSoldesReportables(): bool
@@ -45,34 +35,7 @@ final class EtatCloture
         return
             $this->exerciceActif
             && !$this->exerciceCloture
-            && $this->regularisationsGenerees;
-    }
-
-    public function peutGenererANouveaux(): bool
-    {
-        return
-            $this->exerciceActif
-            && !$this->exerciceCloture
-            && $this->regularisationsGenerees
-            && $this->clotureComptesGestionGeneree
-            && $this->exerciceSuivantExiste
-            && !$this->anouveauxGeneres;
-    }
-
-
-    public function peutCloturer(): bool
-    {
-        return
-            $this->exerciceActif
-            && !$this->exerciceCloture
-            && $this->exerciceTermine
-            && $this->budgetsVerrouilles
-            && $this->operationsEquilibrees
-            && $this->regularisationsGenerees
-            && $this->anouveauxGeneres
-            && $this->clotureComptesGestionGeneree
-            && $this->exerciceSuivantExiste
-            && empty($this->erreurs);
+            && $this->clotureComptesGestionGeneree;
     }
 
     public function peutCreerExerciceSuivant(): bool
@@ -83,6 +46,30 @@ final class EtatCloture
             && $this->exerciceTermine
             && $this->clotureComptesGestionGeneree
             && !$this->exerciceSuivantExiste;
+    }
+
+    public function peutGenererANouveaux(): bool
+    {
+        return
+            $this->exerciceActif
+            && !$this->exerciceCloture
+            && $this->clotureComptesGestionGeneree
+            && $this->exerciceSuivantExiste
+            && !$this->anouveauxGeneres;
+    }
+
+    public function peutCloturer(): bool
+    {
+        return
+            $this->exerciceActif
+            && !$this->exerciceCloture
+            && $this->exerciceTermine
+            && $this->budgetsVerrouilles
+            && $this->operationsEquilibrees
+            && $this->clotureComptesGestionGeneree
+            && $this->exerciceSuivantExiste
+            && $this->anouveauxGeneres
+            && empty($this->erreurs);
     }
 
     public function estBloque(): bool

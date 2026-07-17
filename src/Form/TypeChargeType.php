@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Compte;
 use App\Entity\TypeCharge;
 use App\Enum\ModeRepartition;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
@@ -35,6 +36,15 @@ class TypeChargeType extends AbstractType
                 [
                     'class' => Compte::class,
                     'choice_label' => 'libelle',
+                ]
+            )
+
+            ->add(
+                'estEau',
+                CheckboxType::class,
+                [
+                    'label' => 'Charge d’eau',
+                    'required' => false,
                 ]
             )
         ;

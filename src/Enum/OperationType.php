@@ -11,4 +11,5 @@ enum OperationType: string
     case PAIEMENT_FOURNISSEUR = 'paiement_fournisseur';
     case A_NOUVEAU = 'a_nouveau';
     case CLOTURE = 'cloture';
+    case APPROBATION_COMPTES = 'approbation_comptes';
 }

@@ -32,6 +32,9 @@ class ComptabiliteService
             ->setType($type)
             ->setStatut(OperationStatut::VALIDE);
 
+        $this->em->persist($operation);
+
+
         return $operation;
     }
 
@@ -90,6 +93,8 @@ class ComptabiliteService
 
         $operation->addEcriture($ecriture);
 
+        $this->em->persist($ecriture);
+
         return $ecriture;
     }
 
@@ -129,6 +134,5 @@ class ComptabiliteService
 
         $operation->valider();
 
-        $this->em->persist($operation);
     }
 }

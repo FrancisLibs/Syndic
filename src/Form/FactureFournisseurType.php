@@ -10,6 +10,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -82,7 +83,32 @@ class FactureFournisseurType extends AbstractType
                 [
                     'class' => TypeCharge::class,
                     'choice_label' => 'nom',
-                    'label' => 'Type de charge',]
+                    'label' => 'Type de charge',
+                    'choice_attr' => function (TypeCharge $typeCharge) {
+                        return [
+                            'data-est-eau' => $typeCharge->isEau()
+                                ? '1'
+                                : '0',
+                        ];
+                    },
+                ]
+            )
+
+            ->add(
+                'volumeEau',
+                IntegerType::class,
+                [
+                    'label' => 'Volume facturé (m³)',
+                    'required' => false,
+
+                    'row_attr' => [
+                        'id' => 'volume-eau-row',
+                    ],
+
+                    'attr' => [
+                        'min' => 0,
+                    ],
+                ]
             );
     }
 

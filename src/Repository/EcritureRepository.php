@@ -6,6 +6,7 @@ use App\Entity\Ecriture;
 use App\Entity\Exercice;
 use App\Entity\Lot;
 use App\Enum\CompteType;
+use App\Enum\OperationType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -125,5 +126,36 @@ class EcritureRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
 
         return (float) ($result ?? 0);
+    }
+
+    /**
+     * Retourne les écritures de débit correspondant aux charges
+     * comptabilisées pour un exercice.
+     *
+     * @return Ecriture[]
+     */
+    public function findChargesAvecRepartitions(
+        Exercice $exercice
+    ): array {
+        return $this->createQueryBuilder('e')
+            ->addSelect(
+                'operation',
+                'compte',
+                'repartitions',
+                'typeCharge'
+            )
+            ->join('e.operation', 'operation')
+            ->join('e.compte', 'compte')
+            ->leftJoin('e.repartitions', 'repartitions')
+            ->leftJoin('operation.typeCharge', 'typeCharge')
+            ->andWhere('e.exercice = :exercice')
+            ->andWhere('operation.type = :type')
+            ->andWhere('e.debit > 0')
+            ->setParameter('exercice', $exercice)
+            ->setParameter('type', OperationType::CHARGE)
+            ->orderBy('operation.date', 'ASC')
+            ->addOrderBy('operation.id', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }

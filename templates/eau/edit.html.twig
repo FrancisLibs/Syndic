@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit CompteurEau{% endblock %}
+
+{% block body %}
+    <h1>Edit CompteurEau</h1>
+
+    {{ include('compteur_eau/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_compteur_eau_index') }}">back to list</a>
+
+    {{ include('compteur_eau/_delete_form.html.twig') }}
+{% endblock %}

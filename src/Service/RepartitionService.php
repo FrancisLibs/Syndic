@@ -52,10 +52,13 @@ class RepartitionService
             }
 
             $repartition = new Repartition();
-            $repartition->setLot($lot);
-            $repartition->setEcriture($ecriture);
-            $repartition->setMontant(number_format($part, 2, '.', ''));
-            $repartition->setTantiemes(0);
+            $repartition
+                ->setLot($lot)
+                ->setEcriture($ecriture)
+                ->setExercice($ecriture->getExercice())
+                ->setMontant(number_format($part, 2, '.', ''))
+                ->setTantiemes($lot->getTantiemes())
+                ->setCoproprietaire($coproprietaire);
 
             $coproprietaire = $lot->getCoproprietaireActuel();
             if (!$coproprietaire) {

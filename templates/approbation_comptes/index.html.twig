@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Approbation des comptes
+{% endblock %}
+
+{% block body %}
+
+	<div class="container mt-4">
+
+		<h1>Approbation des comptes</h1>
+
+		<h4 class="text-muted">
+			{{ exercice.nom }}
+		</h4>
+
+		<table class="table table-striped">
+
+			<thead>
+
+				<tr>
+
+					<th>Copropriétaire</th>
+
+					<th class="text-end">
+						Appels
+					</th>
+
+					<th class="text-end">
+						Charges
+					</th>
+
+					<th class="text-end">
+						Régularisation
+					</th>
+
+				</tr>
+
+			</thead>
+
+			<tbody>
+
+				{% for ligne in simulation.lignes %}
+
+					<tr>
+
+						<td>
+							{{ ligne.coproprietaire }}
+						</td>
+
+						<td class="text-end">
+							{{ ligne.totalAppele|number_format(2, ',', ' ') }}
+						</td>
+
+						<td class="text-end">
+							{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
+						</td>
+
+						<td class="text-end">
+
+							{% if ligne.sens == 'credit' %}
+
+								<span class="text-success">
+
+								{% else %}
+
+									<span class="text-danger">
+
+									{% endif %}
+
+									{{ ligne.resultat|number_format(2, ',', ' ') }}
+
+								</span>
+							</td>
+						</td>
+					</tr>
+
+				{% endfor %}
+
+			</tbody>
+
+		</table>
+
+	</div>
+
+{% endblock %}

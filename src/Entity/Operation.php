@@ -57,6 +57,9 @@ class Operation
     #[ORM\OneToOne(mappedBy: 'operation', cascade: ['persist', 'remove'])]
     private ?AppelFond $appelFond = null;
 
+    #[ORM\OneToOne(mappedBy: 'operation', cascade: ['persist', 'remove'])]
+    private ?ApprobationComptes $approbationComptes = null;
+
     public function __construct()
     {
         $this->ecritures = new ArrayCollection();
@@ -252,6 +255,28 @@ class Operation
         }
 
         $this->appelFond = $appelFond;
+
+        return $this;
+    }
+
+    public function getApprobationComptes(): ?ApprobationComptes
+    {
+        return $this->approbationComptes;
+    }
+
+    public function setApprobationComptes(?ApprobationComptes $approbationComptes): static
+    {
+        // unset the owning side of the relation if necessary
+        if ($approbationComptes === null && $this->approbationComptes !== null) {
+            $this->approbationComptes->setOperation(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($approbationComptes !== null && $approbationComptes->getOperation() !== $this) {
+            $approbationComptes->setOperation($this);
+        }
+
+        $this->approbationComptes = $approbationComptes;
 
         return $this;
     }

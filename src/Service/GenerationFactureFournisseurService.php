@@ -65,12 +65,20 @@ class GenerationFactureFournisseurService
         $facture->setOperation($operation);
         $facture->setComptabilisee(true);
 
-        $this->generationRepartitionService->generer(
-            $debit,
-            $facture
-        );
+        /*
+         * Les factures d’eau ne sont pas réparties immédiatement.
+         * Leur répartition sera générée après le relevé des compteurs.
+         */
+        if (!$facture->getTypeCharge()->isEau()) {
+            $this->generationRepartitionService->generer(
+                $debit,
+                $facture
+            );
+        }
 
-        $this->comptabiliteService->enregistrer($operation);
+        $this->comptabiliteService->enregistrer(
+            $operation
+        );
 
         $this->entityManager->flush();
     }

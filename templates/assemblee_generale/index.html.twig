@@ -1,0 +1,244 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Assemblée Générale
+{% endblock %}
+
+{% block body %}
+	<div class="container mt-4">
+
+		<div class="d-flex justify-content-between align-items-start mb-4">
+
+			<div>
+				<h1>Assemblée Générale</h1>
+
+				<p class="text-muted mb-0">
+					Approbation des comptes de l'exercice
+					<strong>{{ exercice.nom }}</strong>
+				</p>
+			</div>
+
+			<a href="{{ path('app_cloture_workflow', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+				← Retour à la clôture
+			</a>
+
+		</div>
+
+		<div class="card mb-4">
+
+			<div class="card-header">
+				<strong>Situation des comptes</strong>
+			</div>
+
+			<div class="card-body">
+
+				<div class="row">
+
+					<div class="col-md-4">
+						<div class="text-muted">
+							Total appelé
+						</div>
+
+						<div class="fs-5 fw-bold">
+							{{ approbation.totalAppele|number_format(2, ',', ' ') }}
+							€
+						</div>
+					</div>
+
+					<div class="col-md-4">
+						<div class="text-muted">
+							Charges réelles
+						</div>
+
+						<div class="fs-5 fw-bold">
+							{{ approbation.totalCharges|number_format(2, ',', ' ') }}
+							€
+						</div>
+					</div>
+
+					<div class="col-md-4">
+						<div class="text-muted">
+							Solde du compte 489000
+						</div>
+
+						<div class="fs-5 fw-bold">
+							{{ approbation.solde489000|number_format(2, ',', ' ') }}
+							€
+						</div>
+					</div>
+
+				</div>
+
+			</div>
+
+		</div>
+
+		<div class="card mb-4">
+
+			<div class="card-header">
+				<strong>Répartition entre les copropriétaires</strong>
+			</div>
+
+			<div class="card-body p-0">
+
+				<div class="table-responsive">
+
+					<table class="table table-striped table-hover mb-0">
+
+						<thead class="table-light">
+							<tr>
+								<th>Copropriétaire</th>
+								<th class="text-end">Tantièmes</th>
+								<th class="text-end">Appels</th>
+								<th class="text-end">Charges</th>
+								<th class="text-end">Régularisation</th>
+							</tr>
+						</thead>
+
+						<tbody>
+
+							{% for ligne in approbation.lignes %}
+								<tr>
+									<td>
+										{{ ligne.coproprietaire }}
+									</td>
+
+									<td class="text-end">
+										{{ ligne.tantiemes }}
+									</td>
+
+									<td class="text-end">
+										{{ ligne.totalAppele|number_format(2, ',', ' ') }}
+										€
+									</td>
+
+									<td class="text-end">
+										{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
+										€
+									</td>
+
+									<td class="text-end fw-bold	{% if ligne.estCrediteur %}	text-success {% elseif ligne.estDebiteur %}text-danger{% endif %}">
+										{{ ligne.regularisation|number_format(2, ',', ' ') }}
+										€
+									</td>
+								</tr>
+
+							{% else %}
+
+								<tr>
+									<td colspan="5" class="text-center text-muted py-4">
+										Aucune régularisation à présenter.
+									</td>
+								</tr>
+
+							{% endfor %}
+
+						</tbody>
+
+						<tfoot class="table-light fw-bold">
+							<tr>
+								<td colspan="2">
+									Totaux
+								</td>
+
+								<td class="text-end">
+									{{ approbation.totalAppele|number_format(2, ',', ' ') }}
+									€
+								</td>
+
+								<td class="text-end">
+									{{ approbation.totalCharges|number_format(2, ',', ' ') }}
+									€
+								</td>
+
+								<td class="text-end">
+									{{ approbation.solde489000|number_format(2, ',', ' ') }}
+									€
+								</td>
+							</tr>
+						</tfoot>
+
+					</table>
+
+				</div>
+
+			</div>
+
+		</div>
+
+		<div class="card">
+
+			<div class="card-header">
+				<strong>Assemblée Générale</strong>
+			</div>
+
+			<div class="card-body">
+				{% if approbationEnregistree.id is null %}
+
+					{{ form_start(form) }}
+
+					<div class="row">
+
+						<div class="col-md-6">
+							{{ form_row(form.dateAssembleeGenerale) }}
+						</div>
+
+						<div class="col-md-6">
+							{{ form_row(form.numeroResolution) }}
+						</div>
+
+					</div>
+
+					<button type="submit" class="btn btn-primary">
+						Enregistrer les informations de l’AG
+					</button>
+
+					{{ form_end(form) }}
+
+				{% else %}
+
+					<div class="alert alert-success">
+						Les informations de l’Assemblée Générale sont enregistrées.
+					</div>
+
+					<table class="table table-sm">
+						<tbody>
+							<tr>
+								<th>Date de l’AG</th>
+								<td>
+									{{ approbationEnregistree.dateAssembleeGenerale|date('d/m/Y') }}
+								</td>
+							</tr>
+							<tr>
+								<th>Résolution</th>
+								<td>
+									{{ approbationEnregistree.numeroResolution }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					{% if approbationEnregistree.operation %}
+
+						<div class="alert alert-success">
+							Les comptes ont été approuvés.
+						</div>
+
+					{% else %}
+
+						<form method="post" action="{{ path( 'app_assemblee_generale_approuver', { id: approbationEnregistree.id } ) }}">
+							<button type="submit" class="btn btn-success" onclick="return confirm('Confirmer l’approbation définitive des comptes ?')">
+								Approuver les comptes
+							</button>
+						</form>
+
+					{% endif %}
+
+				{% endif %}
+
+			</div>
+
+		</div>
+
+	</div>
+{% endblock %}

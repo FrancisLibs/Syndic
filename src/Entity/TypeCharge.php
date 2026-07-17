@@ -32,6 +32,9 @@ class TypeCharge
     #[ORM\OneToMany(targetEntity: Operation::class, mappedBy: 'typeCharge')]
     private Collection $operations;
 
+    #[ORM\Column]
+    private bool $estEau = false;
+
     public function __construct()
     {
         $this->operations = new ArrayCollection();
@@ -103,6 +106,23 @@ class TypeCharge
                 $operation->setTypeCharge(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isEau(): bool
+    {
+        return $this->estEau;
+    }
+
+    public function getEstEau(): bool
+    {
+        return $this->estEau;
+    }
+
+    public function setEstEau(bool $estEau): static
+    {
+        $this->estEau = $estEau;
 
         return $this;
     }
