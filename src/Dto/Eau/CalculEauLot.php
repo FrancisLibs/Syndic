@@ -2,12 +2,14 @@
 
 namespace App\Dto\Eau;
 
+use App\Entity\Coproprietaire;
 use App\Entity\Lot;
 
 final class CalculEauLot
 {
     public function __construct(
         private readonly Lot $lot,
+        private readonly Coproprietaire $coproprietaire,
         private readonly int $consommation,
         private readonly float $partIndividuelle,
         private readonly float $partCommune,
@@ -17,6 +19,11 @@ final class CalculEauLot
     public function getLot(): Lot
     {
         return $this->lot;
+    }
+
+    public function getCoproprietaire(): Coproprietaire
+    {
+        return $this->coproprietaire;
     }
 
     public function getReference(): ?string

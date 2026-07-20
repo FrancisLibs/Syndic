@@ -64,6 +64,7 @@
 		<thead>
 			<tr>
 				<th>Lot</th>
+				<th>Copropriétaire</th>
 				<th>Consommation</th>
 				<th>Part individuelle</th>
 				<th>Part commune</th>
@@ -74,7 +75,8 @@
 		<tbody>
 			{% for lot in calcul.lots %}
 				<tr>
-					<td>{{ lot.reference }}</td>
+					<td>{{ lot.designation }}</td>
+					<td>{{ lot.coproprietaire }}</td>
 					<td>{{ lot.consommation }}</td>
 					<td>{{ lot.partIndividuelle|number_format(2, ',', ' ') }}
 						€</td>

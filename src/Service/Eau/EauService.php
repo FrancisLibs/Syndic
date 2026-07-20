@@ -77,12 +77,8 @@ final class EauService
 
         $lots = $this->calculerLots(
             $consommations,
-            $prixM3
-        );
-
-        $lots = $this->ajusterArrondis(
-            $lots,
-            $montantFactures
+            $prixM3,
+            $exercice
         );
 
         $consommationGenerale =
@@ -109,84 +105,8 @@ final class EauService
             lots: $lots,
         );
     }
-
-    /**
-     * @param CalculEauLot[] $lots
-     *
-     * @return CalculEauLot[]
-     */
-    private function ajusterArrondis(
-        array $lots,
-        float $montantFactures
-    ): array {
-        if ($lots === []) {
-            return $lots;
-        }
-
-        $totalReparti = 0.0;
-
-        foreach ($lots as $calculLot) {
-            $totalReparti += $calculLot->getMontantTotal();
-        }
-
-        $ecart = round(
-            $montantFactures - $totalReparti,
-            2
-        );
-
-        if (abs($ecart) < 0.01) {
-            return $lots;
-        }
-
-        /*
-     * L’écart est affecté à la part commune
-     * du lot ayant le montant total le plus élevé.
-     */
-        $indexAjustement = 0;
-        $montantMaximum = -1.0;
-
-        foreach ($lots as $index => $calculLot) {
-            if (
-                $calculLot->getMontantTotal()
-                > $montantMaximum
-            ) {
-                $montantMaximum =
-                    $calculLot->getMontantTotal();
-
-                $indexAjustement = $index;
-            }
-        }
-
-        $lotAjuste = $lots[$indexAjustement];
-
-        $nouvellePartCommune = round(
-            $lotAjuste->getPartCommune()
-                + $ecart,
-            2
-        );
-
-        if ($nouvellePartCommune < 0) {
-            throw new \DomainException(
-                'L’ajustement des arrondis rendrait une part commune négative.'
-            );
-        }
-
-        $lots[$indexAjustement] =
-            new CalculEauLot(
-                lot: $lotAjuste->getLot(),
-                consommation: $lotAjuste->getConsommation(),
-                partIndividuelle: $lotAjuste->getPartIndividuelle(),
-                partCommune: $nouvellePartCommune,
-                montantTotal: round(
-                    $lotAjuste->getPartIndividuelle()
-                        + $nouvellePartCommune,
-                    2
-                ),
-            );
-
-        return $lots;
-    }
-
+    
+    
     private function calculerPartCommune(
         float $coutCommuns,
         int $tantiemesLot,
@@ -278,7 +198,8 @@ final class EauService
      */
     private function calculerLots(
         ConsommationImmeuble $consommations,
-        float $prixM3
+        float $prixM3,
+        Exercice $exercice
     ): array {
         $totalTantiemes = $this->calculerTotalTantiemes(
             $consommations
@@ -339,6 +260,20 @@ final class EauService
                 );
             }
 
+            $coproprietaire = $lot->getCoproprietaireActuel(
+                $exercice->getDateFin()
+            );
+
+            if ($coproprietaire === null) {
+                throw new \DomainException(
+                    sprintf(
+                        'Aucun copropriétaire n’est défini pour le lot %s au %s.',
+                        $lot->getReference(),
+                        $exercice->getDateFin()->format('d/m/Y')
+                    )
+                );
+            }
+
             $partIndividuelle =
                 $this->calculerPartIndividuelle(
                     $consommation,
@@ -354,12 +289,12 @@ final class EauService
 
             $lots[] = new CalculEauLot(
                 lot: $lot,
+                coproprietaire: $coproprietaire,
                 consommation: $consommation,
                 partIndividuelle: $partIndividuelle,
                 partCommune: $partCommune,
                 montantTotal: round(
-                    $partIndividuelle
-                        + $partCommune,
+                    $partIndividuelle + $partCommune,
                     2
                 ),
             );
