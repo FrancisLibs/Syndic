@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Assistant d'initialisation
+{% endblock %}
+
+{% block body %}
+
+	<div class="d-flex justify-content-between align-items-center mb-4">
+
+		<div>
+
+			<h1>Assistant d'initialisation</h1>
+
+			<p class="text-muted">
+				Cette procédure permet d'initialiser le premier exercice de la copropriété.
+			</p>
+
+		</div>
+
+	</div>
+
+	<div class="list-group">
+
+		<a href="{{ path('app_initialisation_import_factures') }}" class="list-group-item list-group-item-action">
+
+			<div class="d-flex justify-content-between">
+
+				<strong>
+					1. Import des factures fournisseurs
+				</strong>
+
+				<span class="badge bg-primary">
+					Étape 1
+				</span>
+
+			</div>
+
+			<small class="text-muted">
+
+				Import du fichier CSV contenant les anciennes factures.
+
+			</small>
+
+		</a>
+
+		<a href="#" class="list-group-item list-group-item-action disabled">
+
+			<div class="d-flex justify-content-between">
+
+				<strong>
+					2. Traitement des factures importées
+				</strong>
+
+				<span class="badge bg-secondary">
+					À venir
+				</span>
+
+			</div>
+
+		</a>
+
+		<a href="#" class="list-group-item list-group-item-action disabled">
+
+			<div class="d-flex justify-content-between">
+
+				<strong>
+					3. Import des soldes d'ouverture
+				</strong>
+
+				<span class="badge bg-secondary">
+					À venir
+				</span>
+
+			</div>
+
+		</a>
+
+		<a href="#" class="list-group-item list-group-item-action disabled">
+
+			<div class="d-flex justify-content-between">
+
+				<strong>
+					4. Vérification finale
+				</strong>
+
+				<span class="badge bg-secondary">
+					À venir
+				</span>
+
+			</div>
+
+		</a>
+
+	</div>
+
+{% endblock %}

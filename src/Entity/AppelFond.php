@@ -24,7 +24,7 @@ class AppelFond
     private ?\DateTimeImmutable $dateAppel = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $dateEcheance = null;
+    private ?\DateTimeImmutable $dateReglement = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $libelle = null;
@@ -86,17 +86,17 @@ class AppelFond
         return $this;
     }
 
-    public function getDateEcheance(): ?\DateTimeImmutable
+    public function getDateReglement(): ?\DateTimeImmutable
     {
-        return $this->dateEcheance;
+        return $this->dateReglement;
     }
 
-    public function setDateEcheance(
-        ?\DateTimeImmutable $dateEcheance
+    public function setDateReglement(
+        ?\DateTimeImmutable $dateReglement
     ): static {
 
-        $this->dateEcheance =
-            $dateEcheance;
+        $this->dateReglement =
+            $dateReglement;
 
         return $this;
     }

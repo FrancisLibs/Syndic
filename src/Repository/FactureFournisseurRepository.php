@@ -38,7 +38,7 @@ class FactureFournisseurRepository extends ServiceEntityRepository
             ->setParameter('nonSoldee', false)
             ->orderBy('e.dateDebut', 'DESC')
             ->addOrderBy('f.soldee', 'ASC')
-            ->addOrderBy('f.dateEcheance', 'ASC')
+            ->addOrderBy('f.dateReglement', 'ASC')
             ->addOrderBy('f.dateFacture', 'DESC')
             ->getQuery()
             ->getResult();

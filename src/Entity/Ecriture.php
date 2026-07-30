@@ -30,7 +30,11 @@ class Ecriture
     #[ORM\JoinColumn(nullable: false)]
     private ?Operation $operation = null;
 
-    #[ORM\ManyToOne(targetEntity: Exercice::class, inversedBy: 'ecritures')]
+    #[ORM\ManyToOne(
+        targetEntity: Exercice::class,
+        inversedBy: 'ecritures',
+        fetch: 'EAGER'
+    )]
     #[ORM\JoinColumn(nullable: false)]
     private ?Exercice $exercice = null;
 

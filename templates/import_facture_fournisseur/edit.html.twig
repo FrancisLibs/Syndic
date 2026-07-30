@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Corriger une ligne d’import
+{% endblock %}
+
+{% block body %}
+    <div class="mb-4">
+        <h1>Corriger la ligne d’import</h1>
+
+        <p class="text-muted">
+            Ligne n° {{ ligne.id }}
+        </p>
+    </div>
+
+    {{ form_start(form) }}
+
+        {{ form_widget(form) }}
+
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary">
+                Enregistrer les corrections
+            </button>
+
+            <a
+                href="{{ path(
+                    'app_import_facture_fournisseur_index'
+                ) }}"
+                class="btn btn-outline-secondary"
+            >
+                Annuler
+            </a>
+        </div>
+
+    {{ form_end(form) }}
+{% endblock %}

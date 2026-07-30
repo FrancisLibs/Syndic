@@ -2,12 +2,16 @@
 <div class="container">
 	<div class="row">
 		<div class="col-3">
-			{{ form_row(form.numero) }}</div>
-
-		<div class="col-3">
-			{{ form_row(form.fournisseur) }}
+			{{ form_row(form.numero) }}
 		</div>
-
+		<div class="d-flex justify-content-start gap-3">
+			<div>
+				{{ form_row(form.fournisseur) }}
+			</div>
+			<div>
+				{{ form_row(form.coproprietaireAvanceur) }}
+			</div>
+		</div>
 	</div>
 	<div class="row">
 		<div class="col-6">
@@ -24,7 +28,7 @@
 			{{ form_row(form.dateFacture) }}
 		</div>
 		<div class="col-2">
-			{{ form_row(form.dateEcheance) }}
+			{{ form_row(form.dateReglement) }}
 		</div>
 	</div>
 	<div class="row d-flex align-items-center">
@@ -34,9 +38,7 @@
 		<div class="col-6 mt-3">
 			<button class="btn btn-primary">{{ button_label|default('Valider') }}</button>
 		</div>
-
 	</div>
+
 </div>
-
-
 {{ form_end(form) }}

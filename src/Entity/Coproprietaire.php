@@ -233,12 +233,6 @@ class Coproprietaire
         return $this;
     }
 
-    public function __toString(): string
-    {
-        // On affiche le nom et prénom du propriétaire dans les listes de choix
-        return trim(($this->prenom ?? '') . ' ' . $this->nom) ?: 'Anonyme';
-    }
-
     /**
      * @return Collection<int, LigneAppelFond>
      */
@@ -309,5 +303,19 @@ class Coproprietaire
         }
 
         return $this;
+    }
+
+    public function getNomComplet(): string
+    {
+        return trim(
+            ($this->getPrenom() ?? '')
+                . ' '
+                . ($this->getNom() ?? '')
+        );
+    }
+
+    public function __toString(): string
+    {
+        return $this->getNomComplet();
     }
 }

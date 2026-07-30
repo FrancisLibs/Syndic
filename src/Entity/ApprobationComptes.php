@@ -28,7 +28,10 @@ class ApprobationComptes
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $numeroResolution = null;
 
-    #[ORM\OneToOne]
+    #[ORM\OneToOne(
+        inversedBy: 'approbationComptes',
+        targetEntity: Operation::class
+    )]
     #[ORM\JoinColumn(
         nullable: true,
         onDelete: 'SET NULL'
@@ -86,9 +89,8 @@ class ApprobationComptes
         return $this->operation;
     }
 
-    public function setOperation(
-        ?Operation $operation
-    ): static {
+    public function setOperation(?Operation $operation): static
+    {
         $this->operation = $operation;
 
         return $this;

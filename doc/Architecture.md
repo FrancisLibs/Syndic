@@ -1,188 +1,247 @@
-# Architecture
+# ComptaSyndic V4
 
-## Projet
+## Présentation
 
-Application de gestion comptable pour syndic bénévole.
+ComptaSyndic V4 est une application Symfony destinée à assurer la gestion
+comptable d'une copropriété.
 
----
+L'objectif est de disposer d'une comptabilité conforme aux règles de la
+copropriété tout en restant simple d'utilisation pour un syndic bénévole.
 
-# Philosophie
+L'application est construite autour d'un principe fondamental :
 
-Le logiciel doit appliquer automatiquement le bon sens comptable d'un syndic bénévole expérimenté, tout en rendant chaque décision compréhensible et vérifiable.
-
-Chaque chiffre affiché doit pouvoir être expliqué.
-
-Le logiciel ne remplace pas le syndic.
-Il l'accompagne.
+> Toute écriture comptable est générée par les services métier.
+> Aucune écriture n'est créée manuellement.
 
 ---
 
-# Principes
+# Architecture générale
 
-## Une seule source de vérité
+Le projet est organisé autour de quatre couches.
 
-Les écritures comptables sont la référence.
-
-Tous les calculs en découlent.
-
-Aucune donnée calculée ne doit être dupliquée inutilement.
-
----
-
-## Calcul ≠ Génération
-
-Un calcul ne modifie jamais la base de données.
-
-Une génération crée des écritures comptables.
-
----
-
-## Contrôle avant action
-
-Toute génération doit être précédée d'un contrôle utilisateur.
-
----
-
-## Les conséquences sont persistées.
-
-Les calculs ne le sont pas.
-
-Exemples :
-
-✔ régularisations générées
-
-✔ à-nouveaux générés
-
-✔ exercice clôturé
-
-Mais jamais :
-
-✘ calcul des soldes effectué
-
-✘ validation consultée
-
----
-
-# Architecture
-
-Entity
-    ↓
-Repository
-    ↓
-Service
-    ↓
-DTO
-    ↓
+```
 Controller
-    ↓
-Twig
+        │
+        ▼
+Services métier
+        │
+        ▼
+ComptabiliteService
+        │
+        ▼
+Doctrine / Base de données
+```
 
-# Workflow de clôture
+Le contrôleur ne contient jamais de logique comptable.
 
-1. Vérifications préalables
+Il récupère les données du formulaire puis appelle un service.
 
-2. Calcul des régularisations
+Toute la logique métier est regroupée dans les services.
 
-3. Validation des régularisations
+---
 
-4. Génération des régularisations
+# Le rôle de ComptabiliteService
 
-5. Calcul des soldes reportables
+ComptabiliteService constitue le cœur du logiciel.
 
-6. Validation des soldes reportables
+Tous les autres services passent obligatoirement par lui.
 
-7. Génération des à-nouveaux
+Il est responsable de :
 
-8. Validation des à-nouveaux
+- création des opérations
+- création des écritures
+- équilibre débit / crédit
+- rattachement à l'exercice
+- rattachement aux copropriétaires
 
-9. Clôture de l'exercice
+Aucun autre service ne crée directement une écriture comptable.
 
-10. Activation du nouvel exercice
+---
 
+# Les principaux services
 
-# Repository
+## GenerationFactureFournisseurService
 
-- accès aux données
-- requêtes DQL
-- aucun métier
+Responsabilité :
 
-Service
+Création des écritures correspondant à une facture fournisseur.
 
-- règles métier
-- calculs
-- décisions
+Produit :
 
-DTO
+- opération CHARGE
+- débit compte de charge
+- crédit fournisseur
+- génération des répartitions
 
-- transport des données
-- état du workflow
+---
 
-Controller
+## ReglementFactureFournisseurService
 
-- orchestration
+Responsabilité :
 
-Twig
+Paiement d'une facture fournisseur.
 
-- affichage uniquement
+Produit :
 
+- opération PAIEMENT_FOURNISSEUR
+- débit fournisseur
+- crédit banque
 
+---
 
-# EtatCloture
+## GenerationPaiementService
 
-- état général
-- informations de progression
-- données nécessaires à l'affichage
+Responsabilité :
 
-SoldeReportable
+Paiement d'un copropriétaire.
 
-- compte
-- copropriétaire
-- débit
-- crédit
+Produit :
 
-Regularisation (à créer)
+- débit banque
+- crédit copropriétaire
 
-- copropriétaire
-- montant
+---
 
-# Sprint 0
+## GenerationAppelFondService
 
-✔ Architecture
+Responsabilité :
 
-Sprint 1
+Création d'un appel de fonds.
 
-Assistant de clôture
+Produit :
 
-Sprint 2
+- débit copropriétaires
+- crédit produits
 
-Vérifications
+---
 
-Sprint 3
+## RepartitionService
+
+Responsabilité :
+
+Répartition automatique des charges entre les lots.
+
+Modes disponibles :
+
+- tantièmes
+- égalitaire
+
+---
+
+## ClotureExerciceService
+
+Responsabilité :
+
+Clôture comptable d'un exercice.
+
+Fonctions :
+
+- vérifications
+- régularisations
+- clôture des comptes de gestion
+- génération des à-nouveaux
+- bascule vers l'exercice suivant
+
+---
+
+# Cycle comptable
+
+Facture fournisseur
+
+↓
+
+Paiement fournisseur
+
+↓
+
+Répartition
+
+↓
+
+Paiement copropriétaires
+
+↓
 
 Régularisations
 
-Sprint 4
-
-Soldes reportables
-
-Sprint 5
-
-À-nouveaux
-
-Sprint 6
+↓
 
 Clôture
 
-Sprint 7
+↓
 
-Dossier de clôture
+A-nouveaux
 
-# Règle d'or
+↓
 
-Avant d'ajouter une fonctionnalité, toujours se poser les questions suivantes :
+Nouvel exercice
 
-- Quel besoin métier satisfait-elle ?
-- À quelle étape du workflow appartient-elle ?
-- Produit-elle un calcul ou une écriture comptable ?
-- Comment l'utilisateur pourra-t-il comprendre le résultat ?
-- Comment le prochain syndic pourra-t-il vérifier ce résultat ?
+---
+
+# Principe général
+
+Une opération comptable peut produire plusieurs écritures.
+
+Une écriture appartient toujours :
+
+- à une opération
+- à un exercice
+- à un compte
+
+et éventuellement :
+
+- à un copropriétaire.
+
+---
+
+# Types d'opérations
+
+CHARGE
+
+Facture fournisseur.
+
+PAIEMENT_FOURNISSEUR
+
+Paiement d'un fournisseur.
+
+APPEL_FONDS
+
+Appel de provisions.
+
+PAIEMENT
+
+Paiement d'un copropriétaire.
+
+REGULARISATION
+
+Répartition définitive des charges.
+
+CLOTURE
+
+Clôture des comptes de gestion.
+
+APPROBATION_COMPTES
+
+Décision de l'Assemblée Générale.
+
+A_NOUVEAU
+
+Reprise des soldes de l'exercice précédent.
+
+---
+
+# Principes de développement
+
+Les contrôleurs restent les plus simples possible.
+
+Les services contiennent la logique métier.
+
+Les entités représentent uniquement les données.
+
+Les écritures sont toujours générées automatiquement.
+
+Chaque nouvelle fonctionnalité doit être développée sous forme de service.
+
+Chaque opération comptable doit être traçable.
+
+Chaque évolution importante est documentée dans le dossier /docs.

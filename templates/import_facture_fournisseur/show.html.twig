@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Ligne d’import
+{% endblock %}
+
+{% block body %}
+    <h1>Ligne d’import n° {{ ligne.id }}</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Exercice</th>
+                <td>{{ ligne.exercice.nom }}</td>
+            </tr>
+
+            <tr>
+                <th>Statut</th>
+                <td>{{ ligne.statut.value }}</td>
+            </tr>
+
+            <tr>
+                <th>Date de facture</th>
+                <td>{{ ligne.dateFacture|date('d/m/Y') }}</td>
+            </tr>
+
+            <tr>
+                <th>Fournisseur</th>
+                <td>{{ ligne.fournisseur.nom }}</td>
+            </tr>
+
+            <tr>
+                <th>Type de charge</th>
+                <td>{{ ligne.typeCharge.nom }}</td>
+            </tr>
+
+            <tr>
+                <th>Copropriétaire avanceur</th>
+                <td>
+                    {{ ligne.coproprietaireAvanceur
+                        ? ligne.coproprietaireAvanceur
+                        : 'Aucun'
+                    }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Numéro</th>
+                <td>{{ ligne.numero ?: '—' }}</td>
+            </tr>
+
+            <tr>
+                <th>Libellé</th>
+                <td>{{ ligne.libelle }}</td>
+            </tr>
+
+            <tr>
+                <th>Montant</th>
+                <td>
+                    {{ ligne.montant|number_format(2, ',', ' ') }} €
+                </td>
+            </tr>
+
+            <tr>
+                <th>Réglée</th>
+                <td>{{ ligne.reglee ? 'Oui' : 'Non' }}</td>
+            </tr>
+
+            <tr>
+                <th>Date de règlement</th>
+                <td>
+                    {{ ligne.dateReglement
+                        ? ligne.dateReglement|date('d/m/Y')
+                        : '—'
+                    }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Erreur</th>
+                <td>{{ ligne.erreur ?: 'Aucune' }}</td>
+            </tr>
+
+            <tr>
+                <th>Facture créée</th>
+                <td>
+                    {% if ligne.factureCreee %}
+                        <a href="{{ path(
+                            'app_facture_fournisseur_show',
+                            {id: ligne.factureCreee.id}
+                        ) }}">
+                            Facture n° {{ ligne.factureCreee.id }}
+                        </a>
+                    {% else %}
+                        Aucune
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a
+        href="{{ path(
+            'app_import_facture_fournisseur_index'
+        ) }}"
+        class="btn btn-outline-secondary"
+    >
+        Retour
+    </a>
+{% endblock %}

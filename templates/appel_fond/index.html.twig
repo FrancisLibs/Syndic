@@ -1,43 +1,44 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}AppelFond index{% endblock %}
+{% block title %}AppelFond index
+{% endblock %}
 
 {% block body %}
-<h1 class="mb-4">Appel de Fonds</h1>
+	<h1 class="mb-4">Appel de Fonds</h1>
 
 
-    <table class="table">
-        <thead>
-            <tr>
-<th>Exercice</th>
-                <th>DateAppel</th>
-                <th>DateEcheance</th>
-                <th>Libelle</th>
-                <th>MontantTotal</th>
-                <th>Numero</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for appel_fond in appel_fonds %}
-            <tr>
-<td>{{ appel_fond.budget.exercice.nom }}</td>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Exercice</th>
+				<th>Date Appel</th>
+				<th>Date Reglement</th>
+				<th>Libelle</th>
+				<th>Montant Total</th>
+				<th>Numero</th>
+				<th>actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for appel_fond in appel_fonds %}
+				<tr>
+					<td>{{ appel_fond.budget.exercice.nom }}</td>
 
-                <td>{{ appel_fond.dateAppel ? appel_fond.dateAppel|date('Y-m-d') : '' }}</td>
-                <td>{{ appel_fond.dateEcheance ? appel_fond.dateEcheance|date('Y-m-d') : '' }}</td>
-                <td>{{ appel_fond.libelle }}</td>
-                <td>{{ appel_fond.montantTotal }}</td>
-                <td>{{ appel_fond.numero }}</td>
-                <td>
-                    <a href="{{ path('app_appel_fond_show', {'id': appel_fond.id}) }}">Voir</a>
-                    {# <a href="{{ path('app_appel_fond_edit', {'id': appel_fond.id}) }}">edit</a> #}
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="8">Aucun appel de fonds trouvé</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+					<td>{{ appel_fond.dateAppel ? appel_fond.dateAppel|date('Y-m-d') : '' }}</td>
+					<td>{{ appel_fond.dateReglement ? appel_fond.dateReglement|date('Y-m-d') : '' }}</td>
+					<td>{{ appel_fond.libelle }}</td>
+					<td>{{ appel_fond.montantTotal }}</td>
+					<td>{{ appel_fond.numero }}</td>
+					<td>
+						<a href="{{ path('app_appel_fond_show', {'id': appel_fond.id}) }}">Voir</a>
+						{# <a href="{{ path('app_appel_fond_edit', {'id': appel_fond.id}) }}">edit</a> #}
+					</td>
+				</tr>
+			{% else %}
+				<tr>
+					<td colspan="8">Aucun appel de fonds trouvé</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
 {% endblock %}

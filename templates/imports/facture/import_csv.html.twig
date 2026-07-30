@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Import CSV des factures fournisseurs
+{% endblock %}
+
+{% block body %}
+	<div class="container py-4">
+
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<div>
+				<h1 class="mb-1">
+					Import CSV des factures fournisseurs
+				</h1>
+
+				<p class="text-muted mb-0">
+					Le fichier sera analysé avant toute importation.
+				</p>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+			<div class="card-body">
+
+				{{ form_start(form) }}
+
+				<div class="mb-3">
+					{{ form_row(form.fichier) }}
+				</div>
+
+				<button type="submit" class="btn btn-primary">
+					Analyser le fichier
+				</button>
+
+				{{ form_end(form) }}
+
+			</div>
+		</div>
+
+		<div class="alert alert-secondary">
+			<h2 class="h5">
+				Format attendu
+			</h2>
+
+			<p class="mb-2">
+				Le fichier doit être un CSV séparé par des points-virgules.
+			</p>
+
+			<code>
+				date_facture;numero;libelle;montant;reglee;date_reglement;exercice_id;fournisseur_id;type_charge_id;coproprietaire_avanceur_id;statut;volume_eau
+			</code>
+
+			<hr>
+
+			<p class="mb-1">
+				Formats de date acceptés :
+			</p>
+
+			<ul class="mb-0">
+				<li>2023-04-12</li>
+				<li>12/04/2023</li>
+				<li>12/04/23</li>
+			</ul>
+		</div>
+
+	</div>
+{% endblock %}

@@ -178,4 +178,16 @@ class Compte
 
         return $this;
     }
+
+    public function estCompteDeBilan(): bool
+    {
+        return !in_array(
+            $this->type,
+            [
+                CompteType::CHARGE,
+                CompteType::PRODUIT,
+            ],
+            true
+        );
+    }
 }

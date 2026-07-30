@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\FactureFournisseur;
 use App\Entity\Fournisseur;
 use App\Entity\TypeCharge;
+use App\Entity\Coproprietaire;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -13,6 +14,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 class FactureFournisseurType extends AbstractType
 {
@@ -49,12 +51,12 @@ class FactureFournisseurType extends AbstractType
             )
 
             ->add(
-                'dateEcheance',
+                'dateReglement',
                 DateType::class,
                 [
                     'widget' => 'single_text',
                     'required' => false,
-                    'label' => 'Échéance',
+                    'label' => 'date de règlement',
                 ]
             )
 
@@ -74,6 +76,23 @@ class FactureFournisseurType extends AbstractType
                     'class' => Fournisseur::class,
                     'choice_label' => 'nom',
                     'label' => 'Fournisseur',
+                    'required' => true,
+                    'row_attr' => [
+                        'id' => 'fournisseur-row',
+                    ],
+                ]
+            )
+
+            ->add(
+                'coproprietaireAvanceur',
+                EntityType::class,
+                [
+                    'class' => Coproprietaire::class,
+                    'choice_label' => 'nom',
+                    'label' => 'Copropriétaire à rembourser',
+                    'required' => false,
+                    'placeholder' => 'Aucun — règlement au fournisseur',
+                    'help' => 'À renseigner uniquement si un copropriétaire a avancé le paiement.',
                 ]
             )
 

@@ -13,13 +13,12 @@
 				Factures fournisseurs
 			</h1>
 
-			<p class="text-muted mb-0">Exercice consulté : <strong>{{ exercice.nom }}</strong></p>
+			<p class="text-muted mb-0">Exercice consulté :
+				<strong>{{ exercice.nom }}</strong>
+			</p>
 		</div>
 
-		<a
-			class="btn btn-primary"
-			href="{{ path('app_facture_fournisseur_new') }}"
-		>
+		<a class="btn btn-primary" href="{{ path('app_facture_fournisseur_new') }}">
 			Nouvelle facture
 		</a>
 
@@ -35,11 +34,11 @@
 					<thead class="table-light">
 						<tr>
 							<th>Exercice</th>
-							<th>Fournisseur</th>
+							<th>Bénéficiaire</th>
 							<th>Numéro</th>
 							<th>Libellé</th>
 							<th>Date</th>
-							<th>Échéance</th>
+							<th>Date règlement</th>
 							<th class="text-end">Montant</th>
 							<th class="text-end">Réglé</th>
 							<th class="text-end">Reste à payer</th>
@@ -76,7 +75,13 @@
 								</td>
 
 								<td>
-									{{ facture.fournisseur.nom }}
+									{% if facture.fournisseur %}
+										{{ facture.fournisseur.nom }}
+									{% elseif facture.coproprietaireAvanceur %}
+										{{ facture.coproprietaireAvanceur }}
+									{% else %}
+										—
+									{% endif %}
 								</td>
 
 								<td>
@@ -95,8 +100,8 @@
 								</td>
 
 								<td>
-									{{ facture.dateEcheance
-										? facture.dateEcheance|date('d/m/Y')
+									{{ facture.dateReglement
+										? facture.dateReglement|date('d/m/Y')
 										: '—'
 									}}
 								</td>
@@ -176,15 +181,7 @@
 
 									<div class="d-flex justify-content-end gap-2">
 
-										<a
-											class="btn btn-sm btn-outline-primary"
-											href="{{ path(
-												'app_facture_fournisseur_show',
-												{
-													id: facture.id
-												}
-											) }}"
-										>
+										<a class="btn btn-sm btn-outline-primary" href="{{ path( 'app_facture_fournisseur_show', { id: facture.id } ) }}">
 											Voir
 										</a>
 
@@ -193,15 +190,7 @@
 											and not facture.exercice.cloture
 										%}
 
-											<a
-												class="btn btn-sm btn-outline-secondary"
-												href="{{ path(
-													'app_facture_fournisseur_edit',
-													{
-														id: facture.id
-													}
-												) }}"
-											>
+											<a class="btn btn-sm btn-outline-secondary" href="{{ path( 'app_facture_fournisseur_edit', { id: facture.id } ) }}">
 												Modifier
 											</a>
 
@@ -209,28 +198,11 @@
 
 										{% if not facture.soldee %}
 
-											<form
-												method="post"
-												action="{{ path(
-													'app_facture_fournisseur_regler',
-													{
-														id: facture.id
-													}
-												) }}"
-											>
+											<form method="post" action="{{ path( 'app_facture_fournisseur_regler', { id: facture.id } ) }}">
 
-												<input
-													type="hidden"
-													name="_token"
-													value="{{ csrf_token(
-														'regler_facture_' ~ facture.id
-													) }}"
-												>
+												<input type="hidden" name="_token" value="{{ csrf_token( 'regler_facture_' ~ facture.id ) }}">
 
-												<button
-													type="submit"
-													class="btn btn-sm btn-success"
-												>
+												<button type="submit" class="btn btn-sm btn-success">
 													Régler
 												</button>
 
@@ -247,10 +219,7 @@
 						{% else %}
 
 							<tr>
-								<td
-									colspan="12"
-									class="text-center text-muted py-4"
-								>
+								<td colspan="12" class="text-center text-muted py-4">
 									Aucune facture fournisseur trouvée
 								</td>
 							</tr>

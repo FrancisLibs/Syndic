@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\FactureFournisseur;
 use App\Form\FactureFournisseurType;
+use App\Form\ReglementFactureFournisseurType;
 use App\Repository\ExerciceRepository;
 use App\Repository\FactureFournisseurRepository;
 use App\Service\GenerationFactureFournisseurService;
@@ -54,11 +55,9 @@ final class FactureFournisseurController extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $entityManager,
-        ContexteExerciceService $contexteExerciceService,
         GenerationFactureFournisseurService $generationService,
         ExerciceRepository $exerciceRepository
     ): Response {
-
         $exercice = $exerciceRepository->findActif();
 
         if (!$exercice) {
@@ -83,40 +82,53 @@ final class FactureFournisseurController extends AbstractController
             );
         }
 
-
         $facture = new FactureFournisseur();
-        $facture->setExercice($exercice);
-        $facture->setDateFacture(new \DateTimeImmutable());
-        $form = $this->createForm(FactureFournisseurType::class, $facture);
+
+        $facture
+            ->setExercice($exercice)
+            ->setDateFacture(new \DateTimeImmutable());
+
+        $form = $this->createForm(
+            FactureFournisseurType::class,
+            $facture
+        );
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
-            // Sécurité : l’exercice actif est réimposé
-            // même si le formulaire est modifié manuellement.
             $facture->setExercice($exercice);
 
+            try {
+                $entityManager->wrapInTransaction(
+                    function () use (
+                        $entityManager,
+                        $generationService,
+                        $facture
+                    ): void {
+                        $entityManager->persist($facture);
 
-            $entityManager->persist($facture);
-            $entityManager->flush();
+                        $generationService->generer($facture);
+                    }
+                );
 
-            // =====================
-            // Génération comptable
-            // =====================
+                $this->addFlash(
+                    'success',
+                    'La facture fournisseur a été enregistrée et comptabilisée.'
+                );
 
-            $generationService->generer($facture);
-
-            $this->addFlash(
-                'success',
-                'La facture fournisseur a été enregistrée.'
-            );
-
-            return $this->redirectToRoute(
-                'app_facture_fournisseur_show',
-                [
-                    'id' => $facture->getId()
-                ]
-            );
+                return $this->redirectToRoute(
+                    'app_facture_fournisseur_show',
+                    [
+                        'id' => $facture->getId(),
+                    ]
+                );
+            } catch (\Throwable $exception) {
+                $this->addFlash(
+                    'danger',
+                    'La facture n’a pas pu être comptabilisée : '
+                        . $exception->getMessage()
+                );
+            }
         }
 
         return $this->render(
@@ -239,20 +251,63 @@ final class FactureFournisseurController extends AbstractController
     #[Route(
         '/{id}/regler',
         name: 'app_facture_fournisseur_regler',
-        methods: ['POST'],
-        requirements: ['id' => '\d+']
+        methods: ['GET', 'POST']
     )]
     public function regler(
         FactureFournisseur $facture,
-        ReglementFactureFournisseurService $service
+        Request $request,
+        ReglementFactureFournisseurService $reglementService,
     ): Response {
+        if ($facture->isSoldee()) {
+            $this->addFlash(
+                'warning',
+                'Cette facture est déjà réglée.'
+            );
 
-        $service->regler($facture);
+            return $this->redirectToRoute(
+                'app_facture_fournisseur_index'
+            );
+        }
 
-        return $this->redirectToRoute(
-            'app_facture_fournisseur_show',
+        $form = $this->createForm(ReglementFactureFournisseurType::class);
+
+        $form->handleRequest($request);
+
+        if (
+            $form->isSubmitted()
+            && $form->isValid()
+        ) {
+            $dateReglement = $form
+                ->get('dateReglement')
+                ->getData();
+
+            try {
+                $reglementService->regler(
+                    $facture,
+                    $dateReglement
+                );
+
+                $this->addFlash(
+                    'success',
+                    'Le règlement de la facture a été enregistré.'
+                );
+
+                return $this->redirectToRoute(
+                    'app_facture_fournisseur_index'
+                );
+            } catch (\LogicException $exception) {
+                $this->addFlash(
+                    'danger',
+                    $exception->getMessage()
+                );
+            }
+        }
+
+        return $this->render(
+            'facture_fournisseur/regler.html.twig',
             [
-                'id' => $facture->getId()
+                'facture' => $facture,
+                'form' => $form,
             ]
         );
     }

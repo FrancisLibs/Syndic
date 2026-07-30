@@ -20,7 +20,7 @@ class GenerateurAppelFondService
     public function generer(
         Budget $budget,
         \DateTimeImmutable $dateAppel,
-        \DateTimeImmutable $dateEcheance,
+        \DateTimeImmutable $dateReglement,
     ): AppelFond {
 
         // =====================
@@ -43,8 +43,8 @@ class GenerateurAppelFondService
         $appelFond->setBudget($budget);
         $appelFond->setLibelle('Appel de fonds - ' . $budget->getLibelle());
         $appelFond->setDateAppel($dateAppel);
-        $appelFond->setDateEcheance(
-            $dateEcheance
+        $appelFond->setDateReglement(
+            $dateReglement
         );
 
         $appelFond->setMontantTotal($montantTotalBudget);

@@ -296,7 +296,7 @@ Generate à-nouveau entries (carry forward balances)
 - Belongs to Budget
 - Has many LigneAppelFond (per owner)
 - Linked to Operation
-- Has dateAppel and dateEcheance
+- Has dateAppel and dateReglement
 
 ### Operation (Accounting Operation)
 - Has many Ecriture (double-entry lines)

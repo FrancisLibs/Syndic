@@ -1,28 +1,47 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Facture Fournisseur
+{% block title %}
+	Dépense
 {% endblock %}
 
 {% block body %}
 	<div class="container">
 		<div class="d-flex justify-content-start">
 			<div>
-				<h1 class="me-3">Facture Fournisseur</h1>
+				<h1 class="me-3">
+					{% if facture_fournisseur.coproprietaireAvanceur %}
+						Avance de frais
+					{% else %}
+						Facture fournisseur
+					{% endif %}
+				</h1>
 			</div>
+
 			<div class="d-flex align-items-center col-4">
 				<div class="me-3">
-					<a class="btn btn-primary" role="button" aria-disabled="true" href="{{ path('app_facture_fournisseur_index') }}">
+					<a
+						class="btn btn-primary"
+						role="button"
+						href="{{ path('app_facture_fournisseur_index') }}"
+					>
 						Retour à la liste
 					</a>
 				</div>
+
 				<div class="me-3">
-				{% if not facture_fournisseur.soldee %}
-					<form method="post" action="{{ path( 'app_facture_fournisseur_regler', { id: facture_fournisseur.id } ) }}">
-						<button class="btn btn-success">
-							Régler la facture
-						</button>
-					</form>
-				{% endif %}
+					{% if not facture_fournisseur.soldee %}
+						<form
+							method="post"
+							action="{{ path(
+								'app_facture_fournisseur_regler',
+								{ id: facture_fournisseur.id }
+							) }}"
+						>
+							<button class="btn btn-success">
+								Régler la dépense
+							</button>
+						</form>
+					{% endif %}
 				</div>
 			</div>
 		</div>
@@ -30,36 +49,85 @@
 		<table class="table">
 			<tbody>
 				<tr>
-					<th>Numero</th>
+					<th>Nature</th>
+					<td>
+						{% if facture_fournisseur.coproprietaireAvanceur %}
+							Avance de frais d’un copropriétaire
+						{% else %}
+							Facture fournisseur
+						{% endif %}
+					</td>
+				</tr>
+
+				<tr>
+					<th>Bénéficiaire</th>
+					<td>
+						{% if facture_fournisseur.fournisseur %}
+							{{ facture_fournisseur.fournisseur.nom }}
+						{% elseif facture_fournisseur.coproprietaireAvanceur %}
+							{{ facture_fournisseur.coproprietaireAvanceur }}
+						{% else %}
+							—
+						{% endif %}
+					</td>
+				</tr>
+
+				<tr>
+					<th>Numéro</th>
 					<td>{{ facture_fournisseur.numero }}</td>
 				</tr>
+
 				<tr>
-					<th>Libelle</th>
+					<th>Libellé</th>
 					<td>{{ facture_fournisseur.libelle }}</td>
 				</tr>
+
 				<tr>
-					<th>DateFacture</th>
-					<td>{{ facture_fournisseur.dateFacture ? facture_fournisseur.dateFacture|date('Y-m-d') : '' }}</td>
+					<th>Date de la dépense</th>
+					<td>
+						{{ facture_fournisseur.dateFacture
+							? facture_fournisseur.dateFacture|date('d/m/Y')
+							: ''
+						}}
+					</td>
 				</tr>
+
 				<tr>
-					<th>DateEcheance</th>
-					<td>{{ facture_fournisseur.dateEcheance ? facture_fournisseur.dateEcheance|date('Y-m-d') : '' }}</td>
+					<th>Date de règlement</th>
+					<td>
+						{{ facture_fournisseur.dateReglement
+							? facture_fournisseur.dateReglement|date('d/m/Y')
+							: ''
+						}}
+					</td>
 				</tr>
+
 				<tr>
 					<th>Montant</th>
-					<td>{{ facture_fournisseur.montant }}</td>
+					<td>
+						{{ facture_fournisseur.montant|number_format(2, ',', ' ') }} €
+					</td>
 				</tr>
+
 				<tr>
-					<th>MontantRegle</th>
-					<td>{{ facture_fournisseur.montantRegle }}</td>
+					<th>Montant réglé</th>
+					<td>
+						{{ facture_fournisseur.montantRegle|number_format(2, ',', ' ') }} €
+					</td>
 				</tr>
+
 				<tr>
-					<th>Soldee</th>
-					<td>{{ facture_fournisseur.soldee ? 'Oui' : 'Non' }}</td>
+					<th>Soldée</th>
+					<td>
+						{{ facture_fournisseur.soldee ? 'Oui' : 'Non' }}
+					</td>
 				</tr>
+
 				<tr>
-					<th>Comptabilisee</th>
-					<td>{{ facture_fournisseur.comptabilisee ? 'Oui' : 'Non' }}</td>
+					<th>Comptabilisée</th>
+					<td>
+						{{ facture_fournisseur.comptabilisee ? 'Oui' : 'Non' }}
+					</td>
 				</tr>
 			</tbody>
 		</table>

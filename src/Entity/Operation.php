@@ -45,7 +45,10 @@ class Operation
     #[ORM\ManyToOne(inversedBy: 'operations')]
     private ?Lot $lot = null;
 
-    #[ORM\ManyToOne(inversedBy: 'operations')]
+    #[ORM\ManyToOne(
+        inversedBy: 'operations',
+        fetch: 'EAGER'
+    )]
     private ?Fournisseur $fournisseur = null;
 
     #[ORM\OneToOne(mappedBy: 'operation', cascade: ['persist', 'remove'])]
@@ -57,8 +60,17 @@ class Operation
     #[ORM\OneToOne(mappedBy: 'operation', cascade: ['persist', 'remove'])]
     private ?AppelFond $appelFond = null;
 
-    #[ORM\OneToOne(mappedBy: 'operation', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(
+        mappedBy: 'operation',
+        targetEntity: ApprobationComptes::class
+    )]
     private ?ApprobationComptes $approbationComptes = null;
+
+    #[ORM\ManyToOne(
+        inversedBy: 'operations'
+    )]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Journal $journal = null;
 
     public function __construct()
     {
@@ -264,19 +276,29 @@ class Operation
         return $this->approbationComptes;
     }
 
-    public function setApprobationComptes(?ApprobationComptes $approbationComptes): static
-    {
-        // unset the owning side of the relation if necessary
-        if ($approbationComptes === null && $this->approbationComptes !== null) {
-            $this->approbationComptes->setOperation(null);
-        }
+    public function setApprobationComptes(
+        ?ApprobationComptes $approbationComptes
+    ): static {
+        $this->approbationComptes = $approbationComptes;
 
-        // set the owning side of the relation if necessary
-        if ($approbationComptes !== null && $approbationComptes->getOperation() !== $this) {
+        if (
+            $approbationComptes !== null
+            && $approbationComptes->getOperation() !== $this
+        ) {
             $approbationComptes->setOperation($this);
         }
 
-        $this->approbationComptes = $approbationComptes;
+        return $this;
+    }
+
+    public function getJournal(): ?Journal
+    {
+        return $this->journal;
+    }
+
+    public function setJournal(?Journal $journal): static
+    {
+        $this->journal = $journal;
 
         return $this;
     }

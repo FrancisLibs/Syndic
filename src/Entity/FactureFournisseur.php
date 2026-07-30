@@ -6,6 +6,7 @@ use App\Repository\FactureFournisseurRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(
     repositoryClass: FactureFournisseurRepository::class
@@ -30,7 +31,7 @@ class FactureFournisseur
         type: Types::DATE_IMMUTABLE,
         nullable: true
     )]
-    private ?\DateTimeImmutable $dateEcheance = null;
+    private ?\DateTimeImmutable $dateReglement = null;
 
     #[ORM\Column(
         type: Types::DECIMAL,
@@ -58,10 +59,15 @@ class FactureFournisseur
     private bool $comptabilisee = false;
 
     #[ORM\ManyToOne(
-        inversedBy: 'factures'
+        inversedBy: 'factures',
+        fetch: 'EAGER'
     )]
     #[ORM\JoinColumn(nullable: false)]
     private ?Fournisseur $fournisseur = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Coproprietaire $coproprietaireAvanceur = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -72,7 +78,7 @@ class FactureFournisseur
     )]
     private ?Operation $operation = null;
 
-    #[ORM\ManyToOne(inversedBy: 'factureFournisseurs')]
+    #[ORM\ManyToOne(inversedBy: 'factureFournisseurs', fetch: 'EAGER')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Exercice $exercice = null;
 
@@ -122,16 +128,16 @@ class FactureFournisseur
         return $this;
     }
 
-    public function getDateEcheance(): ?\DateTimeImmutable
+    public function getDateReglement(): ?\DateTimeImmutable
     {
-        return $this->dateEcheance;
+        return $this->dateReglement;
     }
 
-    public function setDateEcheance(
-        ?\DateTimeImmutable $dateEcheance
+    public function setDateReglement(
+        ?\DateTimeImmutable $dateReglement
     ): static {
 
-        $this->dateEcheance = $dateEcheance;
+        $this->dateReglement = $dateReglement;
 
         return $this;
     }
@@ -186,6 +192,30 @@ class FactureFournisseur
         $this->fournisseur = $fournisseur;
 
         return $this;
+    }
+
+    public function getCoproprietaireAvanceur(): ?Coproprietaire
+    {
+        return $this->coproprietaireAvanceur;
+    }
+
+    public function setCoproprietaireAvanceur(
+        ?Coproprietaire $coproprietaireAvanceur
+    ): static {
+        $this->coproprietaireAvanceur = $coproprietaireAvanceur;
+
+        return $this;
+    }
+
+    public function isFactureFournisseur(): bool
+    {
+        return $this->fournisseur !== null;
+    }
+
+    public function getBeneficiaire(): Fournisseur|Coproprietaire|null
+    {
+        return $this->fournisseur
+            ?? $this->coproprietaireAvanceur;
     }
 
     public function getTypeCharge(): ?TypeCharge

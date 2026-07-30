@@ -167,4 +167,27 @@ class OperationRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function existeANouveauPourExercice(
+        Exercice $exercice
+    ): bool {
+        $resultat = $this->createQueryBuilder('operation')
+            ->select('COUNT(DISTINCT operation.id)')
+            ->innerJoin('operation.ecritures', 'ecriture')
+            ->where('ecriture.exercice = :exercice')
+            ->andWhere('operation.type = :type')
+            ->setParameter('exercice', $exercice)
+            ->setParameter('type', OperationType::A_NOUVEAU)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $resultat > 0;
+    }
+
+    public function existeANouveau(): bool
+    {
+        return null !== $this->findOneBy([
+            'type' => OperationType::A_NOUVEAU,
+        ]);
+    }
 }

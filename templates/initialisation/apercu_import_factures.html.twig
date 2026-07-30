@@ -1,0 +1,157 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Prévisualisation de l'import
+{% endblock %}
+
+{% block body %}
+
+	<h1>Prévisualisation de l'import</h1>
+
+	<div class="row mb-4">
+
+		<div class="col-md-3">
+
+			<div class="alert alert-primary">
+
+				{{ rapport.total }}
+
+				lignes
+
+			</div>
+
+		</div>
+
+		<div class="col-md-3">
+
+			<div class="alert alert-success">
+
+				{{ rapport.nbValides }}
+
+				valides
+
+			</div>
+
+		</div>
+
+		<div class="col-md-3">
+
+			<div class="alert alert-danger">
+
+				{{ rapport.nbErreurs }}
+
+				erreurs
+
+			</div>
+
+		</div>
+
+	</div>
+
+	<table class="table table-sm table-striped">
+
+		<thead>
+
+			<tr>
+
+				<th>Ligne</th>
+
+				<th>Date</th>
+
+				<th>Fournisseur</th>
+
+				<th>Libellé</th>
+
+				<th class="text-end">
+					Montant
+				</th>
+
+				<th>Résultat</th>
+
+			</tr>
+
+		</thead>
+
+		<tbody>
+
+			{% for ligne in rapport.lignes %}
+
+				<tr>
+
+					<td>
+
+						{{ ligne.ligne }}
+
+					</td>
+
+					<td>
+
+						{{ ligne.dateFacture ? ligne.dateFacture|date('d/m/Y') : '' }}
+
+					</td>
+
+					<td>
+
+						{{ ligne.fournisseur ? ligne.fournisseur.nom : '' }}
+
+					</td>
+
+					<td>
+
+						{{ ligne.libelle }}
+
+					</td>
+
+					<td class="text-end">
+
+						{{ ligne.montant|number_format(2, ',', ' ') }}
+
+					</td>
+
+					<td>
+
+						{% if ligne.estValide %}
+
+							<span class="badge bg-success">
+
+								OK
+
+							</span>
+
+						{% else %}
+
+							{% for erreur in ligne.erreurs %}
+
+								<div class="text-danger">
+
+									{{ erreur }}
+
+								</div>
+
+							{% endfor %}
+
+						{% endif %}
+
+					</td>
+
+				</tr>
+
+			{% endfor %}
+
+		</tbody>
+
+	</table>
+
+	{% if rapport.nbErreurs == 0 %}
+
+		<form method="post">
+
+			<button class="btn btn-success">
+				Importer
+			</button>
+
+		</form>
+
+	{% endif %}
+
+{% endblock %}

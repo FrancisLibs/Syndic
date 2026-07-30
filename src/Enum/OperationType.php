@@ -12,4 +12,5 @@ enum OperationType: string
     case A_NOUVEAU = 'a_nouveau';
     case CLOTURE = 'cloture';
     case APPROBATION_COMPTES = 'approbation_comptes';
+    case TRANSFERT_DETTE = 'transfert_dette';
 }

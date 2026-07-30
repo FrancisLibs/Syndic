@@ -22,7 +22,7 @@ class AppelFondType extends AbstractType
                 ]
             )
             ->add(
-                'dateEcheance',
+                'dateReglement',
                 null,
                 [
                     'input'  => 'datetime_immutable',

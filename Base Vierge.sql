@@ -46,7 +46,7 @@ CREATE TABLE `appel_fond` (
   `montant_total` decimal(10,2) DEFAULT NULL,
   `numero` int(11) DEFAULT NULL,
   `budget_id` int(11) NOT NULL,
-  `date_echeance` date DEFAULT NULL,
+  `date_reglement` date DEFAULT NULL,
   `libelle` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -248,7 +248,7 @@ CREATE TABLE `facture_fournisseur` (
   `numero` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `libelle` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `date_facture` date NOT NULL,
-  `date_echeance` date DEFAULT NULL,
+  `date_reglement` date DEFAULT NULL,
   `montant` decimal(10,2) NOT NULL,
   `montant_regle` decimal(10,2) NOT NULL DEFAULT '0.00',
   `soldee` tinyint(4) NOT NULL,

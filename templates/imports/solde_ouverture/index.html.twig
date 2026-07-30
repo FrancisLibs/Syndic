@@ -1,0 +1,221 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Import des soldes d'ouverture
+{% endblock %}
+
+{% block body %}
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<h1>Import des soldes d'ouverture</h1>
+
+			<h2 class="h5 text-muted">
+				{{ exercice.nom }}
+			</h2>
+		</div>
+	</div>
+
+	<div class="row mb-4">
+		<div class="col-md-3">
+			<div class="card">
+				<div class="card-body">
+					<div class="text-muted">
+						Lignes
+					</div>
+
+					<div class="fs-4 fw-bold">
+						{{ controle.nombreLignes }}
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-3">
+			<div class="card">
+				<div class="card-body">
+					<div class="text-muted">
+						Total débit
+					</div>
+
+					<div class="fs-4 fw-bold">
+						{{ controle.totalDebit|number_format(2, ',', ' ') }}
+						€
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-3">
+			<div class="card">
+				<div class="card-body">
+					<div class="text-muted">
+						Total crédit
+					</div>
+
+					<div class="fs-4 fw-bold">
+						{{ controle.totalCredit|number_format(2, ',', ' ') }}
+						€
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-md-3">
+			<div class="card">
+				<div class="card-body">
+					<div class="text-muted">
+						Écart
+					</div>
+
+					<div class="fs-4 fw-bold">
+						{{ controle.ecart|number_format(2, ',', ' ') }}
+						€
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{% if controle.nombreLignes == 0 %}
+		<div class="alert alert-info">
+			Aucune ligne de solde d'ouverture n'a été trouvée
+												            pour cet exercice.
+		</div>
+	{% else %}
+		{% if controle.nombreErreurs > 0 %}
+			<div class="alert alert-danger">
+				{{ controle.nombreErreurs }}
+				ligne(s) comporte(nt) une erreur.
+			</div>
+		{% elseif not controle.equilibre %}
+			<div class="alert alert-warning">
+				Les soldes d'ouverture ne sont pas équilibrés.
+																
+																                L'écart est de
+				<strong>
+					{{ controle.ecart|number_format(2, ',', ' ') }}
+					€
+				</strong>.
+			</div>
+		{% else %}
+			<div class="alert alert-success d-flex justify-content-start align-items-baseline gap-5">
+				Les données sont valides et équilibrées. Elles sont prêtes à être importées.
+
+				{% if controle.peutImporter %}
+					<div class="d-flex justify-content-end mb-4">
+						<form method="post" action="{{ path( 'app_import_solde_ouverture_importer', { id: exercice.id } ) }}" onsubmit="return confirm(
+																					                'Confirmer la création des écritures d’ouverture ?'
+																					            );">
+							<input type="hidden" name="_token" value="{{ csrf_token( 'import-soldes-ouverture-' ~ exercice.id ) }}">
+
+							<button type="submit" class="btn btn-primary">
+								Importer les soldes d’ouverture
+							</button>
+						</form>
+					</div>
+				{% endif %}
+			</div>
+		{% endif %}
+
+		<div class="table-responsive">
+			<table class="table table-striped table-hover align-middle">
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Compte</th>
+						<th>Libellé</th>
+						<th>Copropriétaire</th>
+						<th class="text-end">Débit</th>
+						<th class="text-end">Crédit</th>
+						<th>État</th>
+						<th>Erreur</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					{% for ligne in controle.lignes %}
+						<tr {% if ligne.erreur %} class="table-danger" {% elseif ligne.importe %} class="table-success" {% endif %}>
+							<td>
+								{{ ligne.id }}
+							</td>
+
+							<td>
+								<strong>
+									{{ ligne.compte.numero }}
+								</strong>
+
+								<br>
+
+								<small class="text-muted">
+									{{ ligne.compte.libelle }}
+								</small>
+							</td>
+
+							<td>
+								{{ ligne.libelle ?: '—' }}
+							</td>
+
+							<td>
+								{% if ligne.coproprietaire %}
+									{{ ligne.coproprietaire.nom }}
+								{% else %}
+									—
+								{% endif %}
+							</td>
+
+							<td class="text-end">
+								{{ ligne.debit|number_format(2, ',', ' ') }}
+								€
+							</td>
+
+							<td class="text-end">
+								{{ ligne.credit|number_format(2, ',', ' ') }}
+								€
+							</td>
+
+							<td>
+								{% if ligne.importe %}
+									<span class="badge bg-success">
+										Importé
+									</span>
+								{% elseif ligne.erreur %}
+									<span class="badge bg-danger">
+										Erreur
+									</span>
+								{% else %}
+									<span class="badge bg-secondary">
+										À importer
+									</span>
+								{% endif %}
+							</td>
+
+							<td>
+								{{ ligne.messageErreur ?: '—' }}
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+
+				<tfoot>
+					<tr class="table-light fw-bold">
+						<td colspan="4">
+							Totaux
+						</td>
+
+						<td class="text-end">
+							{{ controle.totalDebit|number_format(2, ',', ' ') }}
+							€
+						</td>
+
+						<td class="text-end">
+							{{ controle.totalCredit|number_format(2, ',', ' ') }}
+							€
+						</td>
+
+						<td colspan="2"></td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	{% endif %}
+{% endblock %}

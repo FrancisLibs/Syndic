@@ -1,0 +1,206 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Analyse du fichier CSV
+{% endblock %}
+
+{% block body %}
+
+	<div class="container py-4">
+
+		<div class="d-flex justify-content-between align-items-center mb-4">
+
+			<div>
+
+				<h1 class="mb-1">
+					Analyse du fichier CSV
+				</h1>
+
+				<p class="text-muted mb-0">
+					Vérifiez les données avant de lancer l'import.
+				</p>
+
+			</div>
+
+		</div>
+
+		<div class="card mb-4">
+
+			<div class="card-header">
+				Résumé
+			</div>
+
+			<div class="card-body">
+
+				<dl class="row mb-0">
+
+					<dt class="col-sm-4">
+						Nombre de lignes
+					</dt>
+
+					<dd class="col-sm-8">
+						{{ rapport.total() }}
+					</dd>
+
+					<dt class="col-sm-4">
+						Lignes valides
+					</dt>
+
+					<dd class="col-sm-8 text-success">
+						{{ rapport.nbValides() }}
+					</dd>
+
+					<dt class="col-sm-4">
+						Lignes en erreur
+					</dt>
+
+					<dd class="col-sm-8 {% if rapport.nbErreurs() > 0 %}text-danger{% endif %}">
+						{{ rapport.nbErreurs() }}
+					</dd>
+
+				</dl>
+
+			</div>
+
+		</div>
+
+		{% if rapport.nbErreurs() > 0 %}
+
+			<div class="alert alert-danger">
+
+				<h2 class="h5">
+					Des erreurs ont été détectées
+				</h2>
+
+				<p class="mb-0">
+					Corrigez le fichier puis recommencez l'analyse.
+				</p>
+
+			</div>
+
+		{% endif %}
+
+		<div class="card">
+
+			<div class="card-header">
+				Détail des lignes
+			</div>
+
+			<div class="table-responsive">
+
+				<table class="table table-striped table-hover mb-0">
+
+					<thead>
+
+						<tr>
+
+							<th>#</th>
+							<th>Date</th>
+							<th>Fournisseur</th>
+							<th>Libellé</th>
+							<th>Montant</th>
+							<th>État</th>
+
+						</tr>
+
+					</thead>
+
+					<tbody>
+
+						{% for ligne in rapport.lignes %}
+
+							<tr>
+
+								<td>
+									{{ loop.index }}
+								</td>
+
+								<td>
+									{{ ligne.dateFacture ? ligne.dateFacture|date('d/m/Y') : '' }}
+								</td>
+
+								<td>
+									{{ ligne.fournisseur }}
+								</td>
+
+								<td>
+									{{ ligne.libelle }}
+								</td>
+
+								<td class="text-end">
+									{{ ligne.montant|number_format(2, ',', ' ') }}
+								</td>
+
+								<td>
+
+									{% if ligne.estValide() %}
+
+										<span class="badge text-bg-success">
+											OK
+										</span>
+
+									{% else %}
+
+										<span class="badge text-bg-danger">
+											Erreur
+										</span>
+
+										<ul class="small text-danger mt-2 mb-0">
+
+											{% for erreur in ligne.erreurs %}
+
+												<li>{{ erreur }}</li>
+
+											{% endfor %}
+
+										</ul>
+
+									{% endif %}
+
+								</td>
+
+							</tr>
+
+						{% endfor %}
+
+					</tbody>
+
+				</table>
+
+			</div>
+
+		</div>
+
+		<div class="mt-4 d-flex gap-2">
+
+			<a href="{{ path('app_import_csv_facture') }}" class="btn btn-secondary">
+
+				Retour
+
+			</a>
+
+			{% if rapport.estValide() %}
+
+				<form method="post" action="{{ path('app_import_csv_facture_importer') }}">
+
+					<input type="hidden" name="_token" value="{{ csrf_token('import_csv_factures') }}">
+
+					<input type="hidden" name="nomFichier" value="{{ nomFichier }}">
+
+					<button class="btn btn-success" type="submit">
+
+						Importer les
+						{{ rapport.nbValides() }}
+						lignes
+
+					</button>
+
+				</form>
+
+			{% endif %}
+
+		</div>
+
+	</div>
+
+{% endblock %}

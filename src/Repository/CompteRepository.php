@@ -3,8 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Compte;
+use App\Enum\CompteType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\QueryBuilder;
 
 /**
  * @extends ServiceEntityRepository<Compte>
@@ -41,5 +43,16 @@ class CompteRepository extends ServiceEntityRepository
         }
 
         return $compte;
+    }
+
+    public function createBilanQueryBuilder(): QueryBuilder
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.type NOT IN (:types)')
+            ->setParameter('types', [
+                CompteType::CHARGE,
+                CompteType::PRODUIT,
+            ])
+            ->orderBy('c.numero', 'ASC');
     }
 }

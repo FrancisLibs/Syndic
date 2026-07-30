@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Ajouter une facture à importer
+{% endblock %}
+
+{% block body %}
+    <div class="mb-4">
+        <h1>Ajouter une ligne d’import</h1>
+
+        <p class="text-muted">
+            {{ exercice.nom }}
+        </p>
+    </div>
+
+    {{ form_start(form) }}
+
+        {{ form_row(form.dateFacture) }}
+        {{ form_row(form.fournisseur) }}
+        {{ form_row(form.typeCharge) }}
+        {{ form_row(form.coproprietaireAvanceur) }}
+        {{ form_row(form.numero) }}
+        {{ form_row(form.libelle) }}
+        {{ form_row(form.montant) }}
+        {{ form_row(form.reglee) }}
+        {{ form_row(form.dateReglement) }}
+
+        <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary">
+                Enregistrer
+            </button>
+
+            <a
+                href="{{ path(
+                    'app_import_facture_fournisseur_index'
+                ) }}"
+                class="btn btn-outline-secondary"
+            >
+                Annuler
+            </a>
+        </div>
+
+    {{ form_end(form) }}
+{% endblock %}
