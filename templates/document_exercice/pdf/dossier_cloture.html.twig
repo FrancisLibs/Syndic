@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+	<head>
+		<meta charset="UTF-8">
+
+		<style>
+			{{css|raw}}</style>
+	</head>
+
+	<body>
+
+		{# =========================
+		       PAGE DE GARDE
+		       ========================= #}
+
+		<div class="dossier-cloture-garde">
+
+			<div class="dossier-cloture-copropriete">
+				{{ exercice.copropriete.nom }}
+			</div>
+
+			<div class="dossier-cloture-adresse">
+				{{ exercice.copropriete.adresse }}<br>
+				{{ exercice.copropriete.codePostal }}
+				{{ exercice.copropriete.localite }}
+			</div>
+
+			<div class="dossier-cloture-titre">
+				DOSSIER DE CLÔTURE
+			</div>
+
+			<div class="dossier-cloture-exercice">
+				{{ exercice.nom }}
+			</div>
+
+			<div class="dossier-cloture-periode">
+				Du
+				{{ exercice.dateDebut|date('d/m/Y') }}
+				au
+				{{ exercice.dateFin|date('d/m/Y') }}
+			</div>
+
+		</div>
+
+
+		{# =========================
+		       RÉPARTITION DES CHARGES
+		       ========================= #}
+
+		<div class="pdf-nouvelle-page"></div>
+
+		{% include 'document_exercice/pdf/_entete.html.twig' %}
+
+		{% include 'document_exercice/pdf/sections/repartition_charges.html.twig' %}
+
+
+		{# =========================
+		       RÉPARTITION DE L'EAU
+		       ========================= #}
+
+		{% if calculEau is not null %}
+
+			<div class="pdf-nouvelle-page"></div>
+
+			{% include 'document_exercice/pdf/_entete.html.twig' %}
+
+			{% include 'document_exercice/pdf/sections/repartition_eau.html.twig' %}
+
+		{% endif %}
+
+
+		{# =========================
+		       CLÔTURE DES COMPTES
+		       DE GESTION
+		       ========================= #}
+
+		<div class="pdf-nouvelle-page"></div>
+
+		{% include 'document_exercice/pdf/_entete.html.twig' %}
+
+		{% include 'document_exercice/pdf/sections/cloture_comptes_gestion.html.twig' %}
+
+
+		{# =========================
+		       SOLDES REPORTABLES
+		       ========================= #}
+
+		<div class="pdf-nouvelle-page"></div>
+
+		{% include 'document_exercice/pdf/_entete.html.twig' %}
+
+		{% include 'document_exercice/pdf/sections/soldes_reportables.html.twig' %}
+
+
+		{# =========================
+		       À-NOUVEAUX
+		       ========================= #}
+
+		<div class="pdf-nouvelle-page"></div>
+
+		{% include 'document_exercice/pdf/_entete.html.twig' %}
+
+		{% include 'document_exercice/pdf/sections/anouveaux.html.twig' %}
+
+
+		{# =========================
+		       APPROBATION DES COMPTES
+		       ========================= #}
+
+		<div class="pdf-nouvelle-page"></div>
+
+		{% include 'document_exercice/pdf/_entete.html.twig' %}
+
+		{% include 'document_exercice/pdf/sections/approbation_comptes.html.twig' %}
+
+
+		<footer class="pdf-footer">
+			Dossier de clôture —
+			{{ exercice.nom }}
+			— Document édité le
+			{{ "now"|date("d/m/Y") }}
+		</footer>
+
+	</body>
+
+</html>

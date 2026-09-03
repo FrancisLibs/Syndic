@@ -78,7 +78,8 @@ final class EauService
         $lots = $this->calculerLots(
             $consommations,
             $prixM3,
-            $exercice
+            $exercice,
+            $montantFactures
         );
 
         $consommationGenerale =
@@ -105,8 +106,8 @@ final class EauService
             lots: $lots,
         );
     }
-    
-    
+
+
     private function calculerPartCommune(
         float $coutCommuns,
         int $tantiemesLot,
@@ -199,7 +200,8 @@ final class EauService
     private function calculerLots(
         ConsommationImmeuble $consommations,
         float $prixM3,
-        Exercice $exercice
+        Exercice $exercice,
+        float $montantFactures
     ): array {
         $totalTantiemes = $this->calculerTotalTantiemes(
             $consommations
@@ -298,6 +300,59 @@ final class EauService
                     2
                 ),
             );
+        }
+
+        /*
+ * Correction de l'écart d'arrondi.
+ *
+ * La somme des montants par lot peut différer
+ * de quelques centimes du montant total des factures,
+ * car chaque part est arrondie individuellement.
+ *
+ * On affecte l'écart au dernier lot.
+ */
+        $totalReparti = 0.0;
+
+        foreach ($lots as $lotCalcule) {
+            $totalReparti += $lotCalcule->getMontantTotal();
+        }
+
+        $ecart = round(
+            $montantFactures - $totalReparti,
+            2
+        );
+
+        if (
+            abs($ecart) >= 0.01
+            && $lots !== []
+        ) {
+            $dernierIndex = array_key_last(
+                $lots
+            );
+
+            $dernierLot = $lots[$dernierIndex];
+
+            $nouvellePartCommune = round(
+                $dernierLot->getPartCommune()
+                    + $ecart,
+                2
+            );
+
+            $nouveauMontantTotal = round(
+                $dernierLot->getPartIndividuelle()
+                    + $nouvellePartCommune,
+                2
+            );
+
+            $lots[$dernierIndex] =
+                new CalculEauLot(
+                    lot: $dernierLot->getLot(),
+                    coproprietaire: $dernierLot->getCoproprietaire(),
+                    consommation: $dernierLot->getConsommation(),
+                    partIndividuelle: $dernierLot->getPartIndividuelle(),
+                    partCommune: $nouvellePartCommune,
+                    montantTotal: $nouveauMontantTotal,
+                );
         }
 
         return $lots;

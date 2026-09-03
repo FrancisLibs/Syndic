@@ -74,7 +74,12 @@ final class LotController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_lot_show', methods: ['GET'])]
+    #[Route(
+        '/{id}',
+        name: 'app_lot_show',
+        requirements: ['id' => '\d+'],
+        methods: ['GET']
+    )]
     public function show(Lot $lot): Response
     {
         return $this->render(
@@ -85,7 +90,12 @@ final class LotController extends AbstractController
         );
     }
 
-    #[Route('/{id}/edit', name: 'app_lot_edit', methods: ['GET', 'POST'])]
+    #[Route(
+        '/{id}/edit',
+        name: 'app_lot_edit',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST']
+    )]
     public function edit(
         Request $request,
         Lot $lot,
@@ -125,7 +135,12 @@ final class LotController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_lot_delete', methods: ['POST'])]
+    #[Route(
+        '/{id}',
+        name: 'app_lot_delete',
+        requirements: ['id' => '\d+'],
+        methods: ['POST']
+    )]
     public function delete(Request $request, Lot $lot, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete' . $lot->getId(), $request->getPayload()->getString('_token'))) {
@@ -139,6 +154,7 @@ final class LotController extends AbstractController
     #[Route(
         '/{id}/compteur',
         name: 'app_lot_compteur',
+        requirements: ['id' => '\d+'],
         methods: ['GET', 'POST']
     )]
     public function compteur(

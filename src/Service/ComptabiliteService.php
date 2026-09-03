@@ -197,7 +197,8 @@ class ComptabiliteService
             OperationType::REGULARISATION,
             OperationType::CLOTURE,
             OperationType::APPROBATION_COMPTES,
-            OperationType::TRANSFERT_DETTE
+            OperationType::TRANSFERT_DETTE,
+            OperationType::OPERATION_DIVERSE
             => JournalCode::OD,
         };
     }

@@ -3,12 +3,12 @@
 namespace App\Controller\Imports;
 
 use App\Entity\Exercice;
-use App\Service\Import\ControleImportSoldeOuvertureService;
+use App\Service\Imports\ControleImportSoldeOuvertureService;
+use App\Service\Imports\ImportSoldeOuvertureService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Service\Import\ImportSoldeOuvertureService;
-use Symfony\Component\HttpFoundation\Request;
 
 #[Route('/imports/soldes-ouverture')]
 final class ImportSoldeOuvertureController extends AbstractController
@@ -16,6 +16,7 @@ final class ImportSoldeOuvertureController extends AbstractController
     #[Route(
         '/{id}',
         name: 'app_import_solde_ouverture_index',
+        requirements: ['id' => '\d+'],
         methods: ['GET']
     )]
     public function index(
@@ -27,7 +28,7 @@ final class ImportSoldeOuvertureController extends AbstractController
         );
 
         return $this->render(
-            'import/solde_ouverture/index.html.twig',
+            'imports/solde_ouverture/index.html.twig',
             [
                 'exercice' => $exercice,
                 'controle' => $controle,
@@ -38,6 +39,7 @@ final class ImportSoldeOuvertureController extends AbstractController
     #[Route(
         '/{id}/importer',
         name: 'app_import_solde_ouverture_importer',
+        requirements: ['id' => '\d+'],
         methods: ['POST']
     )]
     public function importer(

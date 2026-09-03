@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Modifier un règlement fournisseur
+{% endblock %}
+
+{% block body %}
+
+	<div class="container mt-4">
+
+		<h1>
+			Modifier le règlement fournisseur
+		</h1>
+
+		<div class="card shadow-sm mt-4">
+			<div class="card-body">
+
+				{{ form_start(form) }}
+
+				{{ form_row(form.dateReglement) }}
+				{{ form_row(form.fournisseur) }}
+				{{ form_row(form.montant) }}
+				{{ form_row(form.reference) }}
+
+				<div class="d-flex gap-2 mt-4">
+
+					<button class="btn btn-primary">
+						Enregistrer les modifications
+					</button>
+
+					<a href="{{ path( 'app_reglement_fournisseur_show', { id: reglement.id } ) }}" class="btn btn-outline-secondary">
+						Annuler
+					</a>
+
+				</div>
+
+				{{ form_end(form) }}
+
+			</div>
+		</div>
+
+	</div>
+
+{% endblock %}

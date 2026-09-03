@@ -38,6 +38,10 @@ class ApprobationComptes
     )]
     private ?Operation $operation = null;
 
+    #[ORM\ManyToOne(targetEntity: Exercice::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Exercice $exerciceComptabilisation = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -92,6 +96,19 @@ class ApprobationComptes
     public function setOperation(?Operation $operation): static
     {
         $this->operation = $operation;
+
+        return $this;
+    }
+
+    public function getExerciceComptabilisation(): ?Exercice
+    {
+        return $this->exerciceComptabilisation;
+    }
+
+    public function setExerciceComptabilisation(
+        ?Exercice $exerciceComptabilisation
+    ): static {
+        $this->exerciceComptabilisation = $exerciceComptabilisation;
 
         return $this;
     }

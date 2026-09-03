@@ -68,7 +68,12 @@ final class BudgetController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_budget_show', methods: ['GET'])]
+    #[Route(
+        '/{id}',
+        name: 'app_budget_show',
+        requirements: ['id' => '\d+'],
+        methods: ['GET']
+    )]
     public function show(Budget $budget): Response
     {
         return $this->render(
@@ -79,7 +84,12 @@ final class BudgetController extends AbstractController
         );
     }
 
-    #[Route('/{id}/edit', name: 'app_budget_edit', methods: ['GET', 'POST'])]
+    #[Route(
+        '/{id}/edit',
+        name: 'app_budget_edit',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST']
+    )]
     public function edit(
         Request $request,
         Budget $budget,
@@ -118,6 +128,7 @@ final class BudgetController extends AbstractController
     #[Route(
         '/{id}/generer-appel',
         name: 'app_budget_generer_appel',
+        requirements: ['id' => '\d+'],
         methods: ['POST']
     )]
     public function genererAppel(

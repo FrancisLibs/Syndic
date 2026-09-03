@@ -4,12 +4,12 @@ namespace App\Controller;
 
 use App\Entity\FactureFournisseur;
 use App\Form\FactureFournisseurType;
-use App\Form\ReglementFactureFournisseurType;
+use App\Form\CorrectionMontantFactureFournisseurType;
 use App\Repository\ExerciceRepository;
 use App\Repository\FactureFournisseurRepository;
 use App\Service\GenerationFactureFournisseurService;
-use App\Service\ReglementFactureFournisseurService;
 use App\Service\ContexteExerciceService;
+use App\Service\CorrectionFactureFournisseurService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,7 +36,10 @@ final class FactureFournisseurController extends AbstractController
             );
         }
 
-        $factures = $repository->findPourExercice($exercice);
+        $factures = $repository
+            ->findPourExercice(
+                $exercice
+            );
 
         return $this->render(
             'facture_fournisseur/index.html.twig',
@@ -249,53 +252,76 @@ final class FactureFournisseurController extends AbstractController
     }
 
     #[Route(
-        '/{id}/regler',
-        name: 'app_facture_fournisseur_regler',
+        '/{id}/corriger-montant',
+        name: 'app_facture_fournisseur_corriger_montant',
+        requirements: ['id' => '\d+'],
         methods: ['GET', 'POST']
     )]
-    public function regler(
-        FactureFournisseur $facture,
+    public function corrigerMontant(
+        int $id,
         Request $request,
-        ReglementFactureFournisseurService $reglementService,
+        FactureFournisseurRepository $factureRepository,
+        CorrectionFactureFournisseurService $correctionService
     ): Response {
-        if ($facture->isSoldee()) {
-            $this->addFlash(
-                'warning',
-                'Cette facture est déjà réglée.'
-            );
-
-            return $this->redirectToRoute(
-                'app_facture_fournisseur_index'
+        $facture = $factureRepository
+            ->findAvecOperationPourCorrection($id);
+        if ($facture === null) {
+            throw $this->createNotFoundException(
+                'Facture fournisseur introuvable.'
             );
         }
 
-        $form = $this->createForm(ReglementFactureFournisseurType::class);
+        if ($facture->getCoproprietaireAvanceur() !== null) {
+            $this->addFlash(
+                'warning',
+                'La correction des factures avancées par un copropriétaire n’est pas encore disponible.'
+            );
+
+            return $this->redirectToRoute(
+                'app_facture_fournisseur_show',
+                [
+                    'id' => $facture->getId(),
+                ]
+            );
+        }
+
+        $ancienMontant = $facture->getMontant();
+
+        $form = $this->createForm(
+            CorrectionMontantFactureFournisseurType::class,
+            [
+                'montant' => $ancienMontant,
+            ]
+        );
 
         $form->handleRequest($request);
 
-        if (
-            $form->isSubmitted()
-            && $form->isValid()
-        ) {
-            $dateReglement = $form
-                ->get('dateReglement')
-                ->getData();
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $data = $form->getData();
 
             try {
-                $reglementService->regler(
+                $correctionService->corrigerMontant(
                     $facture,
-                    $dateReglement
+                    (string) $data['montant']
                 );
 
                 $this->addFlash(
                     'success',
-                    'Le règlement de la facture a été enregistré.'
+                    sprintf(
+                        'Le montant de la facture a été corrigé de %.2f € à %.2f €.',
+                        (float) $ancienMontant,
+                        (float) $data['montant']
+                    )
                 );
 
                 return $this->redirectToRoute(
-                    'app_facture_fournisseur_index'
+                    'app_facture_fournisseur_show',
+                    [
+                        'id' => $facture->getId(),
+                    ]
                 );
-            } catch (\LogicException $exception) {
+            } catch (\Throwable $exception) {
                 $this->addFlash(
                     'danger',
                     $exception->getMessage()
@@ -304,7 +330,7 @@ final class FactureFournisseurController extends AbstractController
         }
 
         return $this->render(
-            'facture_fournisseur/regler.html.twig',
+            'facture_fournisseur/corriger_montant.html.twig',
             [
                 'facture' => $facture,
                 'form' => $form,

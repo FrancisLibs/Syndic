@@ -1,0 +1,217 @@
+<h1>Clôture des comptes de gestion</h1>
+
+		{% set totalDebit = 0 %}
+		{% set totalCredit = 0 %}
+		{% set nombreLignes = cloture.lignes|length %}
+		{% set nombreComptesGestion = 0 %}
+		{% set nombreComptesResultat = 0 %}
+
+		{% for ligne in cloture.lignes %}
+
+			{% if ligne.compte.numero == '489000' %}
+				{% set nombreComptesResultat = nombreComptesResultat + 1 %}
+			{% else %}
+				{% set nombreComptesGestion = nombreComptesGestion + 1 %}
+			{% endif %}
+
+		{% endfor %}
+
+		{% if cloture.generee %}
+
+			<table class="cloture-informations">
+				<tbody>
+					<tr>
+						<th>État</th>
+						<td>Écritures de clôture générées</td>
+					</tr>
+
+					<tr>
+						<th>Date</th>
+						<td>
+							{{ cloture.operation.date|date('d/m/Y') }}
+						</td>
+					</tr>
+
+					<tr>
+						<th>Libellé</th>
+						<td>
+							{{ cloture.operation.libelle }}
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+		{% endif %}
+
+		<h2>Synthèse</h2>
+
+		<table class="cloture-synthese">
+			<tbody>
+				<tr>
+					<th>Nombre d'écritures</th>
+					<td class="montant">
+						{{ nombreLignes }}
+					</td>
+				</tr>
+
+				<tr>
+					<th>Comptes de gestion</th>
+					<td class="montant">
+						{{ nombreComptesGestion }}
+					</td>
+				</tr>
+
+				<tr>
+					<th>Écriture de résultat</th>
+					<td class="montant">
+						{{ nombreComptesResultat }}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h2>Écritures de clôture</h2>
+
+		<table>
+
+			<thead>
+				<tr>
+					<th>Nature</th>
+					<th>Compte</th>
+					<th>Libellé</th>
+					<th class="montant">Débit</th>
+					<th class="montant">Crédit</th>
+				</tr>
+			</thead>
+
+			<tbody>
+
+				{% for ligne in cloture.lignes %}
+
+					{% set totalDebit = totalDebit + ligne.debit %}
+					{% set totalCredit = totalCredit + ligne.credit %}
+
+					{% if ligne.compte.numero == '489000' %}
+
+						<tr class="cloture-resultat">
+							<td colspan="5">
+								<strong>Contrepartie du résultat</strong>
+							</td>
+						</tr>
+
+					{% endif %}
+
+					<tr>
+
+						<td>
+							{{ ligne.compte.type.value }}
+						</td>
+
+						<td>
+							{{ ligne.compte.numero }}
+						</td>
+
+						<td>
+							{{ ligne.compte.libelle }}
+						</td>
+
+						<td class="montant">
+							{% if ligne.debit > 0 %}
+								{{ ligne.debit|number_format(2, ',', ' ') }}
+								€
+							{% else %}
+								-
+							{% endif %}
+						</td>
+
+						<td class="montant">
+							{% if ligne.credit > 0 %}
+								{{ ligne.credit|number_format(2, ',', ' ') }}
+								€
+							{% else %}
+								-
+							{% endif %}
+						</td>
+
+					</tr>
+
+				{% else %}
+
+					<tr>
+						<td colspan="5">
+							Aucune écriture de clôture.
+						</td>
+					</tr>
+
+				{% endfor %}
+
+			</tbody>
+
+			<tfoot>
+				<tr>
+					<th colspan="3">
+						Totaux
+					</th>
+
+					<th class="montant">
+						{{ totalDebit|number_format(2, ',', ' ') }}
+						€
+					</th>
+
+					<th class="montant">
+						{{ totalCredit|number_format(2, ',', ' ') }}
+						€
+					</th>
+				</tr>
+			</tfoot>
+
+		</table>
+
+		<h2>Résultat de l'exercice</h2>
+
+		<table class="cloture-resultat-table">
+			<tbody>
+
+				<tr>
+					<th>Total des charges</th>
+
+					<td class="montant">
+						{{ cloture.charges|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+
+				<tr>
+					<th>Total des produits</th>
+
+					<td class="montant">
+						{{ cloture.produits|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+
+				<tr>
+					<th>Résultat</th>
+
+					<td class="montant">
+						<strong>
+							{{ cloture.resultat|number_format(2, ',', ' ') }}
+							€
+						</strong>
+					</td>
+				</tr>
+
+				<tr>
+					<th>Contrôle</th>
+
+					<td>
+						{% if (totalDebit - totalCredit)|abs < 0.01 %}
+							Écritures équilibrées
+						{% else %}
+							Écritures non équilibrées
+						{% endif %}
+					</td>
+				</tr>
+
+			</tbody>
+		</table>

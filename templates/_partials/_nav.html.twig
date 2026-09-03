@@ -5,7 +5,6 @@
 		</a>
 		<div class="collapse navbar-collapse">
 			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
 				{# ========================= #}
 				{# COMPTABILITÉ              #}
 				{# ========================= #}
@@ -39,6 +38,60 @@
 						</li>
 					</ul>
 				</li>
+				{# ========================= #}
+				{# CLOTURE                   #}
+				{# ========================= #}
+
+					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+						Clôture
+					</a>
+
+					<ul class="dropdown-menu">
+
+						{% if contexte.exercice %}
+
+							<li>
+								<a class="dropdown-item" href="{{ path( 'app_cloture_workflow', { id: contexte.exercice.id } ) }}">
+									Assistant de clôture
+								</a>
+							</li>
+
+							<li>
+								<a class="dropdown-item" href="{{ path( 'app_cloture_regularisations', { id: contexte.exercice.id } ) }}">
+									Régularisations
+								</a>
+							</li>
+
+							<li>
+								<a class="dropdown-item" href="{{ path( 'app_cloture_soldes_reportables', { id: contexte.exercice.id } ) }}">
+									Soldes reportables
+								</a>
+							</li>
+
+							<li>
+								<a class="dropdown-item" href="{{ path( 'app_cloture_comptes_gestion', { id: contexte.exercice.id } ) }}">
+									Comptes de gestion
+								</a>
+							</li>
+
+							<li>
+								<a class="dropdown-item" href="{{ path( 'app_cloture_anouveaux', { id: contexte.exercice.id } ) }}">
+									À-nouveaux
+								</a>
+							</li>
+
+						{% else %}
+
+							<li>
+								<span class="dropdown-item-text text-muted">
+									Aucun exercice sélectionné
+								</span>
+							</li>
+
+						{% endif %}
+
+					</ul>
+				</li>
 
 				{# ========================= #}
 				{# EXPLOITATION              #}
@@ -46,41 +99,64 @@
 					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Exploitation
 					</a>
+
 					<ul class="dropdown-menu">
+
 						<li>
 							<a class="dropdown-item" href="{{ path('app_budget_index') }}">
 								Budgets
 							</a>
 						</li>
+
 						<li>
 							<a class="dropdown-item" href="{{ path('app_appel_fond_index') }}">
 								<i class="bi bi-cash-stack"></i>
 								Appels de fonds
 							</a>
 						</li>
+
 						<li>
 							<a class="dropdown-item" href="{{ path('app_facture_fournisseur_index') }}">
 								<i class="bi bi-receipt"></i>
 								Factures fournisseurs
 							</a>
 						</li>
+
 						<li>
-							<a class="dropdown-item" href="{{ path('app_paiement_index')}}">
+							<a class="dropdown-item" href="{{ path('app_reglement_fournisseur_index') }}">
+								<i class="bi bi-receipt"></i>
+								Paiements fournisseurs
+							</a>
+						</li>
+
+
+						<li>
+							<a class="dropdown-item" href="{{ path('app_paiement_index') }}">
 								<i class="bi bi-cash-coin"></i>
 								Paiements copropriétaires
 							</a>
 						</li>
+
 						<li>
-							<a class="dropdown-item" href="{{ path('app_repartition_charges')}}">
+							<a class="dropdown-item" href="{{ path('app_repartition_charges') }}">
 								<i class="bi bi-cash-coin"></i>
 								Répartition charges
 							</a>
 						</li>
+
 						<li>
-							<a class="dropdown-item" href="{{ path('app_eau_calcul') }}" >
+							<a class="dropdown-item" href="{{ path('app_repartition_charges_synthese') }}">
+								<i class="bi bi-cash-coin"></i>
+								Répartition charges - synthèse
+							</a>
+						</li>
+
+						<li>
+							<a class="dropdown-item" href="{{ path('app_eau_calcul') }}">
 								Voir la répartition de l’eau
 							</a>
 						</li>
+
 					</ul>
 				</li>
 
@@ -111,29 +187,9 @@
 						</li>
 
 						<li>
-							<a class="dropdown-item disabled" href="#" aria-disabled="true">
-								Répartition
-							</a>
-						</li>
-						<li>
 							<a class="dropdown-item" href="{{ path('app_eau_calcul') }}">
 								Calcul de l'eau
 							</a>
-						</li>
-					</ul>
-				</li>
-
-				{# ========================= #}
-				{# TRÉSORERIE                #}
-				{# ========================= #}
-					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-						Trésorerie
-					</a>
-					<ul
-						class="dropdown-menu">
-						{# Ajoutez vos liens de trésorerie ici si nécessaire #}
-						<li>
-							<a class="dropdown-item" href="#">Suivi bancaire</a>
 						</li>
 					</ul>
 				</li>
@@ -156,6 +212,11 @@
 							</a>
 						</li>
 						<li>
+							<a class="dropdown-item" href="{{ path('app_coproprietaire_index') }}">
+								Copropriétaires
+							</a>
+						</li>
+						<li>
 							<hr class="dropdown-divider">
 						</li>
 						<li>
@@ -175,6 +236,79 @@
 						</li>
 					</ul>
 				</li>
+				{# ========================= #}
+				{# Documents                 #}
+				{# ========================= #}
+					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+						Documents
+					</a>
+					<ul
+						class="dropdown-menu">
+						{# Ajoutez vos liens de documents ici si nécessaire #}
+						<li>
+							<a class="dropdown-item" href="{{ path('app_document_exercice_index') }}">Index</a>
+						</li>
+					</ul>
+				</li>
+
+				{# ========================= #}
+				{# Initialisation            #}
+				{# ========================= #}
+					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+						Initialisation
+					</a>
+
+					<ul class="dropdown-menu">
+
+						{% if contexte.exercice %}
+
+							<li>
+								<a class="dropdown-item" href="{{ path( 'app_import_solde_ouverture_index', { id: contexte.exercice.id } ) }}">
+									1) Importer les soldes d’ouverture
+								</a>
+							</li>
+
+							<li>
+								<hr class="dropdown-divider">
+							</li>
+
+							<li>
+								<a class="dropdown-item" href="{{ path('app_import_csv_facture') }}">
+									2) Import du fichier CSV des factures fournisseurs
+								</a>
+							</li>
+
+							<li>
+								<a class="dropdown-item" href="{{ path( 'app_import_facture_index', { id: contexte.exercice.id } ) }}">
+									3) Traiter les factures importées
+								</a>
+							</li>
+
+							<li>
+								<a class="dropdown-item" href="{{ path('app_import_csv_reglement') }}">
+									4) Import du fichier CSV des règlements fournisseurs
+								</a>
+							</li>
+
+							<li>
+								<a class="dropdown-item" href="{{ path( 'app_import_reglement_index', { id: contexte.exercice.id } ) }}">
+									5) Traiter les règlements importés
+								</a>
+							</li>
+
+						{% else %}
+
+							<li>
+								<span class="dropdown-item-text text-muted">
+									Aucun exercice sélectionné
+								</span>
+							</li>
+
+						{% endif %}
+
+
+					</ul>
+				</li>
 			</ul>
 			<div class="d-flex gap-5">
 				{# ========================= #}
@@ -184,12 +318,19 @@
 					<div class="d-flex gap-2"> <a href="{{ path('app_facture_fournisseur_new') }}" class="btn btn-light btn-sm">
 						+ Facture fournisseur
 					</a>
+
+					<a href="{{ path('app_reglement_fournisseur_new') }}" class="btn btn-light btn-sm">
+						+ Règlement fournisseur
+					</a>
+
 					<a href="{{ path('app_paiement_new') }}" class="btn btn-light btn-sm">
 						+ Paiement copropriétaire
 					</a>
+
 					<a class="btn btn-light btn-sm" href="{{ path('app_coproprietaire_index') }}">
 						Copropriétaires
 					</a>
+
 				</div>
 
 				{# ========================= #}

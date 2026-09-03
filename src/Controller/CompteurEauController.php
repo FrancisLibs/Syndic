@@ -82,6 +82,7 @@ final class CompteurEauController extends AbstractController
     #[Route(
         '/{id}',
         name: 'app_compteur_eau_show',
+        requirements: ['id' => '\d+'],
         methods: ['GET']
     )]
     public function show(
@@ -98,6 +99,7 @@ final class CompteurEauController extends AbstractController
     #[Route(
         '/{id}/edit',
         name: 'app_compteur_eau_edit',
+        requirements: ['id' => '\d+'],
         methods: ['GET', 'POST']
     )]
     public function edit(
@@ -139,6 +141,7 @@ final class CompteurEauController extends AbstractController
     #[Route(
         '/{id}',
         name: 'app_compteur_eau_delete',
+        requirements: ['id' => '\d+'],
         methods: ['POST']
     )]
     public function delete(

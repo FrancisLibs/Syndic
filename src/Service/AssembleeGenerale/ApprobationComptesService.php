@@ -32,9 +32,6 @@ final class ApprobationComptesService
         $lignes = [];
 
         foreach ($simulation->lignes as $ligne) {
-            if ($ligne->estEquilibre()) {
-                continue;
-            }
 
             $lignes[] = new ApprobationLigne(
                 coproprietaire: $ligne->coproprietaire,
@@ -54,6 +51,24 @@ final class ApprobationComptesService
         ApprobationComptesEntity $approbation
     ): Operation {
         $exercice = $approbation->getExercice();
+
+        $exerciceComptabilisation =
+            $approbation->getExerciceComptabilisation();
+
+        if (!$exerciceComptabilisation) {
+            throw new \LogicException(
+                'L’exercice de comptabilisation de l’approbation est obligatoire.'
+            );
+        }
+
+        if ($exerciceComptabilisation->isCloture()) {
+            throw new \LogicException(
+                sprintf(
+                    'L’exercice %s est clôturé et ne peut pas recevoir les écritures d’approbation.',
+                    $exerciceComptabilisation->getNom()
+                )
+            );
+        }
 
         if (!$exercice) {
             throw new \LogicException(
@@ -82,6 +97,31 @@ final class ApprobationComptesService
             );
         }
 
+        if (
+            $dateAssembleeGenerale < $exerciceComptabilisation->getDateDebut()
+            || $dateAssembleeGenerale > $exerciceComptabilisation->getDateFin()
+        ) {
+            throw new \LogicException(
+                sprintf(
+                    'La date de l’Assemblée Générale (%s) ne correspond pas à l’exercice de comptabilisation %s.',
+                    $dateAssembleeGenerale->format('d/m/Y'),
+                    $exerciceComptabilisation->getNom()
+                )
+            );
+        }
+
+        if (
+            $dateAssembleeGenerale
+            <= $exercice->getDateFin()
+        ) {
+            throw new \LogicException(
+                sprintf(
+                    'L’Assemblée Générale d’approbation des comptes doit être postérieure au %s.',
+                    $exercice->getDateFin()->format('d/m/Y')
+                )
+            );
+        }
+
         $numeroResolution =
             trim((string) $approbation->getNumeroResolution());
 
@@ -105,7 +145,10 @@ final class ApprobationComptesService
         $preparation =
             $this->preparerApprobation($exercice);
 
-        if ($preparation->getNombreLignes() === 0) {
+        if (
+            $preparation->getTotalDebiteur() < 0.01
+            && $preparation->getTotalCrediteur() < 0.01
+        ) {
             throw new \LogicException(
                 'Aucune régularisation ne doit être comptabilisée.'
             );
@@ -154,14 +197,14 @@ final class ApprobationComptesService
                  */
                 $this->comptabiliteService->creerDebit(
                     $operation,
-                    $exercice,
+                    $exerciceComptabilisation,
                     $compte489000,
                     $montant
                 );
 
                 $this->comptabiliteService->creerCredit(
                     $operation,
-                    $exercice,
+                    $exerciceComptabilisation,
                     $compteCoproprietaire,
                     $montant,
                     $coproprietaire
@@ -178,7 +221,7 @@ final class ApprobationComptesService
              */
             $this->comptabiliteService->creerDebit(
                 $operation,
-                $exercice,
+                $exerciceComptabilisation,
                 $compteCoproprietaire,
                 $montant,
                 $coproprietaire
@@ -186,7 +229,7 @@ final class ApprobationComptesService
 
             $this->comptabiliteService->creerCredit(
                 $operation,
-                $exercice,
+                $exerciceComptabilisation,
                 $compte489000,
                 $montant
             );

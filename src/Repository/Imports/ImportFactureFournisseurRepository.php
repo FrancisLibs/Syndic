@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Repository\Import;
+namespace App\Repository\Imports;
 
 use App\Entity\Exercice;
-use App\Entity\Import\ImportFactureFournisseur;
+use App\Entity\Imports\ImportFactureFournisseur;
 use App\Enum\ImportStatut;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -100,5 +100,23 @@ final class ImportFactureFournisseurRepository extends ServiceEntityRepository
             )
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    public function trouverDoublon(
+        ImportFactureFournisseur $import
+    ): ?ImportFactureFournisseur {
+        return $this->createQueryBuilder('i')
+            ->andWhere('i.exercice = :exercice')
+            ->andWhere('i.fournisseur = :fournisseur')
+            ->andWhere('i.dateFacture = :dateFacture')
+            ->andWhere('i.montant = :montant')
+            ->andWhere('i.libelle = :libelle')
+            ->setParameter('exercice', $import->getExercice())
+            ->setParameter('fournisseur', $import->getFournisseur())
+            ->setParameter('dateFacture', $import->getDateFacture())
+            ->setParameter('montant', $import->getMontant())
+            ->setParameter('libelle', $import->getLibelle())
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

@@ -8,7 +8,6 @@ use App\Entity\Imports\ImportFactureFournisseur;
 use App\Entity\TypeCharge;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -66,17 +65,6 @@ final class ImportFactureFournisseurType extends AbstractType
                 'label' => 'Montant',
                 'currency' => 'EUR',
                 'scale' => 2,
-            ])
-
-            ->add('reglee', CheckboxType::class, [
-                'label' => 'Facture déjà réglée',
-                'required' => false,
-            ])
-
-            ->add('dateReglement', DateType::class, [
-                'label' => 'Date de règlement',
-                'widget' => 'single_text',
-                'required' => false,
             ]);
     }
 

@@ -131,6 +131,7 @@ extends AbstractController
     #[Route(
         'show/{id}',
         name: 'app_paiement_show',
+        requirements: ['id' => '\d+'],
         methods: ['GET']
     )]
     public function show(

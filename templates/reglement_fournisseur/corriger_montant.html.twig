@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Correction règlement fournisseur
+{% endblock %}
+
+{% block body %}
+
+	<h1>Correction du règlement fournisseur</h1>
+
+	<div class="card shadow-sm mb-4">
+
+		<div class="card-header">
+			Règlement
+		</div>
+
+		<div class="card-body">
+
+			<dl class="row mb-0">
+
+				<dt class="col-sm-4">
+					Fournisseur
+				</dt>
+
+				<dd class="col-sm-8">
+					{{ reglement.fournisseur.nom }}
+				</dd>
+
+				<dt class="col-sm-4">
+					Date
+				</dt>
+
+				<dd class="col-sm-8">
+					{{ reglement.dateReglement|date('d/m/Y') }}
+				</dd>
+
+				<dt class="col-sm-4">
+					Référence
+				</dt>
+
+				<dd class="col-sm-8">
+					{{ reglement.reference ?: '—' }}
+				</dd>
+
+				<dt class="col-sm-4">
+					Montant actuel
+				</dt>
+
+				<dd class="col-sm-8 fw-semibold">
+					{{ reglement.montant|number_format(2, ',', ' ') }}
+					€
+				</dd>
+
+				<dt class="col-sm-4">
+					Montant affecté
+				</dt>
+
+				<dd class="col-sm-8">
+					{{ reglement.montantAffecte|number_format(2, ',', ' ') }}
+					€
+				</dd>
+
+				<dt class="col-sm-4">
+					Disponible
+				</dt>
+
+				<dd class="col-sm-8">
+
+					{% if reglement.montantNonAffecte > 0.009 %}
+
+						<span class="text-success fw-semibold">
+							{{ reglement.montantNonAffecte|number_format(2, ',', ' ') }}
+							€
+						</span>
+
+					{% else %}
+
+						0,00 €
+
+					{% endif %}
+
+				</dd>
+
+			</dl>
+
+		</div>
+
+	</div>
+
+
+	<div class="card shadow-sm">
+
+		<div class="card-header">
+			Nouveau montant
+		</div>
+
+		<div class="card-body">
+
+			{{ form_start(form) }}
+
+				{{ form_row(form.montant) }}
+
+				<div class="alert alert-warning mt-3">
+
+					La correction modifiera également
+					les écritures comptables du règlement.
+
+					<br>
+
+					Si le nouveau montant est inférieur
+					aux sommes déjà affectées aux factures,
+					les affectations les plus récentes
+					seront réduites.
+
+				</div>
+
+				<div class="d-flex justify-content-between mt-4">
+
+					<a
+						href="{{ path(
+							'app_reglement_fournisseur_show',
+							{ id: reglement.id }
+						) }}"
+						class="btn btn-secondary"
+					>
+						Annuler
+					</a>
+
+					<button
+						type="submit"
+						class="btn btn-warning"
+					>
+						Corriger le règlement
+					</button>
+
+				</div>
+
+			{{ form_end(form) }}
+
+		</div>
+
+	</div>
+
+{% endblock %}

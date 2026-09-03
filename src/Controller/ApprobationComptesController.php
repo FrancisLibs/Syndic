@@ -14,6 +14,7 @@ final class ApprobationComptesController extends AbstractController
     #[Route(
         '/{id}',
         name: 'app_approbation_comptes',
+        requirements: ['id' => '\d+'],
         methods: ['GET']
     )]
     public function index(

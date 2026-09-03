@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Exercice;
 use App\Entity\FactureFournisseur;
+use App\Entity\Fournisseur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -21,32 +22,17 @@ class FactureFournisseurRepository extends ServiceEntityRepository
         Exercice $exercice
     ): array {
         return $this->createQueryBuilder('f')
-            ->innerJoin('f.exercice', 'e')
-            ->addSelect('e')
-            ->andWhere(
-                'e = :exercice
-            OR (
-                e.dateFin < :dateDebut
-                AND f.soldee = :nonSoldee
-            )'
-            )
+            ->leftJoin('f.typeCharge', 'tc')
+            ->addSelect('tc')
+            ->andWhere('f.exercice = :exercice')
             ->setParameter('exercice', $exercice)
-            ->setParameter(
-                'dateDebut',
-                $exercice->getDateDebut()
-            )
-            ->setParameter('nonSoldee', false)
-            ->orderBy('e.dateDebut', 'DESC')
-            ->addOrderBy('f.soldee', 'ASC')
-            ->addOrderBy('f.dateReglement', 'ASC')
-            ->addOrderBy('f.dateFacture', 'DESC')
+            ->orderBy('tc.nom', 'ASC')
+            ->addOrderBy('f.dateFacture', 'ASC')
+            ->addOrderBy('f.id', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
-    /**
-     * @return FactureFournisseur[]
-     */
     /**
      * @return FactureFournisseur[]
      */
@@ -79,5 +65,19 @@ class FactureFournisseurRepository extends ServiceEntityRepository
             ->setParameter('exercice', $exercice)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    public function findAvecOperationPourCorrection(
+        int $id
+    ): ?FactureFournisseur {
+        return $this->createQueryBuilder('f')
+            ->addSelect('o', 'e', 'r')
+            ->leftJoin('f.operation', 'o')
+            ->leftJoin('o.ecritures', 'e')
+            ->leftJoin('e.repartitions', 'r')
+            ->andWhere('f.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

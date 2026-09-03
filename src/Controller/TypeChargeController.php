@@ -46,7 +46,12 @@ final class TypeChargeController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_type_charge_show', methods: ['GET'])]
+    #[Route(
+        '/{id}',
+        name: 'app_type_charge_show',
+        requirements: ['id' => '\d+'],
+        methods: ['GET']
+    )]
     public function show(TypeCharge $typeCharge): Response
     {
         return $this->render('type_charge/show.html.twig', [
@@ -54,7 +59,12 @@ final class TypeChargeController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_type_charge_edit', methods: ['GET', 'POST'])]
+    #[Route(
+        '/{id}/edit',
+        name: 'app_type_charge_edit',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST']
+    )]
     public function edit(Request $request, TypeCharge $typeCharge, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(TypeChargeType::class, $typeCharge);
@@ -75,7 +85,12 @@ final class TypeChargeController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_type_charge_delete', methods: ['POST'])]
+    #[Route(
+        '/{id}',
+        name: 'app_type_charge_delete',
+        requirements: ['id' => '\d+'],
+        methods: ['POST']
+    )]
     public function delete(Request $request, TypeCharge $typeCharge, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete' . $typeCharge->getId(), $request->getPayload()->getString('_token'))) {

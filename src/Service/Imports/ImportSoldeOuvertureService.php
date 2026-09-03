@@ -4,7 +4,7 @@ namespace App\Service\Imports;
 
 use App\Entity\Ecriture;
 use App\Entity\Exercice;
-use App\Enum\ImportEtat;
+use App\Enum\ImportStatut;
 use App\Enum\OperationType;
 use App\Repository\Imports\ImportSoldeOuvertureRepository;
 use App\Service\ComptabiliteService;
@@ -99,7 +99,7 @@ final class ImportSoldeOuvertureService
             foreach ($lignes as $ligne) {
                 if (
                     $ligne->getEtat()
-                    !== ImportEtat::A_IMPORTER
+                    !== ImportStatut::EN_ATTENTE
                 ) {
                     continue;
                 }

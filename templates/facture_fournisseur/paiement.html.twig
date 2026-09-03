@@ -1,0 +1,340 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Paiement fournisseur
+{% endblock %}
+
+{% block body %}
+
+	<div class="d-flex justify-content-between align-items-center mb-4">
+
+		<div>
+			<h1 class="mb-0">
+				Paiement fournisseur
+			</h1>
+
+			<p class="text-muted mb-0">
+				{{ fournisseur.nom }}
+			</p>
+		</div>
+
+	</div>
+
+	{# ===================================================== #}
+	{# Factures sélectionnées                                #}
+	{# ===================================================== #}
+
+		<div class="card shadow-sm mb-4"> <div class="card-header">
+			Factures sélectionnées
+		</div>
+
+		<div class="card-body p-0">
+
+			<div class="table-responsive">
+
+				<table class="table table-hover align-middle mb-0">
+
+					<thead class="table-light">
+						<tr>
+							<th>Date</th>
+							<th>Numéro</th>
+							<th>Libellé</th>
+							<th class="text-end">
+								Montant
+							</th>
+							<th class="text-end">
+								Déjà réglé
+							</th>
+							<th class="text-end">
+								Reste à payer
+							</th>
+						</tr>
+					</thead>
+
+					<tbody>
+
+						{% for facture in factures %}
+
+							<tr>
+
+								<td>
+									{{ facture.dateFacture
+										? facture.dateFacture|date('d/m/Y')
+										: '—'
+									}}
+								</td>
+
+								<td>
+									{{ facture.numero }}
+								</td>
+
+								<td>
+									{{ facture.libelle }}
+								</td>
+
+								<td class="text-end text-nowrap">
+									{{ facture.montant|number_format(2, ',', ' ') }}
+									€
+								</td>
+
+								<td class="text-end text-nowrap">
+									{{ facture.montantRegle|number_format(2, ',', ' ') }}
+									€
+								</td>
+
+								<td class="text-end fw-semibold text-nowrap">
+									{{ facture.resteAPayer|number_format(2, ',', ' ') }}
+									€
+								</td>
+
+							</tr>
+
+						{% endfor %}
+
+					</tbody>
+
+					<tfoot class="table-light">
+
+						<tr>
+
+							<th colspan="5" class="text-end">
+								Total à payer
+							</th>
+
+							<th class="text-end">
+								{{ totalFactures|number_format(2, ',', ' ') }}
+								€
+							</th>
+
+						</tr>
+
+					</tfoot>
+
+				</table>
+
+			</div>
+
+		</div>
+
+	</div>
+
+
+	{# ===================================================== #}
+	{# Formulaire de paiement                               #}
+	{# ===================================================== #}
+
+		<form method="post" action="{{ path('app_facture_fournisseur_paiement') }}"> <input type="hidden" name="_token" value="{{ csrf_token('paiement_factures_fournisseur') }}">
+
+		<div class="row">
+
+			{# ================================================= #}
+			{# Partie gauche : saisie                             #}
+			{# ================================================= #}
+
+				<div class="col-md-7"> <div class="card shadow-sm">
+
+					<div class="card-header">
+						Paiement
+					</div>
+
+					<div
+						class="card-body">
+
+						{# Crédit antérieur #}
+
+						{% if creditDisponible > 0.009 %}
+
+							<div class="mb-3">
+
+								<label for="credit_utilise" class="form-label">
+									Crédit antérieur à utiliser
+								</label>
+
+								<div class="input-group">
+
+									<input type="number" id="credit_utilise" name="credit_utilise" class="form-control" value="{{ creditDisponible|number_format(2, '.', '') }}" min="0" max="{{ creditDisponible }}" step="0.01">
+
+									<span class="input-group-text">
+										€
+									</span>
+
+								</div>
+
+								<div class="form-text">
+									Disponible :
+									{{ creditDisponible|number_format(2, ',', ' ') }}
+									€
+								</div>
+
+							</div>
+
+						{% else %}
+
+							<input type="hidden" id="credit_utilise" name="credit_utilise" value="0">
+
+						{% endif %}
+
+
+						{# Date #}
+
+						<div class="mb-3">
+
+							<label for="date_reglement" class="form-label">
+								Date du paiement
+							</label>
+
+							<input type="date" id="date_reglement" name="date_reglement" class="form-control" required>
+
+						</div>
+
+
+						{# Autoriser un paiement antérieur à la date de facture #}
+						<div class="form-check mb-3">
+
+							<input type="checkbox" class="form-check-input" id="autoriser_date_anterieure" name="autoriser_date_anterieure" value="1">
+
+							<label class="form-check-label" for="autoriser_date_anterieure">
+								Autoriser un paiement antérieur à la date de facture
+							</label>
+
+							<div class="form-text">
+								À utiliser uniquement pour corriger un paiement ancien saisi tardivement.
+							</div>
+						</div>
+
+						{# Montant bancaire #}
+
+						<div class="mb-3">
+
+							<label for="montant" class="form-label">
+								Montant payé
+							</label>
+
+							<div class="input-group">
+
+								<input type="number" id="montant" name="montant" class="form-control" step="0.01" min="0" value="{{ montantPropose|number_format(2, '.', '') }}" data-total-factures="{{ totalFactures }}" required>
+
+								<span class="input-group-text">
+									€
+								</span>
+
+							</div>
+
+							<div class="form-text">
+								Montant réellement débité du compte bancaire.
+							</div>
+
+						</div>
+
+
+						{# Référence #}
+
+						<div class="mb-3">
+							<label for="reference" class="form-label">
+								Référence
+							</label>
+							<input type="text" id="reference" name="reference" class="form-control">
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+			{# ================================================= #}
+			{# Partie droite : récapitulatif                      #}
+			{# ================================================= #}
+
+				<div class="col-md-5"> <div class="card shadow-sm">
+
+					<div class="card-header">
+						Récapitulatif
+					</div>
+
+					<div class="card-body">
+
+						<table class="table mb-0">
+
+							<tr>
+
+								<th>
+									Total des factures
+								</th>
+
+								<td class="text-end">
+									{{ totalFactures|number_format(2, ',', ' ') }}
+									€
+								</td>
+
+							</tr>
+
+							<tr>
+
+								<th>
+									Crédit disponible
+								</th>
+
+								<td class="text-end">
+
+									{% if creditDisponible > 0.009 %}
+
+										<span class="text-success fw-semibold">
+											{{ creditDisponible|number_format(2, ',', ' ') }}
+											€
+										</span>
+
+									{% else %}
+
+										0,00 €
+
+									{% endif %}
+
+								</td>
+
+							</tr>
+
+							<tr>
+
+								<th>
+									Montant proposé
+								</th>
+
+								<td class="text-end fw-semibold">
+									{{ montantPropose|number_format(2, ',', ' ') }}
+									€
+								</td>
+
+							</tr>
+
+						</table>
+
+					</div>
+
+				</div>
+
+			</div>
+
+		</div>
+
+
+		{# ===================================================== #}
+		{# Boutons                                               #}
+		{# ===================================================== #}
+
+			<div class="d-flex justify-content-between mt-4"> <a href="{{ path('app_facture_fournisseur_index') }}" class="btn btn-secondary">
+				Retour
+			</a>
+
+			<button type="submit" class="btn btn-success btn-lg">
+				Payer
+			</button>
+
+		</div>
+
+	</form>
+{% endblock %}
+{% block javascripts %}
+
+	{{ parent() }}
+
+	<script src="{{ asset('assets/js/Paiement/fournisseur.js') }}"></script>
+{% endblock %}

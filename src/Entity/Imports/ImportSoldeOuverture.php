@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Entity\Import;
+namespace App\Entity\Imports;
 
 use App\Entity\Compte;
 use App\Entity\Coproprietaire;
 use App\Entity\Exercice;
 use App\Entity\Operation;
-use App\Enum\ImportEtat;
-use App\Repository\Import\ImportSoldeOuvertureRepository;
+use App\Enum\ImportStatut;
+use App\Repository\Imports\ImportSoldeOuvertureRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -56,10 +56,10 @@ class ImportSoldeOuverture
     private string $credit = '0.00';
 
     #[ORM\Column(
-        enumType: ImportEtat::class,
-        options: ['default' => 'a_importer']
+        enumType: ImportStatut::class,
+        options: ['default' => 'EN_ATTENTE']
     )]
-    private ImportEtat $etat = ImportEtat::A_IMPORTER;
+    private ImportStatut $etat = ImportStatut::EN_ATTENTE;
 
     #[ORM\Column(
         type: Types::TEXT,
@@ -170,13 +170,13 @@ class ImportSoldeOuverture
         return $this;
     }
 
-    public function getEtat(): ImportEtat
+    public function getEtat(): ImportStatut
     {
         return $this->etat;
     }
 
     public function setEtat(
-        ImportEtat $etat
+        ImportStatut $etat
     ): static {
         $this->etat = $etat;
 
@@ -211,22 +211,22 @@ class ImportSoldeOuverture
 
     public function isAImporter(): bool
     {
-        return $this->etat === ImportEtat::A_IMPORTER;
+        return $this->etat === ImportStatut::EN_ATTENTE;
     }
 
     public function isImporte(): bool
     {
-        return $this->etat === ImportEtat::IMPORTE;
+        return $this->etat === ImportStatut::TRAITEE;
     }
 
     public function hasErreur(): bool
     {
-        return $this->etat === ImportEtat::ERREUR;
+        return $this->etat === ImportStatut::ERREUR;
     }
 
     public function marquerImporte(): static
     {
-        $this->etat = ImportEtat::IMPORTE;
+        $this->etat = ImportStatut::TRAITEE;
         $this->dateImport = new \DateTimeImmutable();
         $this->messageErreur = null;
 
@@ -236,7 +236,7 @@ class ImportSoldeOuverture
     public function marquerErreur(
         string $message
     ): static {
-        $this->etat = ImportEtat::ERREUR;
+        $this->etat = ImportStatut::ERREUR;
         $this->messageErreur = $message;
         $this->dateImport = null;
 
@@ -245,7 +245,7 @@ class ImportSoldeOuverture
 
     public function reinitialiser(): static
     {
-        $this->etat = ImportEtat::A_IMPORTER;
+        $this->etat = ImportStatut::EN_ATTENTE;
         $this->messageErreur = null;
         $this->dateImport = null;
 

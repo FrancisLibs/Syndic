@@ -46,7 +46,11 @@ final class OperationController extends AbstractController
         );
     }
 
-    #[Route('/operation/{id}', name: 'app_operation_show')]
+    #[Route(
+        '/operation/{id}',
+        name: 'app_operation_show',
+        requirements: ['id' => '\d+'],
+    )]
     public function show(Operation $operation): Response
     {
         // On cherche l'écriture qui porte le débit (la charge)
@@ -65,7 +69,12 @@ final class OperationController extends AbstractController
         ]);
     }
 
-    #[Route('/operation/{id}/annuler', name: 'app_operation_annuler', methods: ['POST'])]
+    #[Route(
+        '/operation/{id}/annuler',
+        name: 'app_operation_annuler',
+        requirements: ['id' => '\d+'],
+        methods: ['POST']
+    )]
     public function annuler(Request $request, Operation $operation, EntityManagerInterface $em): Response
     {
         // 1. Vérification du token CSRF (sécurité)
@@ -80,7 +89,7 @@ final class OperationController extends AbstractController
             // 3. Changement du statut
             $operation->setStatut(OperationStatut::ANNULE);
 
-            // 4. On nettoie les liens (affectations, paiements, factures)
+            // 4. On traite les éventuelles conséquences métier de l’annulation
             $this->nettoyerRepercussions($operation, $em);
 
             // 5. On sauvegarde tout en base de données
@@ -98,7 +107,7 @@ final class OperationController extends AbstractController
     private function nettoyerRepercussions(
         Operation $operation,
         EntityManagerInterface $em,
-    ): void {
+    ): void { // 4.
         // Selon ton Enum OperationType
         switch ($operation->getType()->value) {
 
@@ -120,20 +129,17 @@ final class OperationController extends AbstractController
                 }
                 break;
 
-            case 'charge': //Facture fournisseur
-                // 1. On va chercher la facture fournisseur liée à cette opération
-                $facture = $em->getRepository(FactureFournisseur::class)->findOneBy(['operation' => $operation]);
+            case 'charge':
+                $facture = $em
+                    ->getRepository(FactureFournisseur::class)
+                    ->findOneBy([
+                        'operation' => $operation,
+                    ]);
 
                 if ($facture) {
-                    // Sécurité : Si la facture est marquée comme payée, on refuse l'annulation
-                    if ($facture->isSoldee()) { // Ou une vérification sur ton statut de paiement
-                        throw new \LogicException("Impossible d'annuler cette charge car elle est associée à un paiement fournisseur actif. Annulez d'abord le paiement.");
-                    }
-
-                    // 2. On libère la facture (elle redevient modifiable ou passe à un statut "annulé")
-                    // Selon ce que tu as prévu, par exemple :
                     $facture->setComptabilisee(false);
                 }
+
                 break;
 
             case 'appel_fonds': // ⚠️ Vérifie la correspondance avec ton OperationType Enum

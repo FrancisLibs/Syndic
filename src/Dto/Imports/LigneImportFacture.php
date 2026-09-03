@@ -2,6 +2,11 @@
 
 namespace App\Dto\Imports;
 
+use App\Entity\Coproprietaire;
+use App\Entity\Exercice;
+use App\Entity\Fournisseur;
+use App\Entity\TypeCharge;
+
 final class LigneImportFacture
 {
     public int $ligne = 0;
@@ -14,9 +19,13 @@ final class LigneImportFacture
 
     public ?float $montant = null;
 
-    public bool $reglee = false;
+    public ?Exercice $exerciceEntite = null;
 
-    public ?\DateTimeImmutable $dateReglement = null;
+    public ?Fournisseur $fournisseurEntite = null;
+
+    public ?TypeCharge $typeChargeEntite = null;
+
+    public ?Coproprietaire $coproprietaireAvanceurEntite = null;
 
     // ===========================
     // Identifiants

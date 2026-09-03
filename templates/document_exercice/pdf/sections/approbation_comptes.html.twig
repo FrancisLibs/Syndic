@@ -1,0 +1,103 @@
+<h1>Approbation des comptes</h1>
+
+		<h2>Synthèse par copropriétaire</h2>
+
+		<table>
+			<thead>
+				<tr>
+					<th>Copropriétaire</th>
+					<th class="montant">Appels</th>
+					<th class="montant">Charges</th>
+					<th class="montant">Régularisation</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				{% for ligne in simulation.lignes %}
+					<tr>
+						<td>
+							{{ ligne.coproprietaire }}
+						</td>
+
+						<td class="montant">
+							{{ ligne.totalAppele|number_format(2, ',', ' ') }}
+							€
+						</td>
+
+						<td class="montant">
+							{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
+							€
+						</td>
+
+						<td class="montant">
+							{{ ligne.regularisation|number_format(2, ',', ' ') }}
+							€
+						</td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="4">
+							Aucune donnée disponible.
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+
+			<tfoot>
+				<tr>
+					<th>Total</th>
+					<th class="montant">
+						{{ simulation.totalAppele|number_format(2, ',', ' ') }}
+						€
+					</th>
+					<th class="montant">
+						{{ simulation.totalCharges|number_format(2, ',', ' ') }}
+						€
+					</th>
+					<th class="montant">
+						{{ (simulation.totalAppele - simulation.totalCharges)|number_format(2, ',', ' ') }}
+						€
+					</th>
+				</tr>
+			</tfoot>
+		</table>
+
+		<h2>Contrôle</h2>
+
+		<table class="approbation-controle">
+			<tbody>
+				<tr>
+					<th>Nombre de copropriétaires</th>
+					<td class="montant">
+						{{ simulation.nombreLignes }}
+					</td>
+				</tr>
+
+				<tr>
+					<th>Total débiteur</th>
+					<td class="montant">
+						{{ simulation.totalDebiteur|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+
+				<tr>
+					<th>Total créditeur</th>
+					<td class="montant">
+						{{ simulation.totalCrediteur|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+
+				<tr>
+					<th>Équilibre appels / charges</th>
+					<td>
+						{% if simulation.estEquilibree() %}
+							Équilibré
+						{% else %}
+							Non équilibré
+						{% endif %}
+					</td>
+				</tr>
+			</tbody>
+		</table>

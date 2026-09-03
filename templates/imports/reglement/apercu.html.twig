@@ -1,0 +1,247 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Aperçu des règlements
+{% endblock %}
+
+{% block body %}
+
+	<div class="container-fluid">
+
+		<div class="d-flex justify-content-between align-items-baseline mb-4">
+
+			<div>
+				<h1>
+					Aperçu des règlements fournisseur
+				</h1>
+
+				{% if rapport.exercice %}
+					<h4 class="text-secondary">
+						{{ rapport.exercice.nom }}
+					</h4>
+				{% endif %}
+			</div>
+
+		</div>
+
+
+		{# ========================= #}
+		{# Erreurs globales          #}
+		{# ========================= #}
+
+			{% if rapport.erreursGlobales is not empty %}
+
+				<div class="alert alert-danger"> <strong>
+					Le fichier contient des erreurs.
+				</strong>
+
+				<ul class="mb-0 mt-2">
+
+					{% for erreur in rapport.erreursGlobales %}
+						<li>{{ erreur }}</li>
+					{% endfor %}
+
+				</ul>
+
+			</div>
+
+		{% endif %}
+
+
+		{# ========================= #}
+		{# Résumé                    #}
+		{# ========================= #}
+
+			<div class="row mb-4"> <div class="col-md-4">
+
+				<div class="card">
+
+					<div class="card-body">
+
+						<h5>Lignes</h5>
+
+						<div class="display-6">
+							{{ rapport.total }}
+						</div>
+
+					</div>
+
+				</div>
+
+			</div>
+
+			<div class="col-md-4">
+
+				<div class="card">
+
+					<div class="card-body">
+
+						<h5>Valides</h5>
+
+						<div class="display-6 text-success">
+							{{ rapport.nbValides }}
+						</div>
+
+					</div>
+
+				</div>
+
+			</div>
+
+			<div class="col-md-4">
+
+				<div class="card">
+
+					<div class="card-body">
+
+						<h5>En erreur</h5>
+
+						<div class="display-6 text-danger">
+							{{ rapport.nbErreurs }}
+						</div>
+
+					</div>
+
+				</div>
+
+			</div>
+
+		</div>
+
+
+		{# ========================= #}
+		{# Lignes du fichier         #}
+		{# ========================= #}
+
+			<table class="table table-striped table-hover"> <thead>
+
+				<tr>
+					<th>Ligne</th>
+					<th>Date</th>
+					<th>Fournisseur</th>
+					<th>Référence</th>
+
+					<th class="text-end">
+						Montant
+					</th>
+
+					<th>État</th>
+					<th>Erreur</th>
+				</tr>
+
+			</thead>
+
+			<tbody>
+
+				{% for ligne in rapport.lignes %}
+
+					<tr>
+
+						<td>
+							{{ ligne.ligne }}
+						</td>
+
+						<td>
+							{% if ligne.dateReglement %}
+								{{ ligne.dateReglement|date('d/m/Y') }}
+							{% else %}
+								—
+							{% endif %}
+						</td>
+
+						<td>
+							{{ ligne.fournisseur ?: '—' }}
+						</td>
+
+						<td>
+							{{ ligne.reference ?: '—' }}
+						</td>
+
+						<td class="text-end">
+
+							{% if ligne.montant is not null %}
+
+								{{ ligne.montant|number_format(2, ',', ' ') }}
+								€
+
+							{% else %}
+
+								—
+
+							{% endif %}
+
+						</td>
+
+						<td>
+
+							{% if ligne.estValide %}
+
+								<span class="badge bg-success">
+									Valide
+								</span>
+
+							{% else %}
+
+								<span class="badge bg-danger">
+									Erreur
+								</span>
+
+							{% endif %}
+
+						</td>
+
+						<td>
+
+							{% if ligne.erreurs is not empty %}
+
+								<ul class="mb-0">
+
+									{% for erreur in ligne.erreurs %}
+										<li>{{ erreur }}</li>
+									{% endfor %}
+
+								</ul>
+
+							{% endif %}
+
+						</td>
+
+					</tr>
+
+				{% endfor %}
+
+			</tbody>
+
+		</table>
+
+
+		{# ========================= #}
+		{# Actions                   #}
+		{# ========================= #}
+
+			<div class="d-flex justify-content-between mt-4"> <a href="{{ path('app_import_csv_reglement') }}" class="btn btn-outline-secondary">
+				Choisir un autre fichier
+			</a>
+
+
+			{% if rapport.estValide %}
+
+				<form method="post" action="{{ path( 'app_import_csv_reglement_importer' ) }}">
+
+					<input type="hidden" name="_token" value="{{ csrf_token( 'import_csv_reglements' ) }}">
+
+					<input type="hidden" name="nomFichier" value="{{ nomFichier }}">
+
+					<button type="submit" class="btn btn-success">
+						Importer les règlements
+					</button>
+
+				</form>
+
+			{% endif %}
+
+		</div>
+
+	</div>
+
+{% endblock %}

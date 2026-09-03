@@ -62,7 +62,12 @@ final class ExerciceController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_exercice_show', methods: ['GET'], requirements: ['id' => '\d+'])]
+    #[Route(
+        '/{id}',
+        name: 'app_exercice_show',
+        methods: ['GET'],
+        requirements: ['id' => '\d+']
+    )]
     public function show(Exercice $exercice): Response
     {
         return $this->render('exercice/show.html.twig', [
@@ -70,7 +75,12 @@ final class ExerciceController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_exercice_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
+    #[Route(
+        '/{id}/edit',
+        name: 'app_exercice_edit',
+        methods: ['GET', 'POST'],
+        requirements: ['id' => '\d+']
+    )]
     public function edit(Request $request, Exercice $exercice, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(ExerciceType::class, $exercice);
@@ -91,7 +101,12 @@ final class ExerciceController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_exercice_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[Route(
+        '/{id}',
+        name: 'app_exercice_delete',
+        methods: ['POST'],
+        requirements: ['id' => '\d+']
+    )]
     public function delete(Request $request, Exercice $exercice, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete' . $exercice->getId(), $request->getPayload()->getString('_token'))) {

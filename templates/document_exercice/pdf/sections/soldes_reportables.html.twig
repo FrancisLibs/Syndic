@@ -1,0 +1,87 @@
+<h1>Soldes reportables</h1>
+
+		{% set totalDebit = 0 %}
+		{% set totalCredit = 0 %}
+
+		<table>
+
+			<thead>
+				<tr>
+					<th>Compte</th>
+					<th>Libellé</th>
+					<th>Copropriétaire</th>
+					<th class="montant">Débit</th>
+					<th class="montant">Crédit</th>
+				</tr>
+			</thead>
+
+			<tbody>
+
+				{% for solde in soldes %}
+
+					{% set totalDebit = totalDebit + solde.debit %}
+					{% set totalCredit = totalCredit + solde.credit %}
+
+					<tr>
+						<td>
+							{{ solde.compte.numero }}
+						</td>
+
+						<td>
+							{{ solde.compte.libelle }}
+						</td>
+
+						<td>
+							{{ solde.coproprietaire ? solde.coproprietaire : '-' }}
+						</td>
+
+						<td class="montant">
+							{% if solde.debit > 0 %}
+								{{ solde.debit|number_format(2, ',', ' ') }}
+								€
+							{% else %}
+								-
+							{% endif %}
+						</td>
+
+						<td class="montant">
+							{% if solde.credit > 0 %}
+								{{ solde.credit|number_format(2, ',', ' ') }}
+								€
+							{% else %}
+								-
+							{% endif %}
+						</td>
+					</tr>
+
+				{% else %}
+
+					<tr>
+						<td colspan="5">
+							Aucun solde reportable.
+						</td>
+					</tr>
+
+				{% endfor %}
+
+			</tbody>
+
+			<tfoot>
+				<tr>
+					<th colspan="3">
+						Totaux
+					</th>
+
+					<th class="montant">
+						{{ totalDebit|number_format(2, ',', ' ') }}
+						€
+					</th>
+
+					<th class="montant">
+						{{ totalCredit|number_format(2, ',', ' ') }}
+						€
+					</th>
+				</tr>
+			</tfoot>
+
+		</table>

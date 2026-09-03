@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Enum\OperationStatut;
 use App\Entity\Coproprietaire;
 use App\Form\CoproprietaireType;
 use App\Repository\CoproprietaireRepository;
@@ -10,6 +11,7 @@ use App\Repository\ExerciceRepository;
 use App\Repository\RepartitionRepository;
 use App\Service\CompteCoproprietaireService;
 use App\Service\ContexteExerciceService;
+use App\Service\EtatCompteCoproprietaireService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -67,7 +69,12 @@ final class CoproprietaireController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_coproprietaire_show', methods: ['GET'])]
+    #[Route(
+        '/{id}',
+        name: 'app_coproprietaire_show',
+        requirements: ['id' => '\d+'],
+        methods: ['GET']
+    )]
     public function show(Coproprietaire $coproprietaire): Response
     {
         $totalCharges = 0;
@@ -84,7 +91,12 @@ final class CoproprietaireController extends AbstractController
         );
     }
 
-    #[Route('/{id}/edit', name: 'app_coproprietaire_edit', methods: ['GET', 'POST'])]
+    #[Route(
+        '/{id}/edit',
+        name: 'app_coproprietaire_edit',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST']
+    )]
     public function edit(
         Request $request,
         Coproprietaire $coproprietaire,
@@ -108,7 +120,12 @@ final class CoproprietaireController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_coproprietaire_delete', methods: ['POST'])]
+    #[Route(
+        '/{id}',
+        name: 'app_coproprietaire_delete',
+        requirements: ['id' => '\d+'],
+        methods: ['POST']
+    )]
     public function delete(
         Request $request,
         Coproprietaire $coproprietaire,
@@ -127,7 +144,12 @@ final class CoproprietaireController extends AbstractController
             );
     }
 
-    #[Route('/{id}/releve', name: 'app_copro_releve', methods: ['GET'])]
+    #[Route(
+        '/{id}/releve',
+        name: 'app_copro_releve',
+        requirements: ['id' => '\d+'],
+        methods: ['GET']
+    )]
     public function releve(
         Coproprietaire $copro,
         RepartitionRepository $repartitionRepo,
@@ -202,87 +224,45 @@ final class CoproprietaireController extends AbstractController
         );
     }
 
-    #[Route('/etat-compte/{copro}', name: 'app_coproprietaire_etat_compte', methods: ['GET'])]
+    #[Route(
+        '/etat-compte/{copro}',
+        name: 'app_coproprietaire_etat_compte',
+        methods: ['GET']
+    )]
     public function etatCompte(
         Coproprietaire $copro,
-        EcritureRepository $ecritureRepo,
         ContexteExerciceService $contexteExerciceService,
+        EtatCompteCoproprietaireService $etatCompteService,
     ): Response {
-
-        $compte = $copro->getCompte();
-
-        if (!$compte) {
-            throw $this->createNotFoundException('Aucun compte associé à ce copropriétaire');
-        }
-
         $exercice = $contexteExerciceService->getExercice();
+
         if (!$exercice) {
-            throw $this->createNotFoundException('Aucun exercice actif trouvé');
+            throw $this->createNotFoundException(
+                'Aucun exercice actif trouvé'
+            );
         }
 
-        // =========================
-        // Écritures du compte
-        // =========================
-        $ecritures = $ecritureRepo->findBy(
-            [
-                'compte' => $compte,
-                'exercice' => $exercice
-            ],
-            ['date' => 'ASC', 'id' => 'ASC']
+        $etat = $etatCompteService->construire(
+            $copro,
+            $exercice
         );
 
-        $mouvements = [];
-        $solde = 0;
-
-        // =========================
-        // Construction mouvements
-        // =========================
-        foreach ($ecritures as $ecriture) {
-
-            $operation = $ecriture->getOperation();
-
-            // 🛡️ SÉCURITÉ COMPTABLE : Si l'écriture est liée à une opération annulée, on passe à la suivante !
-            if ($operation && $operation->getStatut() === \App\Enum\OperationStatut::ANNULE) {
-                continue;
-            }
-
-            $debit = (float) $ecriture->getDebit();
-            $credit = (float) $ecriture->getCredit();
-
-            $solde += $debit;
-            $solde -= $credit;
-
-            $mouvements[] = [
-                'exercice' => $ecriture->getExercice()->getNom(),
-                'date' => $ecriture->getDate(),
-                'piece' => $operation?->getPiece(),
-                'libelle' => $operation?->getLibelle(),
-                'type' => $operation?->getType()?->value,
-                'debit' => $debit,
-                'credit' => $credit,
-                'solde' => $solde,
-            ];
+        if ($etat === null) {
+            throw $this->createNotFoundException(
+                'Aucun compte associé à ce copropriétaire'
+            );
         }
 
-        // =========================
-        // Totaux (Ils se basent sur $mouvements, donc ils seront justes !)
-        // =========================
-        $totalDebit = array_sum(array_column($mouvements, 'debit'));
-        $totalCredit = array_sum(array_column($mouvements, 'credit'));
-
-        // =========================
-        // Render
-        // =========================
         return $this->render(
             'coproprietaire/compte.html.twig',
             [
                 'copro' => $copro,
-                'compte' => $compte,
+                'compte' => $etat['compte'],
                 'exercice' => $exercice,
-                'mvt' => $mouvements,
-                'totalDebit' => $totalDebit,
-                'totalCredit' => $totalCredit,
-                'solde' => $solde,
+                'mvt' => $etat['mouvements'],
+                'totalDebit' => $etat['totalDebit'],
+                'totalCredit' => $etat['totalCredit'],
+                'solde' => $etat['solde'],
             ]
         );
     }

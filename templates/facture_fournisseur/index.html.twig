@@ -13,18 +13,22 @@
 				Factures fournisseurs
 			</h1>
 
-			<p class="text-muted mb-0">Exercice consulté :
+			<p class="text-muted mb-0">
+				Exercice consulté :
 				<strong>{{ exercice.nom }}</strong>
 			</p>
 		</div>
 
-		<a class="btn btn-primary" href="{{ path('app_facture_fournisseur_new') }}">
-			Nouvelle facture
-		</a>
+		<div>
+			<a class="btn btn-primary" href="{{ path('app_facture_fournisseur_new') }}">
+				Nouvelle facture
+			</a>
+		</div>
 
 	</div>
 
 	<div class="card shadow-sm">
+
 		<div class="card-body p-0">
 
 			<div class="table-responsive">
@@ -38,11 +42,7 @@
 							<th>Numéro</th>
 							<th>Libellé</th>
 							<th>Date</th>
-							<th>Date règlement</th>
 							<th class="text-end">Montant</th>
-							<th class="text-end">Réglé</th>
-							<th class="text-end">Reste à payer</th>
-							<th>Statut</th>
 							<th>Comptabilité</th>
 							<th class="text-end">Actions</th>
 						</tr>
@@ -50,38 +50,106 @@
 
 					<tbody>
 
+						{% set typeCourant = null %}
+						{% set sousTotal = 0 %}
+
 						{% for facture in factures %}
 
-							<tr>
+							{# ============================ #}
+							{# Changement de type de charge #}
+							{# ============================ #}
 
-								<td>
-									<div class="fw-semibold">
-										{{ facture.exercice.nom }}
+								{% if typeCourant != facture.typeCharge.nom %}
+
+								{# Sous-total du groupe précédent #}
+									{% if typeCourant is not null %}
+
+										<tr class="table-secondary"> <td colspan="5" class="text-end fw-bold">
+											Sous-total
+											{{ typeCourant }}
+										</td>
+
+										<td class="text-end fw-bold text-nowrap">
+											{{ sousTotal|number_format(2, ',', ' ') }}
+											€
+										</td>
+
+										<td colspan="2"></td>
+
+									</tr>
+
+								{% endif %}
+
+								{% set typeCourant = facture.typeCharge.nom %}
+								{% set sousTotal = 0 %}
+
+								{# Titre du nouveau groupe #}
+
+								<tr class="table-primary">
+
+									<td colspan="8" class="fw-bold">
+
+										{{ typeCourant }}
+
+									</td>
+
+								</tr>
+
+							{% endif %}
+
+							{% set sousTotal =
+                                sousTotal + facture.montant
+                            %}
+
+							{# ============================ #}
+							{# Facture                      #}
+							{# ============================ #}
+
+								<tr>
+
+									<td>
+
+										<div class="fw-semibold"> {{ facture.exercice.nom }}
 									</div>
 
 									{% if facture.exercice.cloture %}
+
 										<span class="badge bg-secondary">
 											Clôturé
 										</span>
+
 									{% elseif facture.exercice.actif %}
+
 										<span class="badge bg-success">
 											Actif
 										</span>
+
 									{% else %}
+
 										<span class="badge bg-light text-dark border">
 											Ouvert
 										</span>
+
 									{% endif %}
+
 								</td>
 
 								<td>
+
 									{% if facture.fournisseur %}
+
 										{{ facture.fournisseur.nom }}
+
 									{% elseif facture.coproprietaireAvanceur %}
+
 										{{ facture.coproprietaireAvanceur }}
+
 									{% else %}
+
 										—
+
 									{% endif %}
+
 								</td>
 
 								<td>
@@ -93,69 +161,20 @@
 								</td>
 
 								<td>
+
 									{{ facture.dateFacture
-										? facture.dateFacture|date('d/m/Y')
-										: '—'
-									}}
-								</td>
+                                        ? facture.dateFacture|date('d/m/Y')
+                                        : '—'
+                                    }}
 
-								<td>
-									{{ facture.dateReglement
-										? facture.dateReglement|date('d/m/Y')
-										: '—'
-									}}
 								</td>
 
 								<td class="text-end text-nowrap">
-									{{ facture.montant|number_format(2, ',', ' ') }}
+
+									{{ facture.montant
+                                        |number_format(2, ',', ' ')
+                                    }}
 									€
-								</td>
-
-								<td class="text-end text-nowrap">
-									{{ facture.montantRegle|number_format(2, ',', ' ') }}
-									€
-								</td>
-
-								<td class="text-end fw-semibold text-nowrap">
-
-									{% if facture.resteAPayer > 0 %}
-
-										<span class="text-danger">
-											{{ facture.resteAPayer|number_format(2, ',', ' ') }}
-											€
-										</span>
-
-									{% else %}
-
-										<span class="text-success">
-											0,00 €
-										</span>
-
-									{% endif %}
-
-								</td>
-
-								<td>
-
-									{% if facture.soldee %}
-
-										<span class="badge bg-success">
-											Soldée
-										</span>
-
-									{% elseif facture.montantRegle > 0 %}
-
-										<span class="badge bg-warning text-dark">
-											Partiellement réglée
-										</span>
-
-									{% else %}
-
-										<span class="badge bg-danger">
-											À régler
-										</span>
-
-									{% endif %}
 
 								</td>
 
@@ -186,9 +205,9 @@
 										</a>
 
 										{% if
-											not facture.comptabilisee
-											and not facture.exercice.cloture
-										%}
+                                            not facture.comptabilisee
+                                            and not facture.exercice.cloture
+                                        %}
 
 											<a class="btn btn-sm btn-outline-secondary" href="{{ path( 'app_facture_fournisseur_edit', { id: facture.id } ) }}">
 												Modifier
@@ -196,17 +215,15 @@
 
 										{% endif %}
 
-										{% if not facture.soldee %}
+										{% if
+                                            facture.comptabilisee
+                                            and not facture.exercice.cloture
+                                            and facture.coproprietaireAvanceur is null
+                                        %}
 
-											<form method="post" action="{{ path( 'app_facture_fournisseur_regler', { id: facture.id } ) }}">
-
-												<input type="hidden" name="_token" value="{{ csrf_token( 'regler_facture_' ~ facture.id ) }}">
-
-												<button type="submit" class="btn btn-sm btn-success">
-													Régler
-												</button>
-
-											</form>
+											<a class="btn btn-sm btn-outline-warning" href="{{ path( 'app_facture_fournisseur_corriger_montant', { id: facture.id } ) }}">
+												Corriger montant
+											</a>
 
 										{% endif %}
 
@@ -219,12 +236,34 @@
 						{% else %}
 
 							<tr>
-								<td colspan="12" class="text-center text-muted py-4">
+								<td colspan="8" class="text-center text-muted py-4">
 									Aucune facture fournisseur trouvée
 								</td>
 							</tr>
 
 						{% endfor %}
+
+						{# ============================ #}
+						{# Sous-total du dernier groupe #}
+						{# ============================ #}
+
+							{% if typeCourant is not null %}
+
+								<tr class="table-secondary"> <td colspan="5" class="text-end fw-bold">
+									Sous-total
+									{{ typeCourant }}
+								</td>
+
+								<td class="text-end fw-bold text-nowrap">
+									{{ sousTotal|number_format(2, ',', ' ') }}
+									€
+								</td>
+
+								<td colspan="2"></td>
+
+							</tr>
+
+						{% endif %}
 
 					</tbody>
 
@@ -233,6 +272,7 @@
 			</div>
 
 		</div>
+
 	</div>
 
 {% endblock %}

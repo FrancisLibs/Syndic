@@ -1,0 +1,238 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Documents -
+	{{ exercice.nom }}
+{% endblock %}
+
+{% block body %}
+
+	<div class="container mt-4">
+
+		<div class="d-flex justify-content-between align-items-start mb-4">
+
+			<div>
+				<h1>Documents de l'exercice</h1>
+
+				<p class="text-muted">
+					{{ exercice.nom }}
+					—
+					{{ exercice.dateDebut|date('d/m/Y') }}
+					au
+					{{ exercice.dateFin|date('d/m/Y') }}
+				</p>
+			</div>
+
+		</div>
+
+		<div class="card mb-4">
+
+			<div class="card-header">
+				<strong>Documents comptables</strong>
+			</div>
+			<div class="list-group list-group-flush">
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>Balance générale</strong>
+						<div class="text-muted small">
+							Situation de l'ensemble des comptes de l'exercice.
+						</div>
+					</div>
+					<div class="d-flex gap-2">
+						<a href="{{ path('app_balance') }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+						<a href="{{ path('app_document_exercice_balance_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>Grand livre</strong>
+						<div class="text-muted small">
+							Détail des écritures par compte.
+						</div>
+					</div>
+					<div class="d-flex gap-2">
+						<a href="{{ path('app_grand_livre') }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+						<a href="{{ path('app_document_exercice_grand_livre_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>Journal des opérations</strong>
+						<div class="text-muted small">
+							Liste chronologique des opérations comptables.
+						</div>
+					</div>
+					<div class="d-flex gap-2">
+						<a href="{{ path('app_journal') }}" class="btn btn-outline-primary" target="_blank">
+							Afficher
+						</a>
+						<a href="{{ path('app_document_exercice_journal_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-4">
+
+			<div class="card-header">
+				<strong>Copropriétaires et charges</strong>
+			</div>
+
+			<div class="list-group list-group-flush">
+
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>Comptes des copropriétaires</strong>
+						<div class="text-muted small">
+							Relevés individuels des copropriétaires.
+						</div>
+					</div>
+					<div class="d-flex gap-2">
+						<a href="{{ path('app_document_exercice_comptes_coproprietaires') }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+						<a href="{{ path('app_document_exercice_comptes_coproprietaires_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>Répartition des charges</strong>
+						<div class="text-muted small">
+							Relevés individuels des copropriétaires.
+						</div>
+					</div>
+					<div class="d-flex gap-2">
+						<a href="{{ path('app_repartition_charges') }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+						<a href="{{ path('app_document_exercice_repartition_charges_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>Répartition de l'eau</strong>
+					</div>
+					<div class="d-flex gap-2">
+						<a href="{{ path('app_eau_calcul') }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+						<a href="{{ path('app_document_exercice_repartition_eau_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+
+
+		<div class="card mb-4">
+
+			<div class="card-header">
+				<strong>Clôture de l'exercice</strong>
+			</div>
+
+			<div class="list-group list-group-flush">
+
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<strong>Clôture des comptes de gestion</strong>
+
+					<div>
+						<a href="{{ path('app_cloture_comptes_gestion', { id: exercice.id }) }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+
+						<a href="{{ path('app_document_exercice_cloture_comptes_gestion_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<strong>Soldes reportables</strong>
+
+					<div>
+						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+
+						<a href="{{ path('app_document_exercice_soldes_reportables_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<strong>À-nouveaux</strong>
+
+					<div>
+						<a href="{{ path('app_cloture_anouveaux', { id: exercice.id }) }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+
+						<a href="{{ path('app_document_exercice_anouveaux_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+
+				<div class="list-group-item d-flex justify-content-between align-items-center">
+					<strong>Approbation des comptes</strong>
+
+					<div>
+						<a href="{{ path('app_approbation_comptes', { id: exercice.id }) }}" class="btn btn-outline-primary">
+							Afficher
+						</a>
+
+						<a href="{{ path('app_document_exercice_approbation_comptes_pdf') }}" class="btn btn-primary" target="_blank">
+							PDF
+						</a>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+
+
+		<div class="card">
+
+			<div class="card-header">
+				<strong>Dossier complet</strong>
+			</div>
+
+			<div class="card-body">
+
+				<p>
+					Génération d'un dossier regroupant les principaux
+																																																																																																																																																																									                    documents comptables de l'exercice.
+				</p>
+
+				<a href="{{ path('app_document_exercice_dossier_cloture_pdf') }}" class="btn btn-primary" target="_blank">
+					PDF
+				</a>
+
+			</div>
+
+		</div>
+
+	</div>
+
+{% endblock %}

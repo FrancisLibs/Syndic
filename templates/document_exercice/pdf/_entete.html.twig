@@ -1,0 +1,32 @@
+<header class="pdf-entete">
+
+    <div class="pdf-copropriete">
+        <div class="pdf-copropriete-nom">
+            {{ exercice.copropriete.nom }}
+        </div>
+
+        <div>
+            {{ exercice.copropriete.adresse }}
+        </div>
+
+        <div>
+            {{ exercice.copropriete.codePostal }}
+            {{ exercice.copropriete.localite }}
+        </div>
+    </div>
+
+    <div class="pdf-exercice">
+        <div>
+             {{ exercice.nom }}
+        </div>
+
+        <div>
+            {{ exercice.dateDebut|date('d/m/Y') }}
+            au
+            {{ exercice.dateFin|date('d/m/Y') }}
+        </div>
+    </div>
+
+</header>
+
+<hr class="pdf-separateur">

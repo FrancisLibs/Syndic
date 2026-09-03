@@ -34,7 +34,7 @@ class PaiementType extends AbstractType
                 EntityType::class,
                 [
                     'class' => Coproprietaire::class,
-                    'choice_label' => 'nom',
+                    'choice_label' => 'nomComplet',
                     'label' => 'Copropriétaire',
                 ]
             )

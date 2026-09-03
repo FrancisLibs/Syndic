@@ -1,0 +1,72 @@
+<h1>Balance générale</h1>
+
+		<table>
+			<thead>
+				<tr>
+					<th>Compte</th>
+					<th>Libellé</th>
+					<th class="montant">Débit</th>
+					<th class="montant">Crédit</th>
+					<th class="montant">Solde débiteur</th>
+					<th class="montant">Solde créditeur</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				{% for ligne in balance %}
+					<tr>
+						<td>{{ ligne.numero }}</td>
+
+						<td>{{ ligne.libelle }}</td>
+
+						<td class="montant">
+							{% if ligne.debit != 0 %}
+								{{ ligne.debit|number_format(2, ',', ' ') }}
+							{% endif %}
+						</td>
+
+						<td class="montant">
+							{% if ligne.credit != 0 %}
+								{{ ligne.credit|number_format(2, ',', ' ') }}
+							{% endif %}
+						</td>
+
+						<td class="montant">
+							{% if ligne.soldeDebiteur != 0 %}
+								{{ ligne.soldeDebiteur|number_format(2, ',', ' ') }}
+							{% endif %}
+						</td>
+
+						<td class="montant">
+							{% if ligne.soldeCrediteur != 0 %}
+								{{ ligne.soldeCrediteur|number_format(2, ',', ' ') }}
+							{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+
+			<tfoot>
+				<tr>
+					<td colspan="2">
+						Totaux
+					</td>
+
+					<td class="montant">
+						{{ totalDebit|number_format(2, ',', ' ') }}
+					</td>
+
+					<td class="montant">
+						{{ totalCredit|number_format(2, ',', ' ') }}
+					</td>
+
+					<td class="montant">
+						{{ totalSoldeDebiteur|number_format(2, ',', ' ') }}
+					</td>
+
+					<td class="montant">
+						{{ totalSoldeCrediteur|number_format(2, ',', ' ') }}
+					</td>
+				</tr>
+			</tfoot>
+		</table>

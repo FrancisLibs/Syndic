@@ -93,7 +93,6 @@
 				</div>
 
 			</div>
-
 		</div>
 
 	</div>
@@ -107,26 +106,31 @@
 
 	</div>
 
-	{% if controle.peutImporter %}
+	{% if controle.nombreErreurs > 0 %}
+
+		<div class="alert alert-warning">
+			Certaines lignes doivent être corrigées avant l'import.
+		</div>
+
+	{% elseif controle.peutImporter %}
 
 		<div class="alert alert-success d-flex justify-content-start align-items-baseline gap-5">
 
 			Les données sont prêtes à être importées.
 
-			{% if controle.peutImporter %}
-				<form method="post" action="{{ path( 'app_import_facture_importer', { id: exercice.id } ) }}">
-					<button class="btn btn-success mb-4">Importer les factures</button>
-				</form>
-			{% endif %}
+			<form method="post" action="{{ path( 'app_import_facture_importer', { id: exercice.id } ) }}">
+				<button class="btn btn-success mb-4">
+					Importer les factures
+				</button>
+			</form>
 
 		</div>
 
-	{% else %}
+	{% elseif controle.nombreTraitees == controle.nombreLignes
+    and controle.nombreLignes > 0 %}
 
-		<div class="alert alert-warning">
-
-			Certaines lignes doivent être corrigées avant l'import.
-
+		<div class="alert alert-success">
+			Toutes les factures ont été importées.
 		</div>
 
 	{% endif %}

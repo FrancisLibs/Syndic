@@ -67,7 +67,12 @@ final class FournisseurController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_fournisseur_show', methods: ['GET'])]
+    #[Route(
+        '/{id}',
+        name: 'app_fournisseur_show',
+        requirements: ['id' => '\d+'],
+        methods: ['GET']
+    )]
     public function show(Fournisseur $fournisseur): Response
     {
         return $this->render('fournisseur/show.html.twig', [
@@ -75,7 +80,12 @@ final class FournisseurController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_fournisseur_edit', methods: ['GET', 'POST'])]
+    #[Route(
+        '/{id}/edit',
+        name: 'app_fournisseur_edit',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST']
+    )]
     public function edit(Request $request, Fournisseur $fournisseur, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(Fournisseur1Type::class, $fournisseur);
@@ -93,7 +103,12 @@ final class FournisseurController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_fournisseur_delete', methods: ['POST'])]
+    #[Route(
+        '/{id}',
+        name: 'app_fournisseur_delete',
+        requirements: ['id' => '\d+'],
+        methods: ['POST']
+    )]
     public function delete(Request $request, Fournisseur $fournisseur, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete' . $fournisseur->getId(), $request->getPayload()->getString('_token'))) {
@@ -107,6 +122,7 @@ final class FournisseurController extends AbstractController
     #[Route(
         '/{id}/compte',
         name: 'app_fournisseur_compte',
+        requirements: ['id' => '\d+'],
         methods: ['GET']
     )]
     public function compte(

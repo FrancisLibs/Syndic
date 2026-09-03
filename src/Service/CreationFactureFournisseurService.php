@@ -33,7 +33,7 @@ class CreationFactureFournisseurService
             $typeCharge,
             $dateFacture,
             $libelle,
-            $montant
+            $montant,
         );
 
         $facture = new FactureFournisseur();
@@ -65,7 +65,7 @@ class CreationFactureFournisseurService
         TypeCharge $typeCharge,
         \DateTimeImmutable $dateFacture,
         string $libelle,
-        string $montant,
+        string $montant
     ): void {
         if ($exercice->isCloture()) {
             throw new \LogicException(

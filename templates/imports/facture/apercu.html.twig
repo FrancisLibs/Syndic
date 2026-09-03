@@ -35,6 +35,28 @@
 				<dl class="row mb-0">
 
 					<dt class="col-sm-4">
+						Exercice détecté
+					</dt>
+
+					<dd class="col-sm-8">
+
+						{% if rapport.exercice %}
+
+							<strong>
+								{{ rapport.exercice.nom }}
+							</strong>
+
+						{% else %}
+
+							<span class="text-danger">
+								Non déterminé
+							</span>
+
+						{% endif %}
+
+					</dd>
+
+					<dt class="col-sm-4">
 						Nombre de lignes
 					</dt>
 
@@ -64,7 +86,29 @@
 
 		</div>
 
-		{% if rapport.nbErreurs() > 0 %}
+		{% if rapport.erreursGlobales is not empty %}
+
+			<div class="alert alert-danger">
+
+				<h2 class="h5">
+					Import impossible
+				</h2>
+
+				<ul class="mb-0">
+
+					{% for erreur in rapport.erreursGlobales %}
+
+						<li>
+							{{ erreur }}
+						</li>
+
+					{% endfor %}
+
+				</ul>
+
+			</div>
+
+		{% elseif rapport.nbErreurs() > 0 %}
 
 			<div class="alert alert-danger">
 
@@ -74,6 +118,22 @@
 
 				<p class="mb-0">
 					Corrigez le fichier puis recommencez l'analyse.
+				</p>
+
+			</div>
+
+		{% elseif rapport.estValide() %}
+
+			<div class="alert alert-success">
+
+				<h2 class="h5">
+					Fichier valide
+				</h2>
+
+				<p class="mb-0">
+					Toutes les factures appartiennent à l'exercice
+					<strong>{{ rapport.exercice.nom }}</strong>.
+											L'import peut être lancé.
 				</p>
 
 			</div>
@@ -94,11 +154,12 @@
 
 						<tr>
 
-							<th>#</th>
+							<th>Ligne CSV</th>
 							<th>Date</th>
+							<th>Exercice</th>
 							<th>Fournisseur</th>
 							<th>Libellé</th>
-							<th>Montant</th>
+							<th class="text-end">Montant</th>
 							<th>État</th>
 
 						</tr>
@@ -112,11 +173,30 @@
 							<tr>
 
 								<td>
-									{{ loop.index }}
+									{{ ligne.ligne }}
 								</td>
 
 								<td>
-									{{ ligne.dateFacture ? ligne.dateFacture|date('d/m/Y') : '' }}
+									{{ ligne.dateFacture
+										? ligne.dateFacture|date('d/m/Y')
+										: ''
+									}}
+								</td>
+
+								<td>
+
+									{% if ligne.exercice %}
+
+										{{ ligne.exercice }}
+
+									{% else %}
+
+										<span class="text-danger">
+											Non renseigné
+										</span>
+
+									{% endif %}
+
 								</td>
 
 								<td>
@@ -149,7 +229,9 @@
 
 											{% for erreur in ligne.erreurs %}
 
-												<li>{{ erreur }}</li>
+												<li>
+													{{ erreur }}
+												</li>
 
 											{% endfor %}
 
@@ -157,6 +239,16 @@
 
 									{% endif %}
 
+								</td>
+
+							</tr>
+
+						{% else %}
+
+							<tr>
+
+								<td colspan="7" class="text-center text-muted py-4">
+									Aucune ligne à afficher.
 								</td>
 
 							</tr>
@@ -174,9 +266,7 @@
 		<div class="mt-4 d-flex gap-2">
 
 			<a href="{{ path('app_import_csv_facture') }}" class="btn btn-secondary">
-
 				Retour
-
 			</a>
 
 			{% if rapport.estValide() %}
@@ -188,11 +278,10 @@
 					<input type="hidden" name="nomFichier" value="{{ nomFichier }}">
 
 					<button class="btn btn-success" type="submit">
-
 						Importer les
 						{{ rapport.nbValides() }}
-						lignes
-
+						lignes de l'exercice
+						{{ rapport.exercice.nom }}
 					</button>
 
 				</form>

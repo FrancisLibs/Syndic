@@ -15,6 +15,7 @@ final class ImportFactureFournisseurController extends AbstractController
     #[Route(
         '/{id}',
         name: 'app_import_facture_index',
+        requirements: ['id' => '\d+'],
         methods: ['GET']
     )]
     public function index(
@@ -27,7 +28,7 @@ final class ImportFactureFournisseurController extends AbstractController
         );
 
         return $this->render(
-            'import/facture/index.html.twig',
+            'imports/facture/index.html.twig',
             [
                 'exercice' => $exercice,
                 'controle' => $controle,
@@ -38,6 +39,7 @@ final class ImportFactureFournisseurController extends AbstractController
     #[Route(
         '/{id}/importer',
         name: 'app_import_facture_importer',
+        requirements: ['id' => '\d+'],
         methods: ['POST']
     )]
     public function importer(

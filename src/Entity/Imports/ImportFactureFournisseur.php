@@ -8,7 +8,7 @@ use App\Entity\FactureFournisseur;
 use App\Entity\Fournisseur;
 use App\Entity\TypeCharge;
 use App\Enum\ImportStatut;
-use App\Repository\Import\ImportFactureFournisseurRepository;
+use App\Repository\Imports\ImportFactureFournisseurRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -56,15 +56,6 @@ class ImportFactureFournisseur
 
     #[ORM\Column(nullable: true)]
     private ?int $volumeEau = null;
-
-    #[ORM\Column]
-    private bool $reglee = false;
-
-    #[ORM\Column(
-        type: Types::DATE_IMMUTABLE,
-        nullable: true
-    )]
-    private ?\DateTimeImmutable $dateReglement = null;
 
     #[ORM\Column(enumType: ImportStatut::class)]
     private ImportStatut $statut = ImportStatut::EN_ATTENTE;
@@ -231,40 +222,6 @@ class ImportFactureFournisseur
         ?int $volumeEau
     ): static {
         $this->volumeEau = $volumeEau;
-
-        return $this;
-    }
-
-    public function isReglee(): bool
-    {
-        return $this->reglee;
-    }
-
-    public function setReglee(
-        bool $reglee
-    ): static {
-        $this->reglee = $reglee;
-
-        if (!$reglee) {
-            $this->dateReglement = null;
-        }
-
-        return $this;
-    }
-
-    public function getDateReglement(): ?\DateTimeImmutable
-    {
-        return $this->dateReglement;
-    }
-
-    public function setDateReglement(
-        ?\DateTimeImmutable $dateReglement
-    ): static {
-        $this->dateReglement = $dateReglement;
-
-        if ($dateReglement !== null) {
-            $this->reglee = true;
-        }
 
         return $this;
     }

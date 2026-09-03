@@ -24,11 +24,10 @@ final class ImportCsvFactureFournisseurType extends AbstractType
                 ]),
                 new File([
                     'maxSize' => '5M',
-                    'extensions' => ['csv'],
                 ]),
             ],
             'attr' => [
-                'accept' => '.csv,text/csv',
+                'accept' => '.csv,text/csv,text/plain',
             ],
         ]);
     }

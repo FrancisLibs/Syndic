@@ -189,12 +189,9 @@ final class ControleImportFactureFournisseurService
         } else {
             $dateFacture = $ligne->getDateFacture();
 
-            if (
-                $dateFacture < $exercice->getDateDebut()
-                || $dateFacture > $exercice->getDateFin()
-            ) {
+            if ($dateFacture > $exercice->getDateFin()) {
                 $erreurs[] = sprintf(
-                    'La date de facture %s est en dehors de l’exercice.',
+                    'La date de facture %s est postérieure à la fin de l’exercice.',
                     $dateFacture->format('d/m/Y')
                 );
             }
@@ -233,32 +230,6 @@ final class ControleImportFactureFournisseurService
         } elseif ($montant <= 0) {
             $erreurs[] =
                 'Le montant doit être supérieur à zéro.';
-        }
-
-        if (
-            $ligne->isReglee()
-            && $ligne->getDateReglement() === null
-        ) {
-            $erreurs[] =
-                'La date de règlement est obligatoire pour une facture réglée.';
-        }
-
-        if (
-            !$ligne->isReglee()
-            && $ligne->getDateReglement() !== null
-        ) {
-            $erreurs[] =
-                'Une date de règlement est renseignée alors que la facture n’est pas déclarée réglée.';
-        }
-
-        if (
-            $ligne->getDateReglement() !== null
-            && $ligne->getDateFacture() !== null
-            && $ligne->getDateReglement()
-            < $ligne->getDateFacture()
-        ) {
-            $erreurs[] =
-                'La date de règlement est antérieure à la date de facture.';
         }
 
         if (

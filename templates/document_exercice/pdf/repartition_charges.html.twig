@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+	<head>
+		<meta charset="UTF-8">
+
+		<style>
+			{{css|raw}}</style>
+	</head>
+
+	<body>
+
+		{% include 'document_exercice/pdf/_entete.html.twig' %}
+
+		{% include 'document_exercice/pdf/sections/repartition_charges.html.twig' %}
+
+		<footer class="pdf-footer">
+			Document édité le
+			{{ "now"|date("d/m/Y") }}
+		</footer>
+
+	</body>
+
+</html>

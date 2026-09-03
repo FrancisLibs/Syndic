@@ -1,0 +1,177 @@
+<h1>Répartition de l'eau</h1>
+
+		<h2>Données générales</h2>
+
+		<table class="eau-synthese">
+			<tbody>
+				<tr>
+					<th>Montant des factures</th>
+					<td class="montant">
+						{{ calcul.montantTotalFactures|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+
+				<tr>
+					<th>Consommation générale</th>
+					<td class="montant">
+						{{ calcul.consommationGenerale }}
+						m³
+					</td>
+				</tr>
+
+				<tr>
+					<th>Consommation des lots</th>
+					<td class="montant">
+						{{ calcul.consommationLots }}
+						m³
+					</td>
+				</tr>
+
+				<tr>
+					<th>Consommation des communs</th>
+					<td class="montant">
+						{{ calcul.consommationCommune }}
+						m³
+					</td>
+				</tr>
+
+				<tr>
+					<th>Prix du m³</th>
+					<td class="montant">
+						{{ calcul.prixM3|number_format(6, ',', ' ') }}
+						€
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<h2>Répartition par lot</h2>
+
+		<table>
+
+			<thead>
+				<tr>
+					<th>Lot</th>
+					<th>Copropriétaire</th>
+					<th class="montant">Consommation</th>
+					<th class="montant">Part individuelle</th>
+					<th class="montant">Part commune</th>
+					<th class="montant">Total</th>
+				</tr>
+			</thead>
+
+			<tbody>
+
+				{% for lot in calcul.lots %}
+
+					<tr>
+						<td>
+							{{ lot.designation }}
+						</td>
+
+						<td>
+							{{ lot.coproprietaire }}
+						</td>
+
+						<td class="montant">
+							{{ lot.consommation }}
+							m³
+						</td>
+
+						<td class="montant">
+							{{ lot.partIndividuelle|number_format(2, ',', ' ') }}
+							€
+						</td>
+
+						<td class="montant">
+							{{ lot.partCommune|number_format(2, ',', ' ') }}
+							€
+						</td>
+
+						<td class="montant">
+							{{ lot.montantTotal|number_format(2, ',', ' ') }}
+							€
+						</td>
+					</tr>
+
+				{% endfor %}
+
+			</tbody>
+
+			<tfoot>
+				<tr>
+					<td colspan="2">
+						Totaux
+					</td>
+
+					<td class="montant">
+						{{ calcul.consommationLots }}
+						m³
+					</td>
+
+					<td class="montant">
+						{{ calcul.totalPartIndividuelle|number_format(2, ',', ' ') }}
+						€
+					</td>
+
+					<td class="montant">
+						{{ calcul.totalPartCommune|number_format(2, ',', ' ') }}
+						€
+					</td>
+
+					<td class="montant">
+						{{ calcul.montantTotalReparti|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+			</tfoot>
+
+		</table>
+
+		<h2>Contrôle</h2>
+
+		<table class="eau-controle">
+
+			<tbody>
+				<tr>
+					<th>Montant des factures</th>
+
+					<td class="montant">
+						{{ calcul.montantTotalFactures|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+
+				<tr>
+					<th>Total réparti</th>
+
+					<td class="montant">
+						{{ calcul.montantTotalReparti|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+
+				<tr>
+					<th>Écart</th>
+
+					<td class="montant">
+						{{ calcul.ecartArrondi|number_format(2, ',', ' ') }}
+						€
+					</td>
+				</tr>
+
+				<tr>
+					<th>État</th>
+
+					<td>
+						{% if calcul.equilibre %}
+							Calcul équilibré
+						{% else %}
+							Ajustement des arrondis nécessaire
+						{% endif %}
+					</td>
+				</tr>
+			</tbody>
+
+		</table>

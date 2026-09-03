@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Import CSV des règlements fournisseur
+{% endblock %}
+
+{% block body %}
+
+	<div class="container">
+
+		<h1 class="mb-4">
+			Import CSV des règlements fournisseur
+		</h1>
+
+		<div class="card">
+
+			<div class="card-header">
+				Sélection du fichier
+			</div>
+
+			<div class="card-body">
+
+				{{ form_start(form) }}
+
+				{{ form_row(form.fichier) }}
+
+				<div class="mt-4">
+
+					<button type="submit" class="btn btn-primary">
+						Analyser le fichier
+					</button>
+
+				</div>
+
+				{{ form_end(form) }}
+
+			</div>
+
+		</div>
+
+		<div class="alert alert-secondary mt-4">
+
+			<strong>Format attendu :</strong>
+
+			<pre class="mb-0 mt-2">date_reglement;montant;reference;exercice_id;fournisseur_id
+28/08/2023;100,00;rib 1;22;1</pre>
+
+		</div>
+
+	</div>
+
+{% endblock %}

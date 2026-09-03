@@ -14,6 +14,7 @@ class ClotureController extends AbstractController
     #[Route(
         '/exercice/{id}/assistant-cloture',
         name: 'app_cloture_workflow',
+        requirements: ['id' => '\d+'],
         methods: ['GET']
     )]
     public function workflow(
@@ -42,6 +43,7 @@ class ClotureController extends AbstractController
     #[Route(
         '/exercice/{id}/cloturer',
         name: 'app_cloture_exercice',
+        requirements: ['id' => '\d+'],
         methods: ['POST']
     )]
     public function cloturer(
@@ -71,6 +73,7 @@ class ClotureController extends AbstractController
     #[Route(
         '/exercice/{id}/regularisations',
         name: 'app_cloture_regularisations',
+        requirements: ['id' => '\d+'],
         methods: ['GET']
     )]
     public function regularisations(
@@ -216,6 +219,7 @@ class ClotureController extends AbstractController
     #[Route(
         '/exercice/{id}/creer-exercice-suivant',
         name: 'app_cloture_creer_exercice_suivant',
+        requirements: ['id' => '\d+'],
         methods: ['POST']
     )]
     public function creerExerciceSuivant(

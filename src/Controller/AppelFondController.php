@@ -23,7 +23,12 @@ final class AppelFondController extends AbstractController
         );
     }
 
-    #[Route('/{id}', name: 'app_appel_fond_show', methods: ['GET'])]
+    #[Route(
+        '/{id}',
+        name: 'app_appel_fond_show',
+        requirements: ['id' => '\d+'],
+        methods: ['GET']
+    )]
     public function show(AppelFond $appelFond): Response
     {
         return $this->render(

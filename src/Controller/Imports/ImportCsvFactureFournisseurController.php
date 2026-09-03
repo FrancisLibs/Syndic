@@ -106,7 +106,7 @@ final class ImportCsvFactureFournisseurController extends AbstractController
         }
 
         return $this->render(
-            'imports/facture/import.html.twig',
+            'imports/facture/import_csv.html.twig',
             [
                 'form' => $form,
             ]

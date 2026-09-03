@@ -39,48 +39,42 @@
 			</thead>
 
 			<tbody>
-
 				{% for ligne in simulation.lignes %}
-
 					<tr>
-
 						<td>
 							{{ ligne.coproprietaire }}
 						</td>
 
 						<td class="text-end">
 							{{ ligne.totalAppele|number_format(2, ',', ' ') }}
+							€
 						</td>
 
 						<td class="text-end">
 							{{ ligne.quotePartReelle|number_format(2, ',', ' ') }}
+							€
 						</td>
 
 						<td class="text-end">
-
-							{% if ligne.sens == 'credit' %}
-
+							{% if ligne.regularisation > 0.01 %}
 								<span class="text-success">
-
-								{% else %}
-
-									<span class="text-danger">
-
-									{% endif %}
-
-									{{ ligne.resultat|number_format(2, ',', ' ') }}
-
+									{{ ligne.regularisation|number_format(2, ',', ' ') }}
+									€
 								</span>
-							</td>
+							{% elseif ligne.regularisation < -0.01 %}
+								<span class="text-danger">
+									{{ ligne.regularisation|number_format(2, ',', ' ') }}
+									€
+								</span>
+							{% else %}
+								<span>
+									0,00 €
+								</span>
+							{% endif %}
 						</td>
 					</tr>
-
 				{% endfor %}
-
 			</tbody>
-
 		</table>
-
 	</div>
-
 {% endblock %}

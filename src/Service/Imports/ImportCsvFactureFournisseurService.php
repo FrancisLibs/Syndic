@@ -2,65 +2,101 @@
 
 namespace App\Service\Imports;
 
-use App\DTO\Imports\LigneImportFacture;
-use App\DTO\Imports\RapportImport;
+use App\Dto\Imports\LigneImportFacture;
+use App\Dto\Imports\RapportImport;
 use App\Entity\Imports\ImportFactureFournisseur;
 use App\Enum\ImportStatut;
-use App\Repository\CoproprietaireRepository;
-use App\Repository\ExerciceRepository;
-use App\Repository\FournisseurRepository;
-use App\Repository\TypeChargeRepository;
+use App\Repository\Imports\ImportFactureFournisseurRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class ImportCsvFactureFournisseurService
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
-        private readonly ExerciceRepository $exerciceRepository,
-        private readonly FournisseurRepository $fournisseurRepository,
-        private readonly TypeChargeRepository $typeChargeRepository,
-        private readonly CoproprietaireRepository $coproprietaireRepository,
-    ) {
-    }
+        private readonly ImportFactureFournisseurRepository $repository,
+    ) {}
 
     public function importer(
         RapportImport $rapport
     ): int {
 
-        $nb = 0;
+        if (!$rapport->estValide()) {
+            throw new \LogicException(
+                'Le rapport contient des erreurs. L’import est impossible.'
+            );
+        }
+
+        $nbImportes = 0;
+        $nbDoublons = 0;
+
 
         foreach ($rapport->lignesValides() as $ligne) {
 
-            $this->em->persist(
-                $this->creerImport($ligne)
-            );
+            $import = $this->creerImport($ligne);
 
-            ++$nb;
+            if ($this->repository->trouverDoublon($import)) {
+                ++$nbDoublons;
+                continue;
+            }
+
+            $this->em->persist($import);
+
+            ++$nbImportes;
         }
 
-        if ($nb > 0) {
+        if ($nbImportes > 0) {
             $this->em->flush();
         }
 
-        return $nb;
+        return $nbImportes;
     }
 
     private function creerImport(
         LigneImportFacture $ligne
     ): ImportFactureFournisseur {
 
+        if ($ligne->dateFacture === null) {
+            throw new \LogicException(
+                sprintf(
+                    'La date de facture est absente à la ligne %d.',
+                    $ligne->ligne
+                )
+            );
+        }
+
+        if ($ligne->exerciceEntite === null) {
+            throw new \LogicException(
+                sprintf(
+                    'L’exercice est absent à la ligne %d.',
+                    $ligne->ligne
+                )
+            );
+        }
+
+        if ($ligne->fournisseurEntite === null) {
+            throw new \LogicException(
+                sprintf(
+                    'Le fournisseur est absent à la ligne %d.',
+                    $ligne->ligne
+                )
+            );
+        }
+
+        if ($ligne->typeChargeEntite === null) {
+            throw new \LogicException(
+                sprintf(
+                    'Le type de charge est absent à la ligne %d.',
+                    $ligne->ligne
+                )
+            );
+        }
+
         $import = new ImportFactureFournisseur();
 
         $import
-            ->setDateFacture(
-                $ligne->dateFacture
-            )
-            ->setNumero(
-                $ligne->numero
-            )
-            ->setLibelle(
-                $ligne->libelle
-            )
+            ->setDateFacture($ligne->dateFacture)
+            ->setNumero($ligne->numero)
+            ->setLibelle($ligne->libelle)
             ->setMontant(
                 number_format(
                     $ligne->montant,
@@ -69,133 +105,21 @@ final class ImportCsvFactureFournisseurService
                     ''
                 )
             )
-            ->setReglee(
-                $ligne->reglee
-            )
-            ->setDateReglement(
-                $ligne->dateReglement
-            )
-            ->setExercice(
-                $this->trouverExercice(
-                    $ligne->exerciceId
-                )
-            )
-            ->setFournisseur(
-                $this->trouverFournisseur(
-                    $ligne->fournisseurId
-                )
-            )
-            ->setTypeCharge(
-                $this->trouverTypeCharge(
-                    $ligne->typeChargeId
-                )
-            )
+            ->setExercice($ligne->exerciceEntite)
+            ->setFournisseur($ligne->fournisseurEntite)
+            ->setTypeCharge($ligne->typeChargeEntite)
             ->setCoproprietaireAvanceur(
-                $this->trouverCoproprietaireNullable(
-                    $ligne->coproprietaireAvanceurId
-                )
+                $ligne->coproprietaireAvanceurEntite
             )
-            ->setStatut(
-                ImportStatut::EN_ATTENTE
-            )
+            ->setStatut(ImportStatut::EN_ATTENTE)
             ->setErreur(null);
 
         if (method_exists($import, 'setVolumeEau')) {
-
             $import->setVolumeEau(
                 $ligne->volumeEau
             );
-
         }
 
         return $import;
-    }
-
-    private function trouverExercice(
-        ?int $id
-    ): \App\Entity\Exercice {
-        if ($id === null || $id <= 0) {
-            throw new \InvalidArgumentException(
-                'L’exercice est obligatoire.'
-            );
-        }
-
-        $exercice = $this->exerciceRepository->find($id);
-
-        if ($exercice === null) {
-            throw new \InvalidArgumentException(
-                sprintf('Exercice %d introuvable.', $id)
-            );
-        }
-
-        return $exercice;
-    }
-
-    private function trouverFournisseur(
-        ?int $id
-    ): \App\Entity\Fournisseur {
-        if ($id === null || $id <= 0) {
-            throw new \InvalidArgumentException(
-                'Le fournisseur est obligatoire.'
-            );
-        }
-
-        $fournisseur = $this->fournisseurRepository->find($id);
-
-        if ($fournisseur === null) {
-            throw new \InvalidArgumentException(
-                sprintf('Fournisseur %d introuvable.', $id)
-            );
-        }
-
-        return $fournisseur;
-    }
-
-    private function trouverTypeCharge(
-        ?int $id
-    ): \App\Entity\TypeCharge {
-        if ($id === null || $id <= 0) {
-            throw new \InvalidArgumentException(
-                'Le type de charge est obligatoire.'
-            );
-        }
-
-        $typeCharge = $this->typeChargeRepository->find($id);
-
-        if ($typeCharge === null) {
-            throw new \InvalidArgumentException(
-                sprintf('Type de charge %d introuvable.', $id)
-            );
-        }
-
-        return $typeCharge;
-    }
-
-    private function trouverCoproprietaireNullable(
-        ?int $id
-    ): ?\App\Entity\Coproprietaire {
-        if ($id === null) {
-            return null;
-        }
-
-        if ($id <= 0) {
-            throw new \InvalidArgumentException(
-                'L’identifiant du copropriétaire avanceur est incorrect.'
-            );
-        }
-
-        $coproprietaire =
-            $this->coproprietaireRepository->find($id);
-
-        if ($coproprietaire === null) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Copropriétaire avanceur %d introuvable.',
-                    $id
-                )
-            );
-        }
-
-        return $coproprietaire;
     }
 }

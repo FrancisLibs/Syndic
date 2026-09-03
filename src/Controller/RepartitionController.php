@@ -6,6 +6,7 @@ use App\Repository\EcritureRepository;
 use App\Repository\FactureFournisseurRepository;
 use App\Repository\RepartitionRepository;
 use App\Service\ContexteExerciceService;
+use App\Service\EtatRepartitionChargesService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -18,9 +19,37 @@ final class RepartitionController extends AbstractController
         methods: ['GET']
     )]
     public function chargesParCoproprietaire(
+        ContexteExerciceService $contexteExerciceService,
+        EtatRepartitionChargesService $etatRepartitionChargesService,
+    ): Response {
+        $exercice =
+            $contexteExerciceService->getExercice();
+
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice sélectionné.'
+            );
+        }
+
+        $etat = $etatRepartitionChargesService
+            ->construire($exercice);
+
+        return $this->render(
+            'repartition/charges_par_coproprietaire.html.twig',
+            [
+                'exercice' => $exercice,
+                ...$etat,
+            ]
+        );
+    }
+
+    #[Route(
+        '/repartitions/charges/synthese',
+        name: 'app_repartition_charges_synthese',
+        methods: ['GET']
+    )]
+    public function chargesSynthese(
         RepartitionRepository $repartitionRepository,
-        EcritureRepository $ecritureRepository,
-        FactureFournisseurRepository $factureFournisseurRepository,
         ContexteExerciceService $contexteExerciceService
     ): Response {
         $exercice = $contexteExerciceService->getExercice();
@@ -35,203 +64,179 @@ final class RepartitionController extends AbstractController
             ->findPourExerciceAvecDetails($exercice);
 
         $groupes = [];
-        $totalReparti = 0.0;
-        $totalRepartiEau = 0.0;
+        $postes = [];
 
         foreach ($repartitions as $repartition) {
 
-            $coproprietaire = $repartition->getCoproprietaire();
+            $coproprietaire =
+                $repartition->getCoproprietaire();
 
             if ($coproprietaire === null) {
                 continue;
             }
 
-            $coproprietaireId = $coproprietaire->getId();
+            $coproprietaireId =
+                $coproprietaire->getId();
 
+            $montant =
+                (float) $repartition->getMontant();
+
+            $ecriture =
+                $repartition->getEcriture();
+
+            $operation =
+                $ecriture?->getOperation();
+
+            $compte =
+                $ecriture?->getCompte();
+
+            $typeCharge =
+                $operation?->getTypeCharge();
+
+            /*
+         * Les répartitions d'eau n'ont pas
+         * d'écriture associée dans ton modèle.
+         */
+            if ($ecriture === null) {
+
+                $clePoste = 'eau';
+                $nomPoste = 'Eau';
+            } elseif ($typeCharge !== null) {
+
+                $clePoste =
+                    'type_' . $typeCharge->getId();
+
+                $nomPoste =
+                    $typeCharge->getNom();
+            } else {
+
+                /*
+             * Sécurité pour les anciennes données
+             * ou une charge sans TypeCharge.
+             */
+                $clePoste =
+                    'compte_' . ($compte?->getId() ?? 'inconnu');
+
+                $nomPoste =
+                    $compte?->getLibelle()
+                    ?? 'Charge non identifiée';
+            }
+
+            /*
+         * Liste globale des postes :
+         * elle servira à construire les colonnes.
+         */
+            $postes[$clePoste] = $nomPoste;
+
+            /*
+         * Initialisation du copropriétaire.
+         */
             if (!isset($groupes[$coproprietaireId])) {
                 $groupes[$coproprietaireId] = [
                     'coproprietaire' => $coproprietaire,
-                    'lignes' => [],
+                    'postes' => [],
                     'total' => 0.0,
                 ];
             }
 
-            $montant = (float) $repartition->getMontant();
-
-            $ecriture = $repartition->getEcriture();
-            $compte = $ecriture?->getCompte();
-            $operation = $ecriture?->getOperation();
-
-            $estEau = $ecriture === null;
-
-            if ($estEau) {
-                $totalRepartiEau += $montant;
+            /*
+         * Initialisation du poste.
+         */
+            if (
+                !isset(
+                    $groupes[$coproprietaireId]['postes'][$clePoste]
+                )
+            ) {
+                $groupes[$coproprietaireId]['postes'][$clePoste] = 0.0;
             }
-
-            $groupes[$coproprietaireId]['lignes'][] = [
-                'lot' => $repartition->getLot(),
-                'compte' => $compte,
-                'operation' => $operation,
-                'nature' => $estEau
-                    ? 'Eau'
-                    : ($compte?->getLibelle() ?? 'Charge non identifiée'),
-                'detail' => $estEau
-                    ? 'Consommation individuelle et part commune'
-                    : ($operation?->getLibelle() ?? ''),
-                'montant' => $montant,
-                'tantiemes' => $repartition->getTantiemes(),
-                'estEau' => $estEau,
-            ];
-
-            $groupes[$coproprietaireId]['total'] += $montant;
-            $totalReparti += $montant;
-        }
-
-        // ===========================
-        // Contrôle détaillé
-        // ===========================
-
-        $controlesCharges = [];
-
-        $ecrituresCharges = $ecritureRepository
-            ->findChargesAvecRepartitions($exercice);
-
-        $totalCharges = 0.0;
-
-        foreach ($ecrituresCharges as $ecritureCharge) {
-
-            $operation = $ecritureCharge->getOperation();
-            $typeCharge = $operation?->getTypeCharge();
 
             /*
-            * L'eau est traitée séparément.
-            */
-            if ($typeCharge?->isEau()) {
-                continue;
-            }
+         * Addition des répartitions du même poste.
+         */
+            $groupes[$coproprietaireId]['postes'][$clePoste]
+                += $montant;
 
-            $montantComptabilise =
-                (float) $ecritureCharge->getDebit();
+            $groupes[$coproprietaireId]['total']
+                += $montant;
+        }
 
-            $totalCharges += $montantComptabilise;
-
-            $montantReparti = 0.0;
+        /*
+     * Arrondis.
+     */
+        foreach ($groupes as &$groupe) {
 
             foreach (
-                $ecritureCharge->getRepartitions()
-                as $repartition
+                $groupe['postes']
+                as $clePoste => $montant
             ) {
-                $montantReparti +=
-                    (float) $repartition->getMontant();
+                $groupe['postes'][$clePoste] =
+                    round($montant, 2);
             }
 
-            $montantReparti = round(
-                $montantReparti,
-                2
-            );
-
-            $ecartCharge = round(
-                $montantComptabilise - $montantReparti,
-                2
-            );
-
-            $controlesCharges[] = [
-                'nature' => $typeCharge?->getNom()
-                    ?? $ecritureCharge->getCompte()?->getLibelle()
-                    ?? 'Charge non identifiée',
-                'detail' => $operation?->getLibelle() ?? '',
-                'montantComptabilise' => $montantComptabilise,
-                'montantReparti' => $montantReparti,
-                'ecart' => $ecartCharge,
-                'equilibree' => abs($ecartCharge) < 0.01,
-            ];
-        }
-
-        // ===========================
-        // Contrôle Eau
-        // ===========================
-
-        $totalFacturesEau = (float)
-        $factureFournisseurRepository
-            ->calculerTotalFacturesEau($exercice);
-
-        if (
-            $totalFacturesEau > 0
-            || $totalRepartiEau > 0
-        ) {
-
-            $ecartEau = round(
-                $totalFacturesEau - $totalRepartiEau,
-                2
-            );
-
-            $controlesCharges[] = [
-                'nature' => 'Eau',
-                'detail' => 'Ensemble des factures d’eau',
-                'montantComptabilise' => $totalFacturesEau,
-                'montantReparti' => round(
-                    $totalRepartiEau,
+            $groupe['total'] =
+                round(
+                    $groupe['total'],
                     2
-                ),
-                'ecart' => $ecartEau,
-                'equilibree' => abs($ecartEau) < 0.01,
-            ];
-
-            $totalCharges += $totalFacturesEau;
+                );
         }
 
-        // ===========================
-        // Contrôle général
-        // ===========================
+        unset($groupe);
 
-        $totalCharges = round($totalCharges, 2);
-
-        $ecart = round(
-            $totalCharges - $totalReparti,
-            2
+        /*
+     * Tri alphabétique des postes.
+     */
+        asort(
+            $postes,
+            SORT_NATURAL | SORT_FLAG_CASE
         );
 
-        $repartitionEquilibree =
-            abs($ecart) < 0.01;
+        /*
+     * Total général par poste.
+     */
+        $totauxPostes = [];
 
-        $chargesPresentes = $totalCharges > 0;
-
-        $eauPresente = false;
-        $eauEquilibree = true;
-
-        $toutesChargesEquilibrees = true;
-
-        foreach ($controlesCharges as $controle) {
-            if (!$controle['equilibree']) {
-                $toutesChargesEquilibrees = false;
-            }
-
-            if ($controle['nature'] === 'Eau') {
-                $eauPresente = true;
-                $eauEquilibree = $controle['equilibree'];
-            }
+        foreach ($postes as $clePoste => $nomPoste) {
+            $totauxPostes[$clePoste] = 0.0;
         }
 
-        $validationGlobale =
-            $chargesPresentes
-            && $repartitionEquilibree
-            && $toutesChargesEquilibrees;
+        $totalGeneral = 0.0;
+
+        foreach ($groupes as $groupe) {
+
+            foreach (
+                $groupe['postes']
+                as $clePoste => $montant
+            ) {
+                $totauxPostes[$clePoste]
+                    += $montant;
+            }
+
+            $totalGeneral +=
+                $groupe['total'];
+        }
+
+        foreach (
+            $totauxPostes
+            as $clePoste => $montant
+        ) {
+            $totauxPostes[$clePoste] =
+                round($montant, 2);
+        }
+
+        $totalGeneral =
+            round(
+                $totalGeneral,
+                2
+            );
 
         return $this->render(
-            'repartition/charges_par_coproprietaire.html.twig',
+            'repartition/charges_synthese.html.twig',
             [
                 'exercice' => $exercice,
                 'groupes' => $groupes,
-                'totalCharges' => $totalCharges,
-                'totalReparti' => $totalReparti,
-                'ecart' => $ecart,
-                'repartitionEquilibree' => $repartitionEquilibree,
-                'controlesCharges' => $controlesCharges,
-                'chargesPresentes' => $chargesPresentes,
-                'eauPresente' => $eauPresente,
-                'eauEquilibree' => $eauEquilibree,
-                'toutesChargesEquilibrees' => $toutesChargesEquilibrees,
-                'validationGlobale' => $validationGlobale,
+                'postes' => $postes,
+                'totauxPostes' => $totauxPostes,
+                'totalGeneral' => $totalGeneral,
             ]
         );
     }

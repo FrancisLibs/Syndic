@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Règlement fournisseur
+{% endblock %}
+
+{% block body %}
+
+	<div class="container mt-4">
+
+		<div class="d-flex justify-content-between align-items-center mb-4">
+
+			<div>
+				<h1>Règlement fournisseur</h1>
+			</div>
+
+			<div class="d-flex gap-2">
+
+				{% if not reglement.exercice.cloture %}
+					<a class="btn btn-outline-secondary" href="{{ path( 'app_reglement_fournisseur_edit', { id: reglement.id } ) }}">
+						Modifier
+					</a>
+				{% endif %}
+
+				<a class="btn btn-outline-primary" href="{{ path( 'app_reglement_fournisseur_index' ) }}">
+					Retour
+				</a>
+
+			</div>
+
+		</div>
+
+		<div class="card shadow-sm">
+			<div class="card-body">
+
+				<table class="table table-sm">
+
+					<tr>
+						<th style="width: 250px;">
+							Id
+						</th>
+						<td>
+							{{ reglement.id }}
+						</td>
+					</tr>
+
+					<tr>
+						<th style="width: 250px;">
+							Date
+						</th>
+						<td>
+							{{ reglement.dateReglement|date('d/m/Y') }}
+						</td>
+					</tr>
+
+					<tr>
+						<th>Fournisseur</th>
+						<td>
+							{{ reglement.fournisseur.nom }}
+						</td>
+					</tr>
+
+					<tr>
+						<th>Montant</th>
+						<td>
+							{{ reglement.montant|number_format(2, ',', ' ') }}
+							€
+						</td>
+					</tr>
+
+					<tr>
+						<th>Référence</th>
+						<td>
+							{{ reglement.reference ?: '—' }}
+						</td>
+					</tr>
+
+					<tr>
+						<th>Exercice</th>
+						<td>
+							{{ reglement.exercice.nom }}
+						</td>
+					</tr>
+
+					<tr>
+						<th>Opération comptable</th>
+						<td>
+							{% if reglement.operation %}
+								{{ reglement.operation.id }}
+							{% else %}
+								—
+							{% endif %}
+						</td>
+					</tr>
+
+				</table>
+
+			</div>
+		</div>
+
+	</div>
+
+{% endblock %}

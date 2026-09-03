@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Repository\CompteRepository;
 use App\Repository\EcritureRepository;
-use App\Repository\ExerciceRepository;
 use App\Enum\OperationStatut;
 use App\Service\ContexteExerciceService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,12 +25,11 @@ final class ComptabiliteController extends AbstractController
 
     #[Route('/balance', name: 'app_balance')]
     public function balance(
-        ExerciceRepository $exerciceRepository,
         EcritureRepository $ecritureRepo,
         ContexteExerciceService $contexteExerciceService,
     ): Response {
-
         $exercice = $contexteExerciceService->getExercice();
+
         if (!$exercice) {
             throw $this->createNotFoundException(
                 'Aucun exercice actif trouvé'
@@ -45,46 +43,64 @@ final class ComptabiliteController extends AbstractController
         $balance = [];
 
         foreach ($ecritures as $ecriture) {
+            if (
+                $ecriture->getOperation()->getStatut()
+                !== OperationStatut::VALIDE
+            ) {
+                continue;
+            }
 
             $compte = $ecriture->getCompte();
-
             $numero = $compte->getNumero();
 
             if (!isset($balance[$numero])) {
-
                 $balance[$numero] = [
                     'numero' => $numero,
                     'libelle' => $compte->getLibelle(),
-                    'debit' => 0,
-                    'credit' => 0,
+                    'debit' => 0.0,
+                    'credit' => 0.0,
                 ];
             }
 
-            //  Suppression des opérations non valides donc annulées
-            if ($ecriture->getOperation()->getStatut() == OperationStatut::VALIDE) {
+            $balance[$numero]['debit'] +=
+                (float) $ecriture->getDebit();
 
-                $balance[$numero]['debit'] +=
-                    (float) $ecriture->getDebit();
-
-                $balance[$numero]['credit'] +=
-                    (float) $ecriture->getCredit();
-            }
+            $balance[$numero]['credit'] +=
+                (float) $ecriture->getCredit();
         }
 
         $totalDebit = 0.0;
         $totalCredit = 0.0;
+        $totalSoldeDebiteur = 0.0;
+        $totalSoldeCrediteur = 0.0;
 
         foreach ($balance as &$ligne) {
-            $ligne['solde'] = $ligne['debit'] - $ligne['credit'];
+
+            $solde = round(
+                $ligne['debit'] - $ligne['credit'],
+                2
+            );
+
+            $ligne['soldeDebiteur'] = 0.0;
+            $ligne['soldeCrediteur'] = 0.0;
+
+            if ($solde > 0) {
+                $ligne['soldeDebiteur'] = $solde;
+            } elseif ($solde < 0) {
+                $ligne['soldeCrediteur'] = abs($solde);
+            }
 
             $totalDebit += $ligne['debit'];
             $totalCredit += $ligne['credit'];
+
+            $totalSoldeDebiteur += $ligne['soldeDebiteur'];
+            $totalSoldeCrediteur += $ligne['soldeCrediteur'];
         }
+
         unset($ligne);
 
-        $equilibree = abs($totalDebit - $totalCredit) < 0.01;
-
-        ksort($balance);
+        $equilibree =
+            abs($totalDebit - $totalCredit) < 0.01;
 
         return $this->render(
             'comptabilite/balance.html.twig',
@@ -93,6 +109,8 @@ final class ComptabiliteController extends AbstractController
                 'exercice' => $exercice,
                 'totalDebit' => $totalDebit,
                 'totalCredit' => $totalCredit,
+                'totalSoldeDebiteur' => $totalSoldeDebiteur,
+                'totalSoldeCrediteur' => $totalSoldeCrediteur,
                 'equilibree' => $equilibree,
             ]
         );
@@ -100,7 +118,6 @@ final class ComptabiliteController extends AbstractController
 
     #[Route('/grand-livre', name: 'app_grand_livre')]
     public function grandLivre(
-        ExerciceRepository $exerciceRepository,
         CompteRepository $compteRepo,
         EcritureRepository $ecritureRepo,
         ContexteExerciceService $contexteExerciceService,
@@ -134,52 +151,44 @@ final class ComptabiliteController extends AbstractController
             );
 
             $mouvements = [];
-
-            $solde = 0;
+            $solde = 0.0;
 
             foreach ($ecritures as $ecriture) {
 
                 $operation = $ecriture->getOperation();
 
-                // Suppression des opérations annulées
-                if ($operation->getStatut() == OperationStatut::VALIDE) {
-
-                    $debit = (float) $ecriture->getDebit();
-                    $credit = (float) $ecriture->getCredit();
-
-                    $solde += $debit;
-                    $solde -= $credit;
-
-                    $mouvements[] = [
-                        'exercice' => $ecriture->getExercice()->getNom(),
-
-                        'date' => $operation->getDate(),
-
-                        'libelle' => $operation->getLibelle(),
-
-                        'debit' => $debit,
-
-                        'credit' => $credit,
-
-                        'solde' => $solde,
-                    ];
+                if ($operation->getStatut() !== OperationStatut::VALIDE) {
+                    continue;
                 }
+
+                $debit = (float) $ecriture->getDebit();
+                $credit = (float) $ecriture->getCredit();
+
+                $solde += $debit - $credit;
+
+                $mouvements[] = [
+                    'exercice' => $ecriture->getExercice()->getNom(),
+                    'date' => $operation->getDate(),
+                    'libelle' => $operation->getLibelle(),
+                    'debit' => $debit,
+                    'credit' => $credit,
+                    'solde' => $solde,
+                ];
+            }
+
+            if ($mouvements === []) {
+                continue;
             }
 
             $grandLivre[] = [
-
                 'compte' => $compte,
-
                 'mouvements' => $mouvements,
-
                 'totalDebit' => array_sum(
                     array_column($mouvements, 'debit')
                 ),
-
                 'totalCredit' => array_sum(
                     array_column($mouvements, 'credit')
                 ),
-
                 'solde' => $solde,
             ];
         }
@@ -220,7 +229,9 @@ final class ComptabiliteController extends AbstractController
             $operation = $ecriture->getOperation();
 
             // Suppression des opérations annulées
-            if ($operation->getStatut() == OperationStatut::VALIDE) {
+            if ($operation->getStatut() !== OperationStatut::VALIDE) {
+                continue;
+            } {
 
                 $compte = $ecriture->getCompte();
 

@@ -24,10 +24,11 @@
 		<tbody>
 			{% for lot in lots %}
 				<tr>
+					{% set nomPropretaire = lot.coproprietaireActuel.nom ~ " " ~ lot.coproprietaireActuel.prenom %}
 					<td class="text-center">{{ lot.reference }}</td>
 					<td class="text-center">{{ lot.designation }}</td>
 					<td class="text-center">{{ lot.tantiemes }}</td>
-					<td class="text-center">{{ lot.coproprietaireActuel ? lot.coproprietaireActuel.nom : '—' }}</td>
+					<td class="text-center">{{ nomPropretaire ? nomPropretaire : '—' }}</td>
 					<td class="text-center">{{ lot.copropriete }}</td>
 					<td class="text-center">
 						<a href="{{ path('app_lot_show', {'id': lot.id}) }}">Voir</a>

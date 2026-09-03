@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Repository\Import;
+namespace App\Repository\Imports;
 
 use App\Entity\Exercice;
-use App\Entity\Import\ImportSoldeOuverture;
-use App\Enum\ImportEtat;
+use App\Entity\Imports\ImportSoldeOuverture;
+use App\Enum\ImportStatut;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -74,7 +74,7 @@ final class ImportSoldeOuvertureRepository extends ServiceEntityRepository
             )
             ->setParameter(
                 'etat',
-                ImportEtat::A_IMPORTER
+                ImportStatut::EN_ATTENTE
             )
             ->orderBy(
                 'import.id',

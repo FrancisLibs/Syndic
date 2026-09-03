@@ -1,0 +1,178 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Nouveau règlement fournisseur
+{% endblock %}
+
+{% block body %}
+
+	<div class="container-fluid">
+
+		<div class="d-flex justify-content-between align-items-baseline mb-4">
+
+			<div>
+				<h1>Règlement fournisseur</h1>
+
+				<h4 class="text-secondary">
+					{{ exercice.nom }}
+				</h4>
+			</div>
+
+		</div>
+
+		{# ============================ #}
+		{# Choix du fournisseur         #}
+		{# ============================ #}
+
+			<div class="card mb-4"> <div class="card-header">
+				Fournisseur
+			</div>
+
+			<div class="card-body">
+
+				<form method="get" action="{{ path('app_reglement_fournisseur_new') }}">
+
+					<div class="row align-items-end">
+
+						<div class="col-md-5">
+
+							<label for="fournisseur" class="form-label">
+								Fournisseur
+							</label>
+
+							<select name="fournisseur" id="fournisseur" class="form-select" onchange="this.form.submit();">
+
+								<option value="">
+									Choisir...
+								</option>
+
+								{% for item in fournisseurs %}
+
+									<option value="{{ item.id }}" {% if fournisseur and fournisseur.id == item.id %} selected {% endif %}>
+										{{ item.nom }}
+									</option>
+
+								{% endfor %}
+
+							</select>
+
+						</div>
+
+					</div>
+
+				</form>
+
+			</div>
+
+		</div>
+
+
+		{% if fournisseur %}
+
+			<form method="post" action="{{ path('app_reglement_fournisseur_new') }}">
+
+				<input type="hidden" name="_token" value="{{ csrf_token('reglement-fournisseur') }}">
+
+				<input type="hidden" name="fournisseur_id" value="{{ fournisseur.id }}">
+
+
+				<div class="card mb-4">
+
+					<div class="card-header">
+						Détails du règlement
+					</div>
+
+					<div class="card-body">
+
+						<div class="mb-4">
+
+							<strong>
+								{{ fournisseur.nom }}
+							</strong>
+
+							{% if fournisseur.compte %}
+
+								<div class="text-muted">
+									Compte :
+									{{ fournisseur.compte.numero }}
+									-
+									{{ fournisseur.compte.libelle }}
+								</div>
+
+							{% endif %}
+
+						</div>
+
+
+						<div class="row">
+
+							<div class="col-md-3">
+
+								<label for="date_reglement" class="form-label">
+									Date du règlement
+								</label>
+
+								<input type="date" name="date_reglement" id="date_reglement" class="form-control" required>
+
+							</div>
+
+
+							<div class="col-md-3">
+
+								<label for="montant" class="form-label">
+									Montant
+								</label>
+
+								<div class="input-group">
+
+									<input type="number" name="montant" id="montant" step="0.01" min="0.01" class="form-control" required>
+
+									<span class="input-group-text">
+										€
+									</span>
+
+								</div>
+
+							</div>
+
+
+							<div class="col-md-6">
+
+								<label for="reference" class="form-label">
+									Référence
+								</label>
+
+								<input type="text" name="reference" id="reference" class="form-control" maxlength="100">
+
+								<div class="form-text">
+									Exemple : numéro de virement, chèque ou prélèvement.
+								</div>
+
+							</div>
+
+						</div>
+
+					</div>
+
+				</div>
+
+
+				<div class="d-flex justify-content-between">
+
+					<a href="{{ path('app_reglement_fournisseur_index') }}" class="btn btn-secondary">
+						Retour
+					</a>
+
+					<button type="submit" class="btn btn-success">
+						Enregistrer le règlement
+					</button>
+
+				</div>
+
+			</form>
+
+		{% endif %}
+
+	</div>
+
+{% endblock %}

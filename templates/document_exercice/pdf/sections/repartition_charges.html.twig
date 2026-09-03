@@ -1,0 +1,137 @@
+<h1>Répartition des charges</h1>
+
+		{% for groupe in groupes %}
+
+			<section class="repartition-coproprietaire">
+
+				<div class="repartition-coproprietaire-entete">
+					{{ groupe.coproprietaire }}
+				</div>
+
+				<table>
+
+					<thead>
+						<tr>
+							<th>Lot</th>
+							<th>Nature</th>
+							<th>Détail</th>
+							<th class="montant">Tantièmes</th>
+							<th class="montant">Montant</th>
+						</tr>
+					</thead>
+
+					<tbody>
+
+						{% for ligne in groupe.lignes %}
+
+							<tr>
+								<td>
+									{{ ligne.lot.reference }}
+								</td>
+
+								<td>
+									{{ ligne.nature }}
+								</td>
+
+								<td>
+									{{ ligne.detail }}
+								</td>
+
+								<td class="montant">
+									{% if ligne.tantiemes is not null %}
+										{{ ligne.tantiemes }}
+									{% endif %}
+								</td>
+
+								<td class="montant">
+									{{ ligne.montant|number_format(2, ',', ' ') }}
+								</td>
+							</tr>
+
+						{% endfor %}
+
+					</tbody>
+
+					<tfoot>
+						<tr>
+							<td colspan="4">
+								Total
+							</td>
+
+							<td class="montant">
+								{{ groupe.total|number_format(2, ',', ' ') }}
+							</td>
+						</tr>
+					</tfoot>
+
+				</table>
+
+			</section>
+
+		{% endfor %}
+
+		<h2>Contrôle de la répartition</h2>
+
+		<table>
+
+			<thead>
+				<tr>
+					<th>Nature</th>
+					<th>Détail</th>
+					<th class="montant">Comptabilisé</th>
+					<th class="montant">Réparti</th>
+					<th class="montant">Écart</th>
+				</tr>
+			</thead>
+
+			<tbody>
+
+				{% for controle in controlesCharges %}
+
+					<tr>
+						<td>
+							{{ controle.nature }}
+						</td>
+
+						<td>
+							{{ controle.detail }}
+						</td>
+
+						<td class="montant">
+							{{ controle.montantComptabilise|number_format(2, ',', ' ') }}
+						</td>
+
+						<td class="montant">
+							{{ controle.montantReparti|number_format(2, ',', ' ') }}
+						</td>
+
+						<td class="montant">
+							{{ controle.ecart|number_format(2, ',', ' ') }}
+						</td>
+					</tr>
+
+				{% endfor %}
+
+			</tbody>
+
+			<tfoot>
+				<tr>
+					<td colspan="2">
+						Total général
+					</td>
+
+					<td class="montant">
+						{{ totalCharges|number_format(2, ',', ' ') }}
+					</td>
+
+					<td class="montant">
+						{{ totalReparti|number_format(2, ',', ' ') }}
+					</td>
+
+					<td class="montant">
+						{{ ecart|number_format(2, ',', ' ') }}
+					</td>
+				</tr>
+			</tfoot>
+
+		</table>

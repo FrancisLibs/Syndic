@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\ApprobationComptes;
 use App\Entity\Exercice;
 use App\Form\ApprobationComptesType;
+use App\Repository\ExerciceRepository;
 use App\Repository\ApprobationComptesRepository;
 use App\Service\AssembleeGenerale\ApprobationComptesService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,7 +27,8 @@ final class AssembleeGeneraleController extends AbstractController
         Request $request,
         ApprobationComptesService $approbationComptesService,
         ApprobationComptesRepository $approbationRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        ExerciceRepository $exerciceRepository,
     ): Response {
         $approbation =
             $approbationComptesService
@@ -44,6 +46,16 @@ final class AssembleeGeneraleController extends AbstractController
 
             $approbationEnregistree
                 ->setExercice($exercice);
+
+            $exerciceActif =
+                $exerciceRepository->findActif();
+
+            if ($exerciceActif !== null) {
+                $approbationEnregistree
+                    ->setExerciceComptabilisation(
+                        $exerciceActif
+                    );
+            }
         }
 
         $form = $this->createForm(
@@ -57,6 +69,41 @@ final class AssembleeGeneraleController extends AbstractController
             $form->isSubmitted()
             && $form->isValid()
         ) {
+            $dateAG =
+                $approbationEnregistree
+                ->getDateAssembleeGenerale();
+
+            if ($dateAG === null) {
+                $this->addFlash(
+                    'danger',
+                    'La date de l’Assemblée Générale est obligatoire.'
+                );
+
+                return $this->redirectToRoute(
+                    'app_assemblee_generale',
+                    [
+                        'id' => $exercice->getId(),
+                    ]
+                );
+            }
+
+            if ($dateAG <= $exercice->getDateFin()) {
+                $this->addFlash(
+                    'danger',
+                    sprintf(
+                        'L’Assemblée Générale d’approbation des comptes doit être postérieure au %s.',
+                        $exercice->getDateFin()->format('d/m/Y')
+                    )
+                );
+
+                return $this->redirectToRoute(
+                    'app_assemblee_generale',
+                    [
+                        'id' => $exercice->getId(),
+                    ]
+                );
+            }
+
             $entityManager->persist(
                 $approbationEnregistree
             );
@@ -90,6 +137,7 @@ final class AssembleeGeneraleController extends AbstractController
     #[Route(
         '/approbation/{id}/approuver',
         name: 'app_assemblee_generale_approuver',
+        requirements: ['id' => '\d+'],
         methods: ['POST']
     )]
     public function approuver(

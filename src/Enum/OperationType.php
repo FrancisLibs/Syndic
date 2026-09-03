@@ -13,4 +13,6 @@ enum OperationType: string
     case CLOTURE = 'cloture';
     case APPROBATION_COMPTES = 'approbation_comptes';
     case TRANSFERT_DETTE = 'transfert_dette';
+    case OPERATION_DIVERSE = 'operation_diverse';
+    case REMBOURSEMENT_COPROPRIETAIRE = 'remboursement_coprop';
 }

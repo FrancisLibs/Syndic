@@ -11,3 +11,8 @@ services:
             - "../src/DependencyInjection/"
             - "../src/Entity/"
             - "../src/Kernel.php"
+
+    App\Service\PdfService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            

@@ -4,7 +4,7 @@ namespace App\Service\Imports;
 
 use App\Entity\Exercice;
 use App\Entity\Imports\ImportSoldeOuverture;
-use App\Enum\ImportEtat;
+use App\Enum\ImportStatut;
 use App\Repository\Imports\ImportSoldeOuvertureRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -55,7 +55,7 @@ final class ControleImportSoldeOuvertureService
              */
             if (
                 $ligne->getEtat()
-                === ImportEtat::IMPORTE
+                === ImportStatut::TRAITEE
             ) {
                 continue;
             }
@@ -83,7 +83,7 @@ final class ControleImportSoldeOuvertureService
              */
             if (
                 $ligne->getEtat()
-                === ImportEtat::ERREUR
+                === ImportStatut::ERREUR
             ) {
                 $ligne->reinitialiser();
             }
