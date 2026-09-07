@@ -103,8 +103,11 @@ class EtatRepartitionChargesService
                 continue;
             }
 
-            $montantComptabilise =
-                (float) $ecritureCharge->getDebit();
+            $montantComptabilise = round(
+                (float) $ecritureCharge->getDebit()
+                    - (float) $ecritureCharge->getCredit(),
+                2
+            );
 
             $totalCharges += $montantComptabilise;
 
@@ -211,7 +214,7 @@ class EtatRepartitionChargesService
             abs($ecart) < 0.01;
 
         $chargesPresentes =
-            $totalCharges > 0;
+            $controlesCharges !== [];
 
         $eauPresente = false;
         $eauEquilibree = true;

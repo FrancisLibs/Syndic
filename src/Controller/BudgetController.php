@@ -149,12 +149,18 @@ final class BudgetController extends AbstractController
         // Génération appel métier création des LignesAppelFond
         // =====================
 
+        // $appelFond = $generateur->generer(
+        //     $budget,
+        //     new \DateTimeImmutable(),
+        //     new \DateTimeImmutable('+120days')
+        // );
+
         $appelFond = $generateur->generer(
             $budget,
-            new \DateTimeImmutable(),
-            new \DateTimeImmutable('+120days')
+            new \DateTimeImmutable('2024-06-10'),
+            new \DateTimeImmutable('2024-10-08')
         );
-
+        
         // =====================
         // Génération comptable
         // =====================

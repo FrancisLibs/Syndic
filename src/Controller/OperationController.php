@@ -5,8 +5,11 @@ namespace App\Controller;
 use App\Entity\Operation;
 use App\Entity\FactureFournisseur;
 use App\Enum\OperationStatut;
+use App\Enum\OperationType;
 use App\Service\ContexteExerciceService;
+use App\Service\ComptabiliteService;
 use App\Repository\OperationRepository;
+use App\Form\OperationDiverseType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,6 +50,126 @@ final class OperationController extends AbstractController
     }
 
     #[Route(
+        '/operation/diverse/new',
+        name: 'app_operation_diverse_new',
+        methods: ['GET', 'POST']
+    )]
+    public function newDiverse(
+        Request $request,
+        ContexteExerciceService $contexteExerciceService,
+        ComptabiliteService $comptabiliteService,
+    ): Response {
+        $exercice = $contexteExerciceService->getExercice();
+
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice sélectionné.'
+            );
+        }
+
+        if ($exercice->isCloture()) {
+            throw $this->createAccessDeniedException(
+                'Impossible de saisir une opération sur un exercice clôturé.'
+            );
+        }
+
+        $form = $this->createForm(
+            OperationDiverseType::class,
+            [
+                'date' => new \DateTimeImmutable(),
+            ]
+        );
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+
+            if (
+                $data['compteDebit']->getId()
+                === $data['compteCredit']->getId()
+            ) {
+                $this->addFlash(
+                    'danger',
+                    'Les comptes débité et crédité doivent être différents.'
+                );
+
+                return $this->render(
+                    'operation/diverse_new.html.twig',
+                    [
+                        'form' => $form,
+                        'exercice' => $exercice,
+                    ]
+                );
+            }
+
+            $date = $data['date'];
+
+            if (
+                $date < $exercice->getDateDebut()
+                || $date > $exercice->getDateFin()
+            ) {
+                $this->addFlash(
+                    'danger',
+                    'La date doit appartenir à l’exercice sélectionné.'
+                );
+
+                return $this->render(
+                    'operation/diverse_new.html.twig',
+                    [
+                        'form' => $form,
+                        'exercice' => $exercice,
+                    ]
+                );
+            }
+
+            $operation = $comptabiliteService->creerOperation(
+                $date,
+                $data['libelle'],
+                OperationType::OPERATION_DIVERSE,
+                $data['piece'],
+            );
+
+            $comptabiliteService->creerDebit(
+                $operation,
+                $exercice,
+                $data['compteDebit'],
+                $data['montant'],
+            );
+
+            $comptabiliteService->creerCredit(
+                $operation,
+                $exercice,
+                $data['compteCredit'],
+                $data['montant'],
+            );
+
+            $comptabiliteService->verifierEquilibre(
+                $operation
+            );
+
+            $comptabiliteService->enregistrer();
+
+            $this->addFlash(
+                'success',
+                'L’opération diverse a été enregistrée.'
+            );
+
+            return $this->redirectToRoute(
+                'app_operation_index'
+            );
+        }
+
+        return $this->render(
+            'operation/diverse_new.html.twig',
+            [
+                'form' => $form,
+                'exercice' => $exercice,
+            ]
+        );
+    }
+
+    #[Route(
         '/operation/{id}',
         name: 'app_operation_show',
         requirements: ['id' => '\d+'],
@@ -68,6 +191,7 @@ final class OperationController extends AbstractController
             'ecriture' => $ecritureCharge,
         ]);
     }
+
 
     #[Route(
         '/operation/{id}/annuler',

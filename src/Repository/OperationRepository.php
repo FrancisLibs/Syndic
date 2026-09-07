@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Exercice;
 use App\Entity\Operation;
 use App\Enum\OperationType;
+use App\Enum\OperationStatut;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -68,8 +69,8 @@ class OperationRepository extends ServiceEntityRepository
             ->andWhere('e.exercice = :exercice')
             ->setParameter('exercice', $exercice)
             ->distinct()
-            ->orderBy('o.date', 'DESC')
-            ->addOrderBy('o.id', 'DESC')
+            ->orderBy('o.date', 'ASC')
+            ->addOrderBy('o.id', 'ASC')
             ->getQuery()
             ->getResult();
     }
@@ -82,8 +83,10 @@ class OperationRepository extends ServiceEntityRepository
             ->join('o.ecritures', 'e')
             ->andWhere('e.exercice = :exercice')
             ->andWhere('o.type = :type')
+            ->andWhere('o.statut = :statut')
             ->setParameter('exercice', $exercice)
-            ->setParameter('type', 'cloture')
+            ->setParameter('type', OperationType::CLOTURE)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -98,8 +101,10 @@ class OperationRepository extends ServiceEntityRepository
             ->join('o.ecritures', 'e')
             ->andWhere('e.exercice = :exercice')
             ->andWhere('o.type = :type')
+            ->andWhere('o.statut = :statut')
             ->setParameter('exercice', $exercice)
             ->setParameter('type', OperationType::CLOTURE)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->orderBy('o.id', 'DESC')
             ->setMaxResults(1)
             ->getQuery()

@@ -6,6 +6,7 @@ use App\Entity\Coproprietaire;
 use App\Entity\Exercice;
 use App\Entity\Fournisseur;
 use App\Entity\TypeCharge;
+use App\Enum\FactureFournisseurType;
 
 final class LigneImportFacture
 {
@@ -18,6 +19,8 @@ final class LigneImportFacture
     public string $libelle = '';
 
     public ?float $montant = null;
+
+    public ?FactureFournisseurType $type = null;
 
     public ?Exercice $exerciceEntite = null;
 

@@ -6,10 +6,11 @@ use App\Dto\Imports\LigneImportReglement;
 use App\Dto\Imports\RapportImport;
 use App\Repository\ExerciceRepository;
 use App\Repository\FournisseurRepository;
+use App\Enum\ReglementFournisseurType;
 
 final class AnalyseImportReglementService
 {
-    private const NOMBRE_COLONNES = 5;
+    private const NOMBRE_COLONNES = 6;
 
     public function __construct(
         private readonly ExerciceRepository $exerciceRepository,
@@ -174,6 +175,7 @@ final class AnalyseImportReglementService
             $reference,
             $exerciceId,
             $fournisseurId,
+            $type,
         ] = array_map(
             static fn(mixed $valeur): string =>
             trim((string) $valeur),
@@ -203,6 +205,11 @@ final class AnalyseImportReglementService
         $this->analyserFournisseur(
             $ligne,
             $fournisseurId
+        );
+
+        $this->analyserType(
+            $ligne,
+            $type
         );
 
         return $ligne;
@@ -368,6 +375,41 @@ final class AnalyseImportReglementService
 
         $ligne->fournisseurEntite =
             $fournisseur;
+    }
+
+    private function analyserType(
+        LigneImportReglement $ligne,
+        string $type
+    ): void {
+        $type = strtolower(
+            trim($type)
+        );
+
+        if ($type === '') {
+            $ligne->ajouterErreur(
+                'Le type de règlement est obligatoire.'
+            );
+
+            return;
+        }
+
+        $typeEnum =
+            ReglementFournisseurType::tryFrom(
+                $type
+            );
+
+        if ($typeEnum === null) {
+            $ligne->ajouterErreur(
+                sprintf(
+                    'Type de règlement invalide : "%s". Valeurs autorisées : paiement, remboursement.',
+                    $type
+                )
+            );
+
+            return;
+        }
+
+        $ligne->type = $typeEnum;
     }
 
     private function convertirIdentifiantObligatoire(

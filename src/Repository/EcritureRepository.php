@@ -7,6 +7,7 @@ use App\Entity\Exercice;
 use App\Entity\Lot;
 use App\Enum\CompteType;
 use App\Enum\OperationType;
+use App\Enum\OperationStatut;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -38,8 +39,11 @@ class EcritureRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('e')
             ->select('COALESCE(SUM(e.debit), 0) AS debit')
             ->addSelect('COALESCE(SUM(e.credit), 0) AS credit')
+            ->join('e.operation', 'o')
             ->andWhere('e.exercice = :exercice')
+            ->andWhere('o.statut = :statut')
             ->setParameter('exercice', $exercice)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->getQuery()
             ->getSingleResult();
     }
@@ -53,10 +57,13 @@ class EcritureRepository extends ServiceEntityRepository
             ->addSelect('SUM(e.debit) AS debit')
             ->addSelect('SUM(e.credit) AS credit')
             ->join('e.compte', 'c')
+            ->join('e.operation', 'o')
             ->leftJoin('e.coproprietaire', 'cp')
             ->andWhere('e.exercice = :exercice')
+            ->andWhere('o.statut = :statut')
             ->andWhere('c.type IN (:typesReportables)')
             ->setParameter('exercice', $exercice)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->setParameter('typesReportables', [
                 CompteType::ACTIF,
                 CompteType::PASSIF,
@@ -79,9 +86,12 @@ class EcritureRepository extends ServiceEntityRepository
             ->addSelect('SUM(e.debit) AS debit')
             ->addSelect('SUM(e.credit) AS credit')
             ->join('e.compte', 'c')
+            ->join('e.operation', 'o')
             ->andWhere('e.exercice = :exercice')
+            ->andWhere('o.statut = :statut')
             ->andWhere('c.type IN (:types)')
             ->setParameter('exercice', $exercice)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->setParameter('types', [
                 CompteType::CHARGE,
                 CompteType::PRODUIT,
@@ -99,9 +109,12 @@ class EcritureRepository extends ServiceEntityRepository
             ->addSelect('SUM(e.debit) AS debit')
             ->addSelect('SUM(e.credit) AS credit')
             ->join('e.compte', 'c')
+            ->join('e.operation', 'o')
             ->andWhere('e.exercice = :exercice')
+            ->andWhere('o.statut = :statut')
             ->andWhere('c.type IN (:types)')
             ->setParameter('exercice', $exercice)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->setParameter('types', [
                 CompteType::CHARGE,
                 CompteType::PRODUIT,
@@ -118,10 +131,13 @@ class EcritureRepository extends ServiceEntityRepository
         $result = $this->createQueryBuilder('e')
             ->select('SUM(e.debit) - SUM(e.credit)')
             ->join('e.compte', 'c')
+            ->join('e.operation', 'o')
             ->where('e.exercice = :exercice')
             ->andWhere('c.type = :type')
+            ->andWhere('o.statut = :statut')
             ->setParameter('exercice', $exercice)
-            ->setParameter('type', 'charge')
+            ->setParameter('type', CompteType::CHARGE)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -142,17 +158,21 @@ class EcritureRepository extends ServiceEntityRepository
                 'operation',
                 'compte',
                 'repartitions',
-                'typeCharge'
+                'typeCharge',
+                'compteCharge'
             )
             ->join('e.operation', 'operation')
             ->join('e.compte', 'compte')
             ->leftJoin('e.repartitions', 'repartitions')
-            ->leftJoin('operation.typeCharge', 'typeCharge')
+            ->join('operation.typeCharge', 'typeCharge')
+            ->join('typeCharge.compte', 'compteCharge')
             ->andWhere('e.exercice = :exercice')
             ->andWhere('operation.type = :type')
-            ->andWhere('e.debit > 0')
+            ->andWhere('e.compte = compteCharge')
+            ->andWhere('operation.statut = :statut')
             ->setParameter('exercice', $exercice)
             ->setParameter('type', OperationType::CHARGE)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->orderBy('operation.date', 'ASC')
             ->addOrderBy('operation.id', 'ASC')
             ->getQuery()

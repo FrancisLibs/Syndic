@@ -4,6 +4,7 @@ namespace App\Dto\Imports;
 
 use App\Entity\Exercice;
 use App\Entity\Fournisseur;
+use App\Enum\ReglementFournisseurType;
 
 final class LigneImportReglement
 {
@@ -14,6 +15,8 @@ final class LigneImportReglement
     public ?float $montant = null;
 
     public ?string $reference = null;
+
+    public ?ReglementFournisseurType $type = null;
 
     public ?Exercice $exerciceEntite = null;
 
@@ -35,9 +38,9 @@ final class LigneImportReglement
 
     public string $fournisseur = '';
 
-    // ===========================
-
-    /** @var string[] */
+    /**
+     * @var string[]
+     */
     public array $erreurs = [];
 
     public function estValide(): bool

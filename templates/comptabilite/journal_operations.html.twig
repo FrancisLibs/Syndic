@@ -1,14 +1,20 @@
-{# templates/operation/index.html.twig #}
+{# templates/comptabilite/journal_operations.html.twig #}
+
 {% extends 'base.html.twig' %}
 
-{% block title %}Journal des Opérations
+{% block title %}
+	Journal des Opérations
 {% endblock %}
 
 {% block body %}
+
 	<div class="container mt-4">
+
 		<div class="row align-items-center mb-4">
 			<div class="col-md-6">
-				<h2>📋 Journal des Opérations</h2>
+
+				<h2>Journal des Opérations</h2>
+
 				{% if exercice %}
 					<p class="text-muted">
 						Exercice :
@@ -19,12 +25,18 @@
 						{{ exercice.dateFin|date('d/m/Y') }})
 					</p>
 				{% endif %}
+
+			</div>
+
+			<div class="col-md-6 text-end">
+				<a href="{{ path('app_operation_diverse_new') }}" class="btn btn-primary">
+					Nouvelle opération diverse
+				</a>
 			</div>
 		</div>
 
-		{# Ton tableau <table> actuel reste le même ici #}
-
 		<table class="table table-hover align-middle shadow-sm mt-3">
+
 			<thead class="table-dark">
 				<tr>
 					<th>Date</th>
@@ -35,88 +47,221 @@
 					<th class="text-center">Actions</th>
 				</tr>
 			</thead>
+
 			<tbody>
+
 				{% for op in operations %}
-					{# ⚠️ On utilise .value pour tester la chaîne de l'Enum ('annule') #}
+
 					<tr class="{{ op.statut.value == 'annule' ? 'table-light text-muted opacity-75' : '' }}">
-						<td>{{ op.date|date('d/m/Y') }}</td>
+
 						<td>
-							{# Mappage de tes types issus de ton SQL #}
+							{{ op.date|date('d/m/Y') }}
+						</td>
+
+						<td>
+
 							{% if op.type.value == 'paiement' %}
-								<span class="badge bg-success">Paiement Copro</span>
+
+								<span class="badge bg-success">
+									Paiement copropriétaire
+								</span>
+
 							{% elseif op.type.value == 'appel_fonds' %}
-								<span class="badge bg-primary">Appel de fonds</span>
+
+								<span class="badge bg-primary">
+									Appel de fonds
+								</span>
+
 							{% elseif op.type.value == 'charge' %}
-								<span class="badge bg-secondary">Facture Charge</span>
+
+								<span class="badge bg-secondary">
+									Facture fournisseur
+								</span>
+
+							{% elseif op.type.value == 'paiement_fournisseur' %}
+
+								<span class="badge bg-info text-dark">
+									Paiement fournisseur
+								</span>
+
+							{% elseif op.type.value == 'remboursement_fournisseur' %}
+
+								<span class="badge bg-info text-dark">
+									Remboursement fournisseur
+								</span>
+
+							{% elseif op.type.value == 'remboursement_coprop' %}
+
+								<span class="badge bg-info text-dark">
+									Remboursement copropriétaire
+								</span>
+
+							{% elseif op.type.value == 'a_nouveau' %}
+
+								<span class="badge bg-warning text-dark">
+									À-nouveau
+								</span>
+
+							{% elseif op.type.value == 'cloture' %}
+
+								<span class="badge bg-dark">
+									Clôture
+								</span>
+
+							{% elseif op.type.value == 'approbation_comptes' %}
+
+								<span class="badge bg-dark">
+									Approbation des comptes
+								</span>
+
+							{% elseif op.type.value == 'regularisation' %}
+
+								<span class="badge bg-dark">
+									Régularisation
+								</span>
+
+							{% elseif op.type.value == 'transfert_dette' %}
+
+								<span class="badge bg-dark">
+									Transfert de dette
+								</span>
+
+							{% elseif op.type.value == 'operation_diverse' %}
+
+								<span class="badge bg-dark">
+									Opération diverse
+								</span>
+
 							{% else %}
-								<span class="badge bg-dark">{{ op.type.value }}</span>
+
+								<span class="badge bg-dark">
+									{{ op.type.value }}
+								</span>
+
 							{% endif %}
+
 						</td>
+
 						<td>
-							<strong>{{ op.libelle }}</strong>
+
+							<strong>
+								{{ op.libelle }}
+							</strong>
+
 							{% if op.piece %}
-								<br><small class="text-muted">N° Pièce :
-									{{ op.piece }}</small>
+								<br>
+								<small class="text-muted">
+									N° Pièce :
+									{{ op.piece }}
+								</small>
 							{% endif %}
+
 						</td>
-						<td
-							class="text-center">
-							{# ⚠️ .value ici aussi pour le badge de statut #}
+
+						<td class="text-center">
+
 							{% if op.statut.value == 'valide' %}
-								<span class="badge bg-success-subtle text-success border border-success">Valide</span>
+
+								<span class="badge bg-success-subtle
+										                                   text-success
+										                                   border border-success">
+									Valide
+								</span>
+
 							{% else %}
-								<span class="badge bg-danger-subtle text-danger border border-danger">Annulée</span>
+
+								<span class="badge bg-danger-subtle
+										                                   text-danger
+										                                   border border-danger">
+									Annulée
+								</span>
+
 							{% endif %}
+
 						</td>
+
 						<td>
+
 							{% for ecriture in op.ecritures %}
+
 								<div>
 									{{ ecriture.compte }}
-									:
-									{{ ecriture.montant|number_format(2, ',', ' ') }}
-									€
+
+									{% if ecriture.debit > 0 %}
+										:
+										                                Débit
+										{{ ecriture.debit
+                                    |number_format(2, ',', ' ')
+                                }}
+										€
+									{% endif %}
+
+									{% if ecriture.credit > 0 %}
+										:
+										                                Crédit
+										{{ ecriture.credit
+                                    |number_format(2, ',', ' ')
+                                }}
+										€
+									{% endif %}
 								</div>
+
 							{% endfor %}
+
 						</td>
-						<td>
-							<div class="d-flex gap-2">
-								{# 1. Lien ou bouton existant (ex: Voir / Modifier) #}
-								<a href="{{ path('app_operation_show', {'id': op.id}) }}" class="btn btn-sm btn-outline-primary">
-									<i class="fas fa-eye"></i>
+
+						<td class="text-center">
+
+							<div class="d-flex gap-2 justify-content-center">
+
+								<a href="{{ path( 'app_operation_show', {'id': op.id} ) }}" class="btn btn-sm btn-outline-primary">
 									Voir
 								</a>
 
-								{# 2. Gestion de l'annulation #}
 								{% if op.statut.value != 'annule' %}
-									{# ⚠️ Adapte 'annule' selon la chaîne exacte de ton Enum OperationStatut::ANNULE #}
 
-									<form
-										method="post" action="{{ path('app_operation_annuler', {'id': op.id}) }}" onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir annuler cette opération ? Cette action mettra à jour les soldes et affectations.');" style="display: inline;">
+									<form method="post" action="{{ path( 'app_operation_annuler', {'id': op.id} ) }}" onsubmit="
+											                                    return confirm(
+											                                        'Êtes-vous sûr de vouloir annuler cette opération ?'
+											                                    );
+											                                ">
 
-										{# Le jeton CSRF indispensable pour le contrôleur #}
-										<input type="hidden" name="_token" value="{{ csrf_token('annuler' ~ op.id) }}">
+										<input type="hidden" name="_token" value="{{ csrf_token( 'annuler' ~ op.id ) }}">
 
 										<button type="submit" class="btn btn-sm btn-danger">
-											<i class="fas fa-undo"></i>
 											Annuler
 										</button>
+
 									</form>
 
 								{% else %}
-									{# Si l'opération est déjà annulée, on grise visuellement la ligne ou on affiche un badge #}
-									<span class="badge bg-secondary text-wrap" style=" width: 6rem;">
-										<i class="fas fa-ban"></i>
-										Opération Annulée
+
+									<span class="badge bg-secondary">
+										Opération annulée
 									</span>
+
 								{% endif %}
+
 							</div>
+
+						</td>
+
+					</tr>
+
+				{% else %}
+
+					<tr>
+						<td colspan="6" class="text-center text-muted">
+							Aucune opération enregistrée.
 						</td>
 					</tr>
-				</div>
+
+				{% endfor %}
+
 			</tbody>
-		</td>
-	</td>
-</tr>{% else %}
-<tr>
-	<td colspan="5" class="text-center text-muted">Aucune opération enregistrée.</td>
-</tr>{% endfor %}</tbody></table></div>{% endblock %}
+
+		</table>
+
+	</div>
+
+{% endblock %}

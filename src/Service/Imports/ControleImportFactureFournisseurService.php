@@ -5,6 +5,7 @@ namespace App\Service\Imports;
 use App\Entity\Exercice;
 use App\Entity\Imports\ImportFactureFournisseur;
 use App\Enum\ImportStatut;
+use App\Enum\FactureFournisseurType;
 use App\Repository\Imports\ImportFactureFournisseurRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -53,9 +54,13 @@ final class ControleImportFactureFournisseurService
                 ++$nombreTraitees;
 
                 $montantTotalCentimes +=
-                    $this->montantEnCentimes(
-                        $ligne->getMontant()
-                    );
+                    $this->montantSigneEnCentimes($ligne);
+
+                continue;
+            }
+
+            if ($ligne->estEnErreur()) {
+                ++$nombreErreurs;
 
                 continue;
             }
@@ -85,20 +90,10 @@ final class ControleImportFactureFournisseurService
                 continue;
             }
 
-            /*
-             * Une ligne auparavant en erreur et désormais corrigée
-             * repasse automatiquement en attente.
-             */
-            $ligne
-                ->setStatut(ImportStatut::EN_ATTENTE)
-                ->setErreur(null);
-
             ++$nombreEnAttente;
 
             $montantCentimes =
-                $this->montantEnCentimes(
-                    $ligne->getMontant()
-                );
+                $this->montantSigneEnCentimes($ligne);
 
             $montantTotalCentimes += $montantCentimes;
             $montantAImporterCentimes += $montantCentimes;
@@ -300,5 +295,22 @@ final class ControleImportFactureFournisseurService
         return (int) round(
             $montantNormalise * 100
         );
+    }
+
+    private function montantSigneEnCentimes(
+        ImportFactureFournisseur $ligne
+    ): int {
+        $montant = $this->montantEnCentimes(
+            $ligne->getMontant()
+        );
+
+        if (
+            $ligne->getType()
+            === FactureFournisseurType::AVOIR
+        ) {
+            return -$montant;
+        }
+
+        return $montant;
     }
 }

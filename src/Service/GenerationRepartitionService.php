@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Ecriture;
 use App\Entity\FactureFournisseur;
 use App\Entity\Repartition;
+use App\Enum\FactureFournisseurType;
 use Doctrine\ORM\EntityManagerInterface;
 
 class GenerationRepartitionService
@@ -80,6 +81,10 @@ class GenerationRepartitionService
         }
 
         $montantFacture = (float) $facture->getMontant();
+
+        if ($facture->getType() === FactureFournisseurType::AVOIR) {
+            $montantFacture *= -1;
+        }
         $totalReparti = 0.0;
         $dernierIndex = count($lotsARepartir) - 1;
 

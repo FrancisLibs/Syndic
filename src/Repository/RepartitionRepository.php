@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Coproprietaire;
 use App\Entity\Exercice;
 use App\Entity\Repartition;
+use App\Enum\OperationStatut;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -40,10 +41,14 @@ class RepartitionRepository extends ServiceEntityRepository
     ): float {
         $resultat = $this->createQueryBuilder('r')
             ->select('COALESCE(SUM(r.montant), 0)')
+            ->leftJoin('r.ecriture', 'e')
+            ->leftJoin('e.operation', 'o')
             ->andWhere('r.coproprietaire = :coproprietaire')
             ->andWhere('r.exercice = :exercice')
+            ->andWhere('(e.id IS NULL OR o.statut = :statut)')
             ->setParameter('coproprietaire', $coproprietaire)
             ->setParameter('exercice', $exercice)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->getQuery()
             ->getSingleScalarResult();
 

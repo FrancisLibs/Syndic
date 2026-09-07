@@ -15,4 +15,5 @@ enum OperationType: string
     case TRANSFERT_DETTE = 'transfert_dette';
     case OPERATION_DIVERSE = 'operation_diverse';
     case REMBOURSEMENT_COPROPRIETAIRE = 'remboursement_coprop';
+    case REMBOURSEMENT_FOURNISSEUR = 'remboursement_fournisseur';
 }

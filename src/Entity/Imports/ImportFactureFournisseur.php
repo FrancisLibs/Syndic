@@ -8,6 +8,7 @@ use App\Entity\FactureFournisseur;
 use App\Entity\Fournisseur;
 use App\Entity\TypeCharge;
 use App\Enum\ImportStatut;
+use App\Enum\FactureFournisseurType;
 use App\Repository\Imports\ImportFactureFournisseurRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -72,6 +73,9 @@ class ImportFactureFournisseur
         onDelete: 'SET NULL'
     )]
     private ?FactureFournisseur $factureCreee = null;
+
+    #[ORM\Column(enumType: FactureFournisseurType::class)]
+    private FactureFournisseurType $type = FactureFournisseurType::FACTURE;
 
     public function getId(): ?int
     {
@@ -261,6 +265,19 @@ class ImportFactureFournisseur
         ?FactureFournisseur $factureCreee
     ): static {
         $this->factureCreee = $factureCreee;
+
+        return $this;
+    }
+
+    public function getType(): FactureFournisseurType
+    {
+        return $this->type;
+    }
+
+    public function setType(
+        FactureFournisseurType $type
+    ): static {
+        $this->type = $type;
 
         return $this;
     }

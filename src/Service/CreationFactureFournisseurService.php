@@ -7,6 +7,7 @@ use App\Entity\Exercice;
 use App\Entity\FactureFournisseur;
 use App\Entity\Fournisseur;
 use App\Entity\TypeCharge;
+use App\Enum\FactureFournisseurType;
 use Doctrine\ORM\EntityManagerInterface;
 
 class CreationFactureFournisseurService
@@ -24,6 +25,7 @@ class CreationFactureFournisseurService
         ?string $numero,
         string $libelle,
         string $montant,
+        FactureFournisseurType $type = FactureFournisseurType::FACTURE,
         ?Coproprietaire $coproprietaireAvanceur = null,
         ?int $volumeEau = null,
     ): FactureFournisseur {
@@ -46,6 +48,7 @@ class CreationFactureFournisseurService
             ->setNumero($numero)
             ->setLibelle(trim($libelle))
             ->setMontant($montant)
+            ->setType($type)
             ->setCoproprietaireAvanceur(
                 $coproprietaireAvanceur
             )
@@ -69,7 +72,7 @@ class CreationFactureFournisseurService
     ): void {
         if ($exercice->isCloture()) {
             throw new \LogicException(
-                'Impossible de créer une facture dans un exercice clôturé.'
+                'Impossible de créer un document fournisseur dans un exercice clôturé.'
             );
         }
 
@@ -84,13 +87,13 @@ class CreationFactureFournisseurService
 
         if (trim($libelle) === '') {
             throw new \LogicException(
-                'Le libellé de la facture est obligatoire.'
+                'Le libellé du document fournisseur est obligatoire.'
             );
         }
 
         if ((float) $montant <= 0) {
             throw new \LogicException(
-                'Le montant de la facture doit être supérieur à zéro.'
+                'Le montant du document fournisseur doit être supérieur à zéro.'
             );
         }
 

@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\FactureFournisseur;
 use App\Enum\OperationType;
+use App\Enum\FactureFournisseurType;
 
 class GenerationFactureFournisseurService
 {
@@ -63,12 +64,10 @@ class GenerationFactureFournisseurService
             }
         }
 
-        /*
-         * 1. Comptabilisation de la facture fournisseur
-         *
-         * Débit  : compte de charge
-         * Crédit : compte fournisseur
+        /**
+         * 1. Comptabilisation de la facture ou de l'avoir fournisseur
          */
+        
         $operationFacture = $this
             ->comptabiliteService
             ->creerOperation(
@@ -82,23 +81,59 @@ class GenerationFactureFournisseurService
             ->setTypeCharge($typeCharge)
             ->setFournisseur($fournisseur);
 
-        $ecritureCharge = $this
-            ->comptabiliteService
-            ->creerDebit(
-                $operationFacture,
-                $facture->getExercice(),
-                $compteCharge,
-                $facture->getMontant()
-            );
+        if ($facture->getType() === FactureFournisseurType::AVOIR) {
 
-        $this
-            ->comptabiliteService
-            ->creerCredit(
-                $operationFacture,
-                $facture->getExercice(),
-                $compteFournisseur,
-                $facture->getMontant()
-            );
+            /*
+     * Avoir fournisseur
+     *
+     * Débit  : compte fournisseur
+     * Crédit : compte de charge
+     */
+
+            $this
+                ->comptabiliteService
+                ->creerDebit(
+                    $operationFacture,
+                    $facture->getExercice(),
+                    $compteFournisseur,
+                    $facture->getMontant()
+                );
+
+            $ecritureCharge = $this
+                ->comptabiliteService
+                ->creerCredit(
+                    $operationFacture,
+                    $facture->getExercice(),
+                    $compteCharge,
+                    $facture->getMontant()
+                );
+        } else {
+
+            /*
+     * Facture fournisseur
+     *
+     * Débit  : compte de charge
+     * Crédit : compte fournisseur
+     */
+
+            $ecritureCharge = $this
+                ->comptabiliteService
+                ->creerDebit(
+                    $operationFacture,
+                    $facture->getExercice(),
+                    $compteCharge,
+                    $facture->getMontant()
+                );
+
+            $this
+                ->comptabiliteService
+                ->creerCredit(
+                    $operationFacture,
+                    $facture->getExercice(),
+                    $compteFournisseur,
+                    $facture->getMontant()
+                );
+        }
 
         $this->comptabiliteService->enregistrer();
 
@@ -127,24 +162,61 @@ class GenerationFactureFournisseurService
             $operationTransfert
                 ->setFournisseur($fournisseur);
 
-            $this
-                ->comptabiliteService
-                ->creerDebit(
-                    $operationTransfert,
-                    $facture->getExercice(),
-                    $compteFournisseur,
-                    $facture->getMontant()
-                );
+            if ($facture->getType() === FactureFournisseurType::AVOIR) {
 
-            $this
-                ->comptabiliteService
-                ->creerCredit(
-                    $operationTransfert,
-                    $facture->getExercice(),
-                    $compteCoproprietaire,
-                    $facture->getMontant(),
-                    $coproprietaireAvanceur
-                );
+                /*
+         * Avoir concernant une dépense avancée
+         *
+         * Débit  : compte copropriétaire
+         * Crédit : compte fournisseur
+         */
+
+                $this
+                    ->comptabiliteService
+                    ->creerDebit(
+                        $operationTransfert,
+                        $facture->getExercice(),
+                        $compteCoproprietaire,
+                        $facture->getMontant(),
+                        $coproprietaireAvanceur
+                    );
+
+                $this
+                    ->comptabiliteService
+                    ->creerCredit(
+                        $operationTransfert,
+                        $facture->getExercice(),
+                        $compteFournisseur,
+                        $facture->getMontant()
+                    );
+            } else {
+
+                /*
+         * Facture concernant une dépense avancée
+         *
+         * Débit  : compte fournisseur
+         * Crédit : compte copropriétaire
+         */
+
+                $this
+                    ->comptabiliteService
+                    ->creerDebit(
+                        $operationTransfert,
+                        $facture->getExercice(),
+                        $compteFournisseur,
+                        $facture->getMontant()
+                    );
+
+                $this
+                    ->comptabiliteService
+                    ->creerCredit(
+                        $operationTransfert,
+                        $facture->getExercice(),
+                        $compteCoproprietaire,
+                        $facture->getMontant(),
+                        $coproprietaireAvanceur
+                    );
+            }
 
             $this->comptabiliteService->enregistrer();
         }

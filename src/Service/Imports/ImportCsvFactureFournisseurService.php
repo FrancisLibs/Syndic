@@ -91,6 +91,15 @@ final class ImportCsvFactureFournisseurService
             );
         }
 
+        if ($ligne->type === null) {
+            throw new \LogicException(
+                sprintf(
+                    'Le type de document est absent à la ligne %d.',
+                    $ligne->ligne
+                )
+            );
+        }
+
         $import = new ImportFactureFournisseur();
 
         $import
@@ -105,6 +114,7 @@ final class ImportCsvFactureFournisseurService
                     ''
                 )
             )
+            ->setType($ligne->type)
             ->setExercice($ligne->exerciceEntite)
             ->setFournisseur($ligne->fournisseurEntite)
             ->setTypeCharge($ligne->typeChargeEntite)

@@ -35,7 +35,7 @@ class Operation
     )]
     private Collection $ecritures;
 
-    #[ORM\Column(type: 'string', length: 20, enumType: OperationType::class)]
+    #[ORM\Column(type: 'string', length: 50, enumType: OperationType::class)]
     private OperationType $type;
 
     #[ORM\ManyToOne(inversedBy: 'operations')]

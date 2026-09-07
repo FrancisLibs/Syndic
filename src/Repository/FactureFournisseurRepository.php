@@ -4,9 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Exercice;
 use App\Entity\FactureFournisseur;
-use App\Entity\Fournisseur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Enum\FactureFournisseurType;
 
 
 class FactureFournisseurRepository extends ServiceEntityRepository
@@ -57,12 +57,24 @@ class FactureFournisseurRepository extends ServiceEntityRepository
         Exercice $exercice
     ): string {
         return (string) $this->createQueryBuilder('facture')
-            ->select('COALESCE(SUM(facture.montant), 0)')
+            ->select(
+                'COALESCE(SUM(
+                CASE
+                    WHEN facture.type = :typeAvoir
+                    THEN -facture.montant
+                    ELSE facture.montant
+                END
+            ), 0)'
+            )
             ->innerJoin('facture.typeCharge', 'typeCharge')
             ->andWhere('facture.exercice = :exercice')
             ->andWhere('typeCharge.estEau = true')
             ->andWhere('facture.comptabilisee = true')
             ->setParameter('exercice', $exercice)
+            ->setParameter(
+                'typeAvoir',
+                FactureFournisseurType::AVOIR
+            )
             ->getQuery()
             ->getSingleScalarResult();
     }

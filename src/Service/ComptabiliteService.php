@@ -188,7 +188,9 @@ class ComptabiliteService
             => JournalCode::FG,
 
             OperationType::PAIEMENT,
-            OperationType::PAIEMENT_FOURNISSEUR
+            OperationType::PAIEMENT_FOURNISSEUR,
+            OperationType::REMBOURSEMENT_COPROPRIETAIRE,
+            OperationType::REMBOURSEMENT_FOURNISSEUR
             => JournalCode::BQ,
 
             OperationType::APPEL_FONDS

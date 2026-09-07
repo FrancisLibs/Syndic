@@ -8,10 +8,11 @@ use App\Repository\CoproprietaireRepository;
 use App\Repository\ExerciceRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\TypeChargeRepository;
+use App\Enum\FactureFournisseurType;
 
 final class AnalyseImportFactureService
 {
-    private const NOMBRE_COLONNES = 10;
+    private const NOMBRE_COLONNES = 11;
 
     public function __construct(
         private readonly ExerciceRepository $exerciceRepository,
@@ -189,6 +190,7 @@ final class AnalyseImportFactureService
             $fournisseurId,
             $typeChargeId,
             $avanceurId,
+            $type,
             $statut,
             $volumeEau
         ] = array_map(
@@ -242,6 +244,10 @@ final class AnalyseImportFactureService
         $this->analyserAvanceur(
             $ligne,
             $avanceurId
+        );
+        $this->analyserType(
+            $ligne,
+            $type
         );
 
         $this->analyserVolumeEau(
@@ -506,6 +512,39 @@ final class AnalyseImportFactureService
 
         $ligne->coproprietaireAvanceurEntite =
             $coproprietaire;
+    }
+
+    private function analyserType(
+        LigneImportFacture $ligne,
+        string $type
+    ): void {
+        $type = strtolower(
+            trim($type)
+        );
+
+        if ($type === '') {
+            $ligne->ajouterErreur(
+                'Le type de document est obligatoire.'
+            );
+
+            return;
+        }
+
+        $typeDocument =
+            FactureFournisseurType::tryFrom($type);
+
+        if ($typeDocument === null) {
+            $ligne->ajouterErreur(
+                sprintf(
+                    'Type de document invalide : "%s". Valeurs autorisées : facture, avoir.',
+                    $type
+                )
+            );
+
+            return;
+        }
+
+        $ligne->type = $typeDocument;
     }
 
     private function analyserVolumeEau(

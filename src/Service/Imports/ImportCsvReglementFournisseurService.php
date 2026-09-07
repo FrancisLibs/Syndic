@@ -82,6 +82,15 @@ final class ImportCsvReglementFournisseurService
             );
         }
 
+        if ($ligne->type === null) {
+            throw new \LogicException(
+                sprintf(
+                    'Le type de règlement est absent à la ligne %d.',
+                    $ligne->ligne
+                )
+            );
+        }
+
         if ($ligne->exerciceEntite === null) {
             throw new \LogicException(
                 sprintf(
@@ -114,6 +123,9 @@ final class ImportCsvReglementFournisseurService
                     '.',
                     ''
                 )
+            )
+            ->setType(
+                $ligne->type
             )
             ->setReference(
                 $ligne->reference

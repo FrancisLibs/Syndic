@@ -46,6 +46,9 @@ final class ReglementFournisseurService
                 $reference
             );
 
+        $this->comptabiliteService
+            ->verifierEquilibre($operation);
+
         $reglement =
             new ReglementFournisseur();
 

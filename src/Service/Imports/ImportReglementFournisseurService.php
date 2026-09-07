@@ -5,13 +5,16 @@ namespace App\Service\Imports;
 use App\Entity\Exercice;
 use App\Repository\Imports\ImportReglementFournisseurRepository;
 use App\Service\ReglementFournisseurService;
+use App\Service\RemboursementFournisseurService;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Enum\ReglementFournisseurType;
 
 final class ImportReglementFournisseurService
 {
     public function __construct(
         private readonly ImportReglementFournisseurRepository $repository,
         private readonly ReglementFournisseurService $reglementService,
+        private readonly RemboursementFournisseurService $remboursementService,
         private readonly EntityManagerInterface $entityManager,
     ) {}
 
@@ -67,19 +70,40 @@ final class ImportReglementFournisseurService
                     );
                 }
 
-                $reglement =
-                    $this->reglementService
-                    ->enregistrer(
-                        fournisseur: $fournisseur,
-                        exercice: $ligne->getExercice(),
-                        dateReglement: $dateReglement,
-                        montant: $montant,
-                        reference: $ligne->getReference(),
-                    );
+                if (
+                    $ligne->getType()
+                    === ReglementFournisseurType::PAIEMENT
+                ) {
 
-                $ligne->marquerTraitee(
-                    $reglement
-                );
+                    $reglement =
+                        $this->reglementService
+                        ->enregistrer(
+                            fournisseur: $fournisseur,
+                            exercice: $ligne->getExercice(),
+                            dateReglement: $dateReglement,
+                            montant: $montant,
+                            reference: $ligne->getReference(),
+                        );
+
+                    $ligne->marquerTraitee(
+                        $reglement
+                    );
+                } else {
+
+                    $this->remboursementService
+                        ->enregistrer(
+                            fournisseur: $fournisseur,
+                            exercice: $ligne->getExercice(),
+                            dateRemboursement: $dateReglement,
+                            montant: $montant,
+                            reference: $ligne->getReference(),
+                        );
+                        
+                    $ligne->marquerTraiteeSansReglement();
+                }
+
+                
+
             } catch (\Throwable $exception) {
 
                 $ligne->marquerErreur(

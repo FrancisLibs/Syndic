@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	Nouvelle opération diverse
+{% endblock %}
+
+{% block body %}
+
+	<div class="d-flex justify-content-between align-items-baseline mb-4">
+		<div>
+			<h1>Nouvelle opération diverse</h1>
+			<h2>{{ exercice.nom }}</h2>
+		</div>
+
+		<a href="{{ path('app_operation_index') }}" class="btn btn-secondary">
+			Retour au journal
+		</a>
+	</div>
+
+	<div class="card">
+		<div class="card-body">
+
+			{{ form_start(form) }}
+
+			<div class="row">
+				<div class="col-md-4">
+					{{ form_row(form.date) }}
+				</div>
+
+				<div class="col-md-4">
+					{{ form_row(form.piece) }}
+				</div>
+
+				<div class="col-md-4">
+					{{ form_row(form.montant) }}
+				</div>
+			</div>
+
+			{{ form_row(form.libelle) }}
+
+			<div class="row">
+				<div class="col-md-6">
+					{{ form_row(form.compteDebit) }}
+				</div>
+
+				<div class="col-md-6">
+					{{ form_row(form.compteCredit) }}
+				</div>
+			</div>
+
+			<button type="submit" class="btn btn-primary mt-3">
+				Enregistrer
+			</button>
+
+			{{ form_end(form) }}
+
+		</div>
+	</div>
+
+{% endblock %}

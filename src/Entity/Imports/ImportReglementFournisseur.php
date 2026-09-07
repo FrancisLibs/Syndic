@@ -6,6 +6,7 @@ use App\Entity\Exercice;
 use App\Entity\Fournisseur;
 use App\Entity\ReglementFournisseur;
 use App\Enum\ImportStatut;
+use App\Enum\ReglementFournisseurType;
 use App\Repository\Imports\ImportReglementFournisseurRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -40,6 +41,10 @@ class ImportReglementFournisseur
 
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $reference = null;
+
+    #[ORM\Column(enumType: ReglementFournisseurType::class)]
+    private ReglementFournisseurType $type =
+    ReglementFournisseurType::PAIEMENT;
 
     #[ORM\Column(enumType: ImportStatut::class)]
     private ImportStatut $statut = ImportStatut::EN_ATTENTE;
@@ -163,6 +168,31 @@ class ImportReglementFournisseur
         return $this;
     }
 
+    public function getType(): ReglementFournisseurType
+    {
+        return $this->type;
+    }
+
+    public function setType(
+        ReglementFournisseurType $type
+    ): static {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function estPaiement(): bool
+    {
+        return $this->type
+            === ReglementFournisseurType::PAIEMENT;
+    }
+
+    public function estRemboursement(): bool
+    {
+        return $this->type
+            === ReglementFournisseurType::REMBOURSEMENT;
+    }
+
     public function getStatut(): ImportStatut
     {
         return $this->statut;
@@ -257,6 +287,15 @@ class ImportReglementFournisseur
     public function reinitialiserTraitement(): static
     {
         $this->statut = ImportStatut::EN_ATTENTE;
+        $this->erreur = null;
+        $this->reglementCree = null;
+
+        return $this;
+    }
+
+    public function marquerTraiteeSansReglement(): static
+    {
+        $this->statut = ImportStatut::TRAITEE;
         $this->erreur = null;
         $this->reglementCree = null;
 

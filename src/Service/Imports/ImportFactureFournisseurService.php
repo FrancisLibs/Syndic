@@ -47,6 +47,7 @@ final class ImportFactureFournisseurService
                         numero: $ligne->getNumero(),
                         libelle: $ligne->getLibelle(),
                         montant: $ligne->getMontant(),
+                        type: $ligne->getType(),
                         coproprietaireAvanceur: $ligne->getCoproprietaireAvanceur(),
                         volumeEau: $ligne->getVolumeEau(),
                     );

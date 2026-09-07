@@ -7,12 +7,14 @@ use App\Entity\Fournisseur;
 use App\Entity\Imports\ImportFactureFournisseur;
 use App\Entity\TypeCharge;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use App\Enum\FactureFournisseurType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 final class ImportFactureFournisseurType extends AbstractType
 {
@@ -52,8 +54,16 @@ final class ImportFactureFournisseurType extends AbstractType
                 'required' => false,
             ])
 
+            ->add('type', ChoiceType::class, [
+                'label' => 'Type',
+                'choices' => [
+                    'Facture' => FactureFournisseurType::FACTURE,
+                    'Avoir' => FactureFournisseurType::AVOIR,
+                ],
+            ])
+
             ->add('numero', TextType::class, [
-                'label' => 'Numéro de facture',
+                'label' => 'Numéro du document',
                 'required' => false,
             ])
 

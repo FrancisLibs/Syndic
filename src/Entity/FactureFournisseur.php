@@ -6,6 +6,7 @@ use App\Repository\FactureFournisseurRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Enum\FactureFournisseurType;
 
 #[ORM\Entity(
     repositoryClass: FactureFournisseurRepository::class
@@ -17,7 +18,7 @@ class FactureFournisseur
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, nullable: true)]
     private ?string $numero = null;
 
     #[ORM\Column(length: 255)]
@@ -70,6 +71,9 @@ class FactureFournisseur
     #[ORM\Column(nullable: true)]
     private ?int $volumeEau = null;
 
+    #[ORM\Column(enumType: FactureFournisseurType::class)]
+    private FactureFournisseurType $type = FactureFournisseurType::FACTURE;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -80,7 +84,7 @@ class FactureFournisseur
         return $this->numero;
     }
 
-    public function setNumero(string $numero): static
+    public function setNumero(?string $numero): static
     {
         $this->numero = $numero;
 
@@ -233,5 +237,28 @@ class FactureFournisseur
         $this->volumeEau = $volumeEau;
 
         return $this;
+    }
+
+    public function getType(): FactureFournisseurType
+    {
+        return $this->type;
+    }
+
+    public function setType(
+        FactureFournisseurType $type
+    ): static {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function estAvoir(): bool
+    {
+        return $this->type === FactureFournisseurType::AVOIR;
+    }
+
+    public function estFacture(): bool
+    {
+        return $this->type === FactureFournisseurType::FACTURE;
     }
 }
