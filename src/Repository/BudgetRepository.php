@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Budget;
+use App\Entity\Exercice;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,15 @@ class BudgetRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Budget::class);
+    }
+
+    public function findPourExercice(
+        Exercice $exercice
+    ): ?Budget {
+        return $this->findOneBy([
+            'exercice' => $exercice,
+            'copropriete' => $exercice->getCopropriete(),
+        ]);
     }
 
     //    /**

@@ -16,4 +16,6 @@ enum OperationType: string
     case OPERATION_DIVERSE = 'operation_diverse';
     case REMBOURSEMENT_COPROPRIETAIRE = 'remboursement_coprop';
     case REMBOURSEMENT_FOURNISSEUR = 'remboursement_fournisseur';
+    case FNP = 'fnp';
+    case TRAITEMENT_FNP = 'traitement_fnp';
 }

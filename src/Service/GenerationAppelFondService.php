@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\AppelFond;
 use App\Enum\OperationType;
 use App\Repository\CompteRepository;
+use App\Repository\EcritureRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class GenerationAppelFondService
@@ -13,6 +14,7 @@ class GenerationAppelFondService
         private CompteRepository $compteRepository,
         private ComptabiliteService $comptabiliteService,
         private EntityManagerInterface $entityManager,
+        private EcritureRepository $ecritureRepository,
     ) {}
 
     public function generer(AppelFond $appelFond): void
@@ -46,6 +48,23 @@ class GenerationAppelFondService
                     )
                 );
             }
+
+            $soldeAvantAppel =
+                $this->ecritureRepository
+                ->calculerSoldeCompteADate(
+                    $exercice,
+                    $compteCoproprietaire,
+                    $appelFond->getDateAppel()
+                );
+
+            $ligne->setSoldeAvantAppel(
+                number_format(
+                    $soldeAvantAppel,
+                    2,
+                    '.',
+                    ''
+                )
+            );
 
             $this->comptabiliteService->creerDebit(
                 $operation,

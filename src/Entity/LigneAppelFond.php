@@ -48,6 +48,14 @@ class LigneAppelFond
 
     #[ORM\Column(
         type: Types::DECIMAL,
+        precision: 10,
+        scale: 2,
+        nullable: true
+    )]
+    private ?string $soldeAvantAppel = null;
+
+    #[ORM\Column(
+        type: Types::DECIMAL,
         precision: 5,
         scale: 2,
         nullable: true
@@ -145,6 +153,19 @@ class LigneAppelFond
         return $this;
     }
 
+    public function getSoldeAvantAppel(): ?string
+    {
+        return $this->soldeAvantAppel;
+    }
+
+    public function setSoldeAvantAppel(
+        ?string $soldeAvantAppel
+    ): static {
+        $this->soldeAvantAppel = $soldeAvantAppel;
+
+        return $this;
+    }
+
     public function getPourcentage(): ?string
     {
         return $this->pourcentage;
@@ -207,6 +228,13 @@ class LigneAppelFond
         }
 
         return $this;
+    }
+
+    public function getMontantDemande(): float
+    {
+        return
+            (float) $this->montant
+            + (float) ($this->soldeAvantAppel ?? 0);
     }
 
     public function __toString(): string

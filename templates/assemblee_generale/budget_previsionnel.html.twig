@@ -1,0 +1,234 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Budget prévisionnel
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+
+        <div>
+            <h1>Budget prévisionnel</h1>
+
+            <p class="text-muted">
+                Assemblée Générale —
+                comptes de {{ exercice.nom }}
+            </p>
+        </div>
+
+        <a
+            href="{{ path(
+            'app_assemblee_generale_budget_previsionnel_pdf',
+            {'id': assemblee_generale.id}
+        ) }}"
+            class="btn btn-primary"
+            target="_blank"
+        >
+            PDF
+        </a>
+
+    </div>
+
+
+    {% if not exercice_suivant %}
+
+        <div class="alert alert-warning">
+            Aucun exercice suivant n'a été trouvé.
+        </div>
+
+    {% else %}
+
+
+        {% if not budget_reference %}
+
+            <div class="alert alert-warning">
+                Aucun budget n'est enregistré pour
+                {{ exercice.nom }}.
+            </div>
+
+        {% endif %}
+
+
+        {% if not budget_projet %}
+
+            <div class="alert alert-warning">
+                Aucun projet de budget n'est enregistré pour
+                {{ exercice_suivant.nom }}.
+            </div>
+
+        {% endif %}
+
+
+        <h2 class="mt-4">
+            Budget voté / Réalisé {{ exercice.nom }}
+        </h2>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nature de charge</th>
+                    <th class="text-end">Budget</th>
+                    <th class="text-end">Réalisé</th>
+                    <th class="text-end">Écart</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for ligne in budget_realise %}
+
+                    {% set ecart = ligne.realise - ligne.budget %}
+
+                    <tr>
+                        <td>{{ ligne.typeCharge.nom }}</td>
+
+                        <td class="text-end">
+                            {{ ligne.budget|number_format(2, ',', ' ') }} €
+                        </td>
+
+                        <td class="text-end">
+                            {{ ligne.realise|number_format(2, ',', ' ') }} €
+                        </td>
+
+                        <td class="text-end">
+                            {% if ecart > 0 %}+{% endif %}
+                            {{ ecart|number_format(2, ',', ' ') }} €
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <th>Total</th>
+
+                    <th class="text-end">
+                        {{ budget_reference.total|number_format(2, ',', ' ') }} €
+                    </th>
+
+                    <th class="text-end">
+                        {{ total_realise|number_format(2, ',', ' ') }} €
+                    </th>
+
+                    <th class="text-end">
+                        {% set ecartTotal =
+                    total_realise - budget_reference.total
+                %}
+
+                        {% if ecartTotal > 0 %}+{% endif %}
+                        {{ ecartTotal|number_format(2, ',', ' ') }} €
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+
+        {% if budget_reference and budget_projet %}
+
+        <h2>
+            Comparatif {{ exercice.nom }} /
+            {{ exercice_suivant.nom }}
+        </h2>
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>Nature de charge</th>
+
+                        <th class="text-end">
+                            Budget {{ exercice.nom }}
+                        </th>
+
+                        <th class="text-end">
+                            Projet {{ exercice_suivant.nom }}
+                        </th>
+
+                        <th class="text-end">
+                            Écart
+                        </th>
+
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for ligne in comparatif %}
+                        <tr>
+                            <td>
+                                {{ ligne.typeCharge.nom }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ ligne.montantReference|number_format(2, ',', ' ') }} €
+                            </td>
+
+                            <td class="text-end">
+                                {{ ligne.montantProjet|number_format(2, ',', ' ') }} €
+                            </td>
+
+                            {% set ecart = ligne.montantProjet - ligne.montantReference %}
+
+                            <td class="text-end">
+                                {% if ecart > 0 %}
+                                    +{{ ecart|number_format(2, ',', ' ') }} €
+                                {% elseif ecart < 0 %}
+                                    {{ ecart|number_format(2, ',', ' ') }} €
+                                {% else %}
+                                    0,00 €
+                                {% endif %}
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <th>Total</th>
+
+                        <th class="text-end">
+                            {{ budget_reference.total|number_format(2, ',', ' ') }} €
+                        </th>
+
+                        <th class="text-end">
+                            {{ budget_projet.total|number_format(2, ',', ' ') }} €
+                        </th>
+
+                        <th class="text-end">
+                            {% set ecartTotal = budget_projet.total - budget_reference.total %}
+
+                            {% if ecartTotal > 0 %}
+                                +{{ ecartTotal|number_format(2, ',', ' ') }} €
+                            {% elseif ecartTotal < 0 %}
+                                {{ ecartTotal|number_format(2, ',', ' ') }} €
+                            {% else %}
+                                0,00 €
+                            {% endif %}
+                        </th>
+                    </tr>
+                </tfoot>
+
+            </table>
+
+        {% endif %}
+
+    {% endif %}
+
+
+    <div class="mt-4">
+
+        <a
+            href="{{ path(
+                'app_assemblee_generale_show',
+                {'id': assemblee_generale.id}
+            ) }}"
+            class="btn btn-secondary"
+        >
+            Retour à l'Assemblée Générale
+        </a>
+
+    </div>
+
+{% endblock %}

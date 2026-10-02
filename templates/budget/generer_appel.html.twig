@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Générer un appel de fonds
+{% endblock %}
+
+{% block body %}
+
+	<h1>Générer un appel de fonds</h1>
+
+	<h2>{{ budget.libelle }}</h2>
+
+	{{ form_start(form) }}
+
+	{{ form_row(form.dateAppel) }}
+	{{ form_row(form.dateReglement) }}
+
+	<button class="btn btn-primary">
+		Générer l'appel de fonds
+	</button>
+
+	{{ form_end(form) }}
+
+{% endblock %}

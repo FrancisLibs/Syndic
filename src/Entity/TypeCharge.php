@@ -35,6 +35,10 @@ class TypeCharge
     #[ORM\Column]
     private bool $estEau = false;
 
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?self $typeChargeBudget = null;
+
     public function __construct()
     {
         $this->operations = new ArrayCollection();
@@ -123,6 +127,19 @@ class TypeCharge
     public function setEstEau(bool $estEau): static
     {
         $this->estEau = $estEau;
+
+        return $this;
+    }
+
+    public function getTypeChargeBudget(): ?self
+    {
+        return $this->typeChargeBudget;
+    }
+
+    public function setTypeChargeBudget(
+        ?self $typeChargeBudget
+    ): static {
+        $this->typeChargeBudget = $typeChargeBudget;
 
         return $this;
     }

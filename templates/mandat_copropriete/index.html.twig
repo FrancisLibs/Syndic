@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Mandats de la copropriété
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+        <h1>Mandats de la copropriété</h1>
+        <h2>{{ exercice.nom }}</h2>
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-5">
+            <div class="card mb-4">
+                <div class="card-header">
+                    Nouveau mandat
+                </div>
+
+                <div class="card-body">
+                    {{ form_start(form) }}
+
+                    {{ form_row(form.coproprietaire) }}
+                    {{ form_row(form.fonction) }}
+                    {{ form_row(form.dateDebut) }}
+                    {{ form_row(form.dateFin) }}
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Enregistrer
+                    </button>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Copropriétaire</th>
+                        <th>Fonction</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for mandat in mandats %}
+                        <tr>
+                            <td>
+                                {{ mandat.coproprietaire }}
+                            </td>
+
+                            <td>
+                                {{ mandat.fonction.label }}
+                            </td>
+
+                            <td>
+                                {{ mandat.dateDebut|date('d/m/Y') }}
+                            </td>
+
+                            <td>
+                                {% if mandat.dateFin %}
+                                    {{ mandat.dateFin|date('d/m/Y') }}
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        En cours
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td
+                                colspan="4"
+                                class="text-center text-muted"
+                            >
+                                Aucun mandat enregistré.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+
+    </div>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Assemblée Générale{% endblock %}
+
+{% block body %}
+    <h1>Nouvelle Assemblée Générale</h1>
+
+    {{ include('assemblee_generale/_form.html.twig') }}
+
+    <a href="{{ path('app_assemblee_generale_index') }}">back to list</a>
+{% endblock %}

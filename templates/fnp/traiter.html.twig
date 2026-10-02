@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Traiter une FNP
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+        <h1>Traiter une facture non parvenue</h1>
+        <h2>{{ exercice.nom }}</h2>
+    </div>
+
+    <div class="mb-4">
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>Exercice d'origine</th>
+                    <td>{{ facture.exercice.nom }}</td>
+                </tr>
+                <tr>
+                    <th>Fournisseur</th>
+                    <td>{{ facture.fournisseur.nom }}</td>
+                </tr>
+                <tr>
+                    <th>Nature</th>
+                    <td>{{ facture.typeCharge.nom }}</td>
+                </tr>
+                <tr>
+                    <th>Libellé</th>
+                    <td>{{ facture.libelle }}</td>
+                </tr>
+                <tr>
+                    <th>Date de la FNP</th>
+                    <td>{{ facture.dateFacture|date('d/m/Y') }}</td>
+                </tr>
+                <tr>
+                    <th>Montant</th>
+                    <td>
+                        {{ facture.montant|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {{ form_start(form) }}
+
+    {{ form_row(form.dateFacture) }}
+
+    {{ form_row(form.numero) }}
+
+    {{ form_row(form.imputerAcompte) }}
+
+    <div class="mt-4">
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Traiter la FNP
+        </button>
+
+        <a
+            href="{{ path('app_fnp_a_traiter') }}"
+            class="btn btn-secondary"
+        >
+            Annuler
+        </a>
+    </div>
+
+    {{ form_end(form) }}
+
+{% endblock %}

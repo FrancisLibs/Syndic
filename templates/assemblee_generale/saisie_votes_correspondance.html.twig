@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Saisie des votes par correspondance
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Saisie des votes par correspondance</h1>
+
+            <h2>
+                {{ presence.coproprietaire }}
+            </h2>
+        </div>
+
+        <a
+            href="{{ path(
+                'app_assemblee_generale_votes_correspondance',
+                {id: assemblee_generale.id}
+            ) }}"
+            class="btn btn-secondary"
+        >
+            Retour
+        </a>
+    </div>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Nombre de voix</th>
+                <td>{{ presence.nombreVoix }}</td>
+            </tr>
+
+            <tr>
+                <th>Date de réception</th>
+                <td>
+                    {{ presence.dateReceptionVoteCorrespondance
+                        ? presence.dateReceptionVoteCorrespondance|date('d/m/Y')
+                        : 'Non renseignée'
+                    }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="mt-4">
+        Votes
+    </h2>
+
+    {{ form_start(form) }}
+
+    <table class="table table-hover table-striped align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th class="text-center">N°</th>
+                <th>Résolution</th>
+                <th class="text-center">Majorité</th>
+                <th>Vote</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for voteForm in form.votes %}
+
+                {% set ligne = voteForm.vars.data %}
+                {% set resolution = ligne.resolution %}
+
+                <tr>
+                    <td class="text-center">
+                        {{ resolution.numero }}
+                    </td>
+
+                    <td>
+                        <strong>
+                            {{ resolution.titre }}
+                        </strong>
+
+                        <div class="mt-1">
+                            {{ resolution.texte|nl2br }}
+                        </div>
+                    </td>
+
+                    <td class="text-center">
+                        {{ resolution.majorite ? resolution.majorite.label : 'Aucune' }}
+                    </td>
+
+                    <td>
+                        {{ form_widget(
+                        voteForm.choix,
+                        {
+                            attr: {
+                                class: 'form-select'
+                            }
+                        }
+                    ) }}
+
+                        {{ form_errors(voteForm.choix) }}
+                    </td>
+                </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button
+        type="submit"
+        class="btn btn-primary"
+    >
+        Enregistrer les votes
+    </button>
+
+    {{ form_end(form) }}
+
+{% endblock %}

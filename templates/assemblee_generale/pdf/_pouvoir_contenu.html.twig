@@ -1,0 +1,114 @@
+<h1>Pouvoir de représentation</h1>
+
+<h2>
+    Assemblée Générale
+    {{ assemblee_generale.exercice.nom }}
+</h2>
+
+<div class="pouvoir-identite">
+    <strong>{{ coproprietaire.nomComplet }}</strong><br>
+
+    {% if coproprietaire.adresse %}
+        {{ coproprietaire.adresse }}<br>
+    {% endif %}
+
+    {% if coproprietaire.codePostal or coproprietaire.ville %}
+        {{ coproprietaire.codePostal }}
+        {{ coproprietaire.ville }}
+    {% endif %}
+</div>
+
+<h2>Assemblée Générale</h2>
+
+<table>
+    <tbody>
+        <tr>
+            <th>Date</th>
+            <td>
+                {{ assemblee_generale.date|date('d/m/Y') }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Heure</th>
+            <td>
+                {{ assemblee_generale.heure|date('H\\:i') }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Lieu</th>
+            <td>
+                {{ assemblee_generale.lieu }}
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Pouvoir</h2>
+
+<p>
+    Je soussigné(e),
+    <strong>{{ coproprietaire.nomComplet }}</strong>,
+    copropriétaire,
+</p>
+
+<p>
+    donne pouvoir à :
+</p>
+
+<div class="pouvoir-mandataire">
+    <p>
+        Nom et prénom :
+        ................................................................................
+    </p>
+
+    <p>
+        Adresse :
+        ............................................................................................
+    </p>
+
+    <p>
+        ..............................................................................................................
+    </p>
+</div>
+
+<p>
+    afin de me représenter à l'Assemblée Générale indiquée
+    ci-dessus, participer aux délibérations et prendre part
+    aux votes sur les questions inscrites à l'ordre du jour.
+</p>
+
+<p>
+    Le présent pouvoir est donné pour cette Assemblée Générale.
+</p>
+
+<div style="margin-top: 35px;">
+    <p>
+        Fait à :
+        ................................................................
+    </p>
+
+    <p>
+        Le :
+        ....................................................................
+    </p>
+
+    <p style="margin-top: 30px;">
+        <strong>
+            Signature du mandant
+        </strong>
+        <br>
+        <small>
+            (précédée de la mention « Bon pour pouvoir »)
+        </small>
+    </p>
+
+    <div style="height: 80px;"></div>
+</div>
+
+<p class="petit">
+    Le mandataire peut être ou non copropriétaire, sous réserve
+    des incompatibilités et limitations prévues par l'article 22
+    de la loi du 10 juillet 1965.
+</p>

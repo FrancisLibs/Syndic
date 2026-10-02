@@ -15,7 +15,19 @@ class CoproprietaireType extends AbstractType
             ->add('nom')
             ->add('prenom')
             ->add('email')
-            ->add('telephone');
+            ->add('telephone')
+            ->add('adresse', null, [
+                'label' => 'Adresse',
+                'required' => false,
+            ])
+            ->add('codePostal', null, [
+                'label' => 'Code postal',
+                'required' => false,
+            ])
+            ->add('ville', null, [
+                'label' => 'Ville',
+                'required' => false,
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

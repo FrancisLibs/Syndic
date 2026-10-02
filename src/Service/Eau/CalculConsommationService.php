@@ -21,7 +21,7 @@ final class CalculConsommationService
         $consommations = [];
 
         $compteurs = $this->compteurEauRepository
-            ->findTousActifs();
+            ->findPourExercice($exercice);
 
         foreach ($compteurs as $compteur) {
             $relevePrecedent = $this->releveCompteurRepository

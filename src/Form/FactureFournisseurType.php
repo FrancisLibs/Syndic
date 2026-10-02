@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -47,16 +48,6 @@ class FactureFournisseurType extends AbstractType
                 [
                     'widget' => 'single_text',
                     'label' => 'Date facture',
-                ]
-            )
-
-            ->add(
-                'dateReglement',
-                DateType::class,
-                [
-                    'widget' => 'single_text',
-                    'required' => false,
-                    'label' => 'date de règlement',
                 ]
             )
 
@@ -114,6 +105,16 @@ class FactureFournisseurType extends AbstractType
             )
 
             ->add(
+                'fnp',
+                CheckboxType::class,
+                [
+                    'label' => 'Facture non parvenue',
+                    'required' => false,
+                    'help' => 'À cocher si la charge concerne l’exercice mais que la facture n’a pas encore été reçue.',
+                ]
+            )
+
+            ->add(
                 'volumeEau',
                 IntegerType::class,
                 [
@@ -128,6 +129,21 @@ class FactureFournisseurType extends AbstractType
                         'min' => 0,
                     ],
                 ]
+            )
+            ->add(
+                'confirmerCorrespondance',
+                CheckboxType::class,
+                [
+                    'label' => 'Je confirme qu’il s’agit d’une nouvelle facture',
+                    'required' => false,
+                    'mapped' => false,
+                'row_attr' => [
+                    'class' => $options['confirmation_correspondance']
+                        ? ''
+                        : 'd-none',
+                    'id' => 'confirmation-correspondance-row',
+                ],
+                ]
             );
     }
 
@@ -137,6 +153,12 @@ class FactureFournisseurType extends AbstractType
 
         $resolver->setDefaults([
             'data_class' => FactureFournisseur::class,
+            'confirmation_correspondance' => false,
         ]);
+
+        $resolver->setAllowedTypes(
+            'confirmation_correspondance',
+            'bool'
+        );
     }
 }

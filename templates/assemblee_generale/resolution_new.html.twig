@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Nouvelle résolution
+{% endblock %}
+
+{% block body %}
+
+    <h1>Nouvelle résolution</h1>
+
+    <h2>
+        Assemblée Générale du
+        {{ assemblee_generale.date|date('d/m/Y') }}
+    </h2>
+
+    {{ form_start(form) }}
+
+    {{ form_widget(form) }}
+
+    <button class="btn btn-success">
+        Enregistrer
+    </button>
+
+    {{ form_end(form) }}
+
+    <div class="mt-3">
+        <a
+            href="{{ path(
+                'app_assemblee_generale_show',
+                {'id': assemblee_generale.id}
+            ) }}"
+            class="btn btn-secondary"
+        >
+            Retour
+        </a>
+    </div>
+
+{% endblock %}

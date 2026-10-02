@@ -1,0 +1,245 @@
+<div class="repartition-individuelle-section">
+    
+    <h1>Projet de répartition individuelle</h1>
+
+    <h2>
+        {{ assemblee_generale.exercice.nom }}
+    </h2>
+
+    <p>
+        <strong>Copropriétaire :</strong>
+        {{ ligne.coproprietaire }}
+    </p>
+
+    <p>
+        <strong>Tantièmes :</strong>
+        {{ ligne.tantiemes }}
+    </p>
+
+    <h2>Répartition des charges</h2>
+
+    <table class="repartition-individuelle">
+        <tbody>
+            <tr>
+                <th>Provisions appelées</th>
+                <td class="montant">
+                    {{ ligne.totalAppele|number_format(2, ',', ' ') }} €
+                </td>
+            </tr>
+
+            <tr>
+                <th>Quote-part des charges réelles</th>
+                <td class="montant">
+                    {{ ligne.quotePartReelle|number_format(2, ',', ' ') }} €
+                </td>
+            </tr>
+
+            <tr>
+                <th>Régularisation</th>
+                <td class="montant">
+                    {{ ligne.montant|number_format(2, ',', ' ') }} €
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Détail de vos charges</h2>
+
+    <table class="repartition-individuelle detail-charges-individuel">
+        <thead>
+            <tr>
+                <th>Lot</th>
+                <th>Nature</th>
+                <th>Détail</th>
+                <th class="montant">Montant</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for charge in detail_charges.lignes %}
+                <tr>
+                    <td>
+                        {{ charge.lot.designation }}
+                    </td>
+
+                    <td>
+                        {{ charge.nature }}
+                    </td>
+
+                    <td>
+                        {{ charge.detail }}
+                    </td>
+
+                    <td class="montant">
+                        {{ charge.montant|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+            {% endfor %}
+
+            <tr>
+                <th colspan="3">
+                    Total de vos charges
+                </th>
+
+                <th class="montant">
+                    {{ detail_charges.total|number_format(2, ',', ' ') }} €
+                </th>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if lots_eau_coproprietaire is not empty %}
+
+        <div class="bloc-eau-individuel">
+
+            <h2>Détail de votre consommation d'eau</h2>
+
+            <table class="repartition-individuelle repartition-eau-individuelle">
+                <thead>
+                    <tr>
+                        <th>Désignation</th>
+                        <th class="montant">Consommation</th>
+                        <th class="montant">Part individuelle</th>
+                        <th class="montant">Part commune</th>
+                        <th class="montant">Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% set totalEau = 0 %}
+
+                    {% for lot in lots_eau_coproprietaire %}
+                        <tr>
+                            <td>
+                                {{ lot.designation }}
+                            </td>
+
+                            <td class="montant">
+                                {{ lot.consommation }} m³
+                            </td>
+
+                            <td class="montant">
+                                {{ lot.partIndividuelle|number_format(2, ',', ' ') }} €
+                            </td>
+
+                            <td class="montant">
+                                {{ lot.partCommune|number_format(2, ',', ' ') }} €
+                            </td>
+
+                            <td class="montant">
+                                {{ lot.montantTotal|number_format(2, ',', ' ') }} €
+                            </td>
+                        </tr>
+
+                        {% set totalEau = totalEau + lot.montantTotal %}
+                    {% endfor %}
+
+                    <tr>
+                        <th colspan="3">
+                            Total de votre consommation d'eau
+                        </th>
+
+                        <th colspan="2" class="montant">
+                            {{ totalEau|number_format(2, ',', ' ') }} €
+                        </th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>  
+    {% endif %}
+
+    <h2 class="repartition-situation">
+        Situation du compte après répartition
+    </h2>
+
+    <table class="repartition-individuelle detail-charges-individuel">
+        <tbody>
+            <tr>
+                <th>
+                    Solde du compte au
+                    {{ date_situation|date('d/m/Y') }}
+                </th>
+
+                <td class="montant">
+                    {% if solde_avant_repartition < - 0.01 %}
+                        {{ solde_avant_repartition|abs|number_format(2, ',', ' ') }} €
+                        (créditeur)
+
+                    {% elseif solde_avant_repartition > 0.01 %}
+                        {{ solde_avant_repartition|number_format(2, ',', ' ') }} €
+                        (débiteur)
+
+                    {% else %}
+                        0,00 € (soldé)
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <th>
+                    Régularisation des charges
+                    {{ assemblee_generale.exercice.nom }}
+                </th>
+
+                <td class="montant">
+                    {% if ligne.estCrediteur %}
+                        {{ ligne.montant|number_format(2, ',', ' ') }} €
+                        (en faveur du copropriétaire)
+
+                    {% elseif ligne.estDebiteur %}
+                        {{ ligne.montant|number_format(2, ',', ' ') }} €
+                        (à la charge du copropriétaire)
+
+                    {% else %}
+                        0,00 €
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Solde après répartition des charges</th>
+
+                <td class="montant">
+                    {% if solde_apres_repartition < - 0.01 %}
+                        {{ solde_apres_repartition|abs|number_format(2, ',', ' ') }} €
+                        (créditeur)
+
+                    {% elseif solde_apres_repartition > 0.01 %}
+                        {{ solde_apres_repartition|number_format(2, ',', ' ') }} €
+                        (débiteur)
+
+                    {% else %}
+                        0,00 € (soldé)
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p class="repartition-conclusion">
+        <strong>
+            {% if solde_apres_repartition < - 0.01 %}
+                Solde créditeur :
+                {{ solde_apres_repartition|abs|number_format(2, ',', ' ') }} €
+                — En faveur du copropriétaire
+
+            {% elseif solde_apres_repartition > 0.01 %}
+                Solde débiteur :
+                {{ solde_apres_repartition|number_format(2, ',', ' ') }} €
+                — À payer par le copropriétaire
+
+            {% else %}
+                Compte soldé
+            {% endif %}
+        </strong>
+    </p>
+
+    <p class="repartition-reserve">
+        Situation établie sous réserve de l'approbation des comptes
+        par l'Assemblée Générale.
+    </p>
+
+    <footer class="pdf-footer">
+        Document édité le {{ "now"|date("d/m/Y") }}
+    </footer>
+</div>

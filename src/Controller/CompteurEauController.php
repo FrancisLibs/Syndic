@@ -43,7 +43,8 @@ final class CompteurEauController extends AbstractController
     )]
     public function new(
         Request $request,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        CompteurEauRepository $compteurEauRepository
     ): Response {
         $compteurEau = new CompteurEau();
 
@@ -55,6 +56,26 @@ final class CompteurEauController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            if (
+                $compteurEau->isActif()
+                && $compteurEau->getLot() !== null
+                && $compteurEauRepository->findAutreActifPourLot(
+                    $compteurEau->getLot()
+                ) !== null
+            ) {
+                $this->addFlash(
+                    'danger',
+                    'Ce lot possède déjà un compteur d’eau actif.'
+                );
+
+                return $this->redirectToRoute(
+                    'app_compteur_eau_new',
+                    [],
+                    Response::HTTP_SEE_OTHER
+                );
+            }
+
             $entityManager->persist($compteurEau);
             $entityManager->flush();
 
@@ -89,7 +110,7 @@ final class CompteurEauController extends AbstractController
         CompteurEau $compteurEau
     ): Response {
         return $this->render(
-            'compteur_eau/show.html.twig',
+            'eau/show.html.twig',
             [
                 'compteur_eau' => $compteurEau,
             ]
@@ -105,7 +126,8 @@ final class CompteurEauController extends AbstractController
     public function edit(
         Request $request,
         CompteurEau $compteurEau,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        CompteurEauRepository $compteurEauRepository
     ): Response {
         $form = $this->createForm(
             CompteurEauType::class,
@@ -115,6 +137,29 @@ final class CompteurEauController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            if (
+                $compteurEau->isActif()
+                && $compteurEau->getLot() !== null
+                && $compteurEauRepository->findAutreActifPourLot(
+                    $compteurEau->getLot(),
+                    $compteurEau
+                ) !== null
+            ) {
+                $this->addFlash(
+                    'danger',
+                    'Ce lot possède déjà un autre compteur d’eau actif.'
+                );
+
+                return $this->redirectToRoute(
+                    'app_compteur_eau_edit',
+                    [
+                        'id' => $compteurEau->getId(),
+                    ],
+                    Response::HTTP_SEE_OTHER
+                );
+            }
+
             $entityManager->flush();
 
             $this->addFlash(
@@ -130,7 +175,7 @@ final class CompteurEauController extends AbstractController
         }
 
         return $this->render(
-            'compteur_eau/edit.html.twig',
+            'eau/edit.html.twig',
             [
                 'compteur_eau' => $compteurEau,
                 'form' => $form,

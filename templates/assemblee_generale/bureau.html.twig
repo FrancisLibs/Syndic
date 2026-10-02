@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Constitution du bureau
+{% endblock %}
+
+{% block body %}
+
+    <h1>Constitution du bureau</h1>
+
+    <h2>
+        Assemblée Générale —
+        {{ assemblee_generale.exercice.nom }}
+    </h2>
+
+    {{ form_start(form) }}
+
+    {{ form_row(form.presidentSeance) }}
+    {{ form_row(form.secretaireSeance) }}
+    {{ form_row(form.scrutateur) }}
+
+    <button class="btn btn-primary">
+        Enregistrer
+    </button>
+
+    {{ form_end(form) }}
+
+    <a
+        href="{{ path(
+            'app_assemblee_generale_show',
+            {'id': assemblee_generale.id}
+        ) }}"
+        class="btn btn-secondary mt-3"
+    >
+        Retour à l'assemblée générale
+    </a>
+
+{% endblock %}

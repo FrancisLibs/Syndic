@@ -184,7 +184,8 @@ class ComptabiliteService
             OperationType::A_NOUVEAU
             => JournalCode::AN,
 
-            OperationType::CHARGE
+            OperationType::CHARGE,
+            OperationType::TRAITEMENT_FNP
             => JournalCode::FG,
 
             OperationType::PAIEMENT,
@@ -200,7 +201,8 @@ class ComptabiliteService
             OperationType::CLOTURE,
             OperationType::APPROBATION_COMPTES,
             OperationType::TRANSFERT_DETTE,
-            OperationType::OPERATION_DIVERSE
+            OperationType::OPERATION_DIVERSE,
+            OperationType::FNP
             => JournalCode::OD,
         };
     }

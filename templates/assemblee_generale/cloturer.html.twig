@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Clôture de l'Assemblée Générale
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+        <h1>Clôture de l'Assemblée Générale</h1>
+
+        <h2>
+            {{ assemblee_generale.exercice.nom }}
+        </h2>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+
+            <p>
+                Indiquez l'heure de fin de l'Assemblée Générale
+                avant de procéder à sa clôture.
+            </p>
+
+            {{ form_start(form) }}
+
+                {{ form_row(form.heureCloture) }}
+
+                <div class="mt-4">
+                    <button
+                        type="submit"
+                        class="btn btn-danger"
+                    >
+                        Clôturer l'Assemblée Générale
+                    </button>
+
+                    <a
+                        href="{{ path(
+                            'app_assemblee_generale_show',
+                            {'id': assemblee_generale.id}
+                        ) }}"
+                        class="btn btn-secondary"
+                    >
+                        Annuler
+                    </a>
+                </div>
+
+            {{ form_end(form) }}
+
+        </div>
+    </div>
+
+{% endblock %}

@@ -30,6 +30,8 @@ class SimulationRegularisationService
         foreach ($coproprietaires as $coproprietaire) {
             $tantiemes = 0;
 
+            $dateReference = $exercice->getDateFin();
+
             foreach (
                 $coproprietaire->getLotCoproprietaires()
                 as $lotCoproprietaire
@@ -40,6 +42,20 @@ class SimulationRegularisationService
                     $lot->getCopropriete()
                     !== $copropriete
                 ) {
+                    continue;
+                }
+
+                $dateDebut = $lotCoproprietaire->getDateDebut();
+                $dateFin = $lotCoproprietaire->getDateFin();
+
+                $relationActive =
+                    $dateDebut <= $dateReference
+                    && (
+                        $dateFin === null
+                        || $dateFin >= $dateReference
+                    );
+
+                if (!$relationActive) {
                     continue;
                 }
 

@@ -74,6 +74,12 @@ class FactureFournisseur
     #[ORM\Column(enumType: FactureFournisseurType::class)]
     private FactureFournisseurType $type = FactureFournisseurType::FACTURE;
 
+    #[ORM\Column]
+    private bool $fnp = false;
+
+    #[ORM\Column]
+    private bool $fnpTraitee = false;
+    
     public function getId(): ?int
     {
         return $this->id;
@@ -159,6 +165,30 @@ class FactureFournisseur
     ): static {
         $this->coproprietaireAvanceur =
             $coproprietaireAvanceur;
+
+        return $this;
+    }
+
+    public function isFnp(): bool
+    {
+        return $this->fnp;
+    }
+
+    public function setFnp(bool $fnp): static
+    {
+        $this->fnp = $fnp;
+
+        return $this;
+    }
+
+    public function isFnpTraitee(): bool
+    {
+        return $this->fnpTraitee;
+    }
+
+    public function setFnpTraitee(bool $fnpTraitee): static
+    {
+        $this->fnpTraitee = $fnpTraitee;
 
         return $this;
     }

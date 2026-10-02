@@ -1,0 +1,179 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Second vote - Résolution {{ resolution.numero }}
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Second vote — Article 25-1</h1>
+
+            <h2 class="h4">
+                Résolution {{ resolution.numero }} —
+                {{ resolution.titre }}
+            </h2>
+
+            <p class="text-muted mb-0">
+                Second vote à la majorité de l'article 24
+            </p>
+        </div>
+
+        <a
+            href="{{ path(
+            'app_assemblee_generale_show',
+            {'id': assemblee_generale.id}
+        ) }}"
+            class="btn btn-outline-secondary"
+        >
+            Retour à l'assemblée générale
+        </a>
+    </div>
+
+    {{ form_start(form) }}
+
+    <table class="table table-striped align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Copropriétaire</th>
+                <th class="text-end">Voix</th>
+                <th>Mode</th>
+                <th>Vote</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {# Présents et représentés : vote modifiable #}
+            {% for voteForm in form.votes %}
+
+                {% set vote = voteForm.vars.data %}
+                {% set presenceVote = null %}
+
+                {% for presence in presences %}
+                    {% if presence.coproprietaire == vote.coproprietaire %}
+                        {% set presenceVote = presence %}
+                    {% endif %}
+                {% endfor %}
+
+                <tr data-voix="{{ vote.nombreVoix }}">
+
+                    <td>
+                        {{ vote.coproprietaire }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ vote.nombreVoix }}
+                    </td>
+
+                    <td>
+                        {% if presenceVote %}
+                            {{ presenceVote.statut.label() }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ form_widget(
+                    voteForm.choix,
+                    {
+                        attr: {
+                            class: 'form-select choix-vote'
+                        }
+                    }
+                ) }}
+
+                        {{ form_errors(voteForm.choix) }}
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+
+            {# Votes par correspondance : lecture seule #}
+            {% for vote in votes_correspondance %}
+
+                <tr data-voix="{{ vote.nombreVoix }}">
+
+                    <td>
+                        {{ vote.coproprietaire }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ vote.nombreVoix }}
+                    </td>
+
+                    <td>
+                        Vote par correspondance
+                    </td>
+
+                    <td>
+                        <strong>
+                            {% if vote.choix %}
+                                {{ vote.choix.label() }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </strong>
+
+                        {# Utilisé uniquement pour le calcul JavaScript #}
+                        <input
+                            type="hidden"
+                            class="choix-vote"
+                            value="{{ vote.choix ? vote.choix.value : '' }}"
+                        >
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+        <tfoot>
+
+            <tr>
+                <th colspan="3">Pour</th>
+                <th>
+                    <span id="total-pour">0</span> voix
+                </th>
+            </tr>
+
+            <tr>
+                <th colspan="3">Contre</th>
+                <th>
+                    <span id="total-contre">0</span> voix
+                </th>
+            </tr>
+
+            <tr>
+                <th colspan="3">Abstention</th>
+                <th>
+                    <span id="total-abstention">0</span> voix
+                </th>
+            </tr>
+
+            <tr class="table-secondary">
+                <th colspan="3">Total votants</th>
+                <th>
+                    <span id="total-votants">0</span> voix
+                </th>
+            </tr>
+
+        </tfoot>
+    </table>
+
+    <button type="submit" class="btn btn-primary">
+        Enregistrer le second vote
+    </button>
+
+    {{ form_end(form) }}
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="{{ asset('assets/js/vote-resolution.js') }}"></script>
+{% endblock %}

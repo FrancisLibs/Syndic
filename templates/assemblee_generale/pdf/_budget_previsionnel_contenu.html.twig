@@ -1,0 +1,85 @@
+<h1>Budget prévisionnel</h1>
+
+        <p>
+            Comparatif {{ exercice.nom }}
+            /
+            {{ exercice_suivant.nom }}
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nature de charge</th>
+                    <th>Budget {{ exercice.nom }}</th>
+                    <th>Projet {{ exercice_suivant.nom }}</th>
+                    <th>Écart</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for ligne in comparatif %}
+
+                    {% set ecart =
+                        ligne.montantProjet
+                        - ligne.montantReference
+                    %}
+
+                    <tr>
+                        <td>
+                            {{ ligne.typeCharge.nom }}
+                        </td>
+
+                        <td>
+                            {{ ligne.montantReference|number_format(2, ',', ' ') }} €
+                        </td>
+
+                        <td>
+                            {{ ligne.montantProjet|number_format(2, ',', ' ') }} €
+                        </td>
+
+                        <td>
+                            {% if ecart > 0 %}
+                                +{{ ecart|number_format(2, ',', ' ') }} €
+                            {% else %}
+                                {{ ecart|number_format(2, ',', ' ') }} €
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+            <tfoot>
+                {% set ecartTotal =
+                    budget_projet.total
+                    - budget_reference.total
+                %}
+
+                <tr>
+                    <th>Total</th>
+
+                    <th>
+                        {{ budget_reference.total|number_format(2, ',', ' ') }} €
+                    </th>
+
+                    <th>
+                        {{ budget_projet.total|number_format(2, ',', ' ') }} €
+                    </th>
+
+                    <th>
+                        {% if ecartTotal > 0 %}
+                            +{{ ecartTotal|number_format(2, ',', ' ') }} €
+                        {% else %}
+                            {{ ecartTotal|number_format(2, ',', ' ') }} €
+                        {% endif %}
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+
+        <footer class="pdf-footer">
+            Document édité le
+            {{ "now"|date("d/m/Y") }}
+        </footer>

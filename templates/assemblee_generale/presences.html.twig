@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Feuille de présence
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Feuille de présence</h1>
+            <h2>
+                Assemblée Générale
+                {{ assemblee_generale.exercice.nom }}
+            </h2>
+        </div>
+
+        <a
+            href="{{ path(
+                'app_assemblee_generale_show',
+                {id: assemblee_generale.id}
+            ) }}"
+            class="btn btn-secondary"
+        >
+            Retour à l'Assemblée Générale
+        </a>
+    </div>
+
+    {{ form_start(form) }}
+
+    <table class="table table-hover table-striped align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Copropriétaire</th>
+                <th class="text-end">Voix</th>
+                <th>Statut</th>
+                <th>Date réception vote</th>
+                <th>Mandataire</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% set totalVoix = 0 %}
+            {% set totalVoixPresentes = 0 %}
+
+            {% for presenceForm in form.presences %}
+                {% set presence = presenceForm.vars.data %}
+                {% set totalVoix = totalVoix + presence.nombreVoix %}
+                {% if presence.statut.value == 'present' or presence.statut.value == 'represente' %}
+                    {% set totalVoixPresentes = totalVoixPresentes + presence.nombreVoix %}
+                {% endif %}
+
+                <tr data-voix="{{ presence.nombreVoix }}">
+                    <td>
+                        {{ presence.coproprietaire }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ presence.nombreVoix }}
+                    </td>
+
+                    <td>
+                        {{ form_widget(
+                            presenceForm.statut,
+                                { attr: {class: 'form-select statut-presence'}}
+                            ) 
+                        }}
+                        {{ form_errors(presenceForm.statut) }}
+                    </td>
+
+                    <td>
+                        {{ form_widget(
+                            presenceForm.dateReceptionVoteCorrespondance,
+                            {
+                                attr: {
+                                    class: 'form-control date-vote-correspondance'
+                                }
+                            }
+                        ) }}
+                        {{ form_errors(
+                            presenceForm.dateReceptionVoteCorrespondance
+                        ) }}
+                    </td>
+
+                    <td>
+                        {{ form_widget(
+                            presenceForm.mandataire,
+                            {
+                                attr: {
+                                    class: 'form-control mandataire-presence'
+                                }
+                            }
+                        ) }}
+                        {{ form_errors(presenceForm.mandataire) }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+
+        <tfoot>
+            <tr class="fw-bold">
+                <td>Total copropriété</td>
+                <td class="text-end">
+                    {{ totalVoix }}
+                </td>
+                <td colspan="3"></td>
+            </tr>
+
+            <tr class="fw-bold">
+                <td>Présents / Représentés</td>
+                <td class="text-end">
+                    <span id="total-voix-presentes">
+                        {{ totalVoixPresentes }}
+                    </span>
+                </td>
+                <td colspan="3"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">
+            Enregistrer la feuille de présence
+        </button>
+    </div>
+
+    {{ form_end(form) }}
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('assets/js/presences-ag.js') }}"></script>
+{% endblock %}

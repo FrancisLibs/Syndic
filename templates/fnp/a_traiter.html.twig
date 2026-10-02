@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    FNP à traiter
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+        <h1>Factures non parvenues à traiter</h1>
+        <h2>{{ exercice.nom }}</h2>
+    </div>
+
+    {% if fnp is empty %}
+
+        <div class="alert alert-success">
+            Aucune facture non parvenue antérieure n'est à traiter.
+        </div>
+
+    {% else %}
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Exercice</th>
+                    <th>Fournisseur</th>
+                    <th>Nature</th>
+                    <th>Libellé</th>
+                    <th>Date FNP</th>
+                    <th>Montant</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for facture in fnp %}
+                    <tr>
+                        <td>
+                            {{ facture.exercice.nom }}
+                        </td>
+
+                        <td>
+                            {{ facture.fournisseur.nom }}
+                        </td>
+
+                        <td>
+                            {{ facture.typeCharge.nom }}
+                        </td>
+
+                        <td>
+                            {{ facture.libelle }}
+                        </td>
+
+                        <td>
+                            {{ facture.dateFacture|date('d/m/Y') }}
+                        </td>
+
+                        <td>
+                            {{ facture.montant|number_format(2, ',', ' ') }} €
+                        </td>
+
+                        <td>
+                            {# Le bouton de traitement viendra ensuite #}
+                            <span class="text-muted">
+                                <a
+                                    href="{{ path('app_fnp_traiter', {id: facture.id}) }}"
+                                    class="btn btn-sm btn-primary"
+                                >
+                                    Traiter
+                                </a>
+                            </span>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% endif %}
+
+{% endblock %}

@@ -30,19 +30,22 @@
 						{% endif %}
 					</td>
 					<td class="text-center">
-						<form method="post" action="{{ path( 'app_budget_generer_appel', { id: budget.id } ) }}">
-							{% if not budget.isVerrouille() %}
-								<button class="btn btn-success">
-									Générer appel de fonds
-								</button>
-							{% else %}
-								<div>
-									Appel de fonds déjà généré.
-								</div>
-							{% endif %}
-						</form>
+
+						{% if not budget.isVerrouille() %}
+
+							<a href="{{ path('app_budget_generer_appel', {id: budget.id}) }}" class="btn btn-success">
+								Générer appel de fonds
+							</a>
+
+						{% else %}
+
+							<div>
+								Appel de fonds déjà généré.
+							</div>
+
+						{% endif %}
+
 					</td>
-				</tr>
 			{% else %}
 				<tr>
 					<td colspan="4">Aucun budget trouvé</td>

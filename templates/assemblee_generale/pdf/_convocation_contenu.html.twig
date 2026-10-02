@@ -1,0 +1,143 @@
+<h1>Convocation à l'Assemblée Générale</h1>
+
+<h2>
+    {{ assemblee_generale.exercice.nom }}
+</h2>
+
+<div class="destinataire">
+    <strong>{{ coproprietaire.nomComplet }}</strong><br>
+
+    {% if coproprietaire.adresse %}
+        {{ coproprietaire.adresse }}<br>
+    {% endif %}
+
+    {% if coproprietaire.codePostal or coproprietaire.ville %}
+        {{ coproprietaire.codePostal }}
+        {{ coproprietaire.ville }}
+    {% endif %}
+</div>
+
+<div class="texte-convocation">
+
+    <p>
+        Madame, Monsieur,
+    </p>
+
+    <p>
+        J'ai le plaisir de vous convier à l'Assemblée Générale
+        des copropriétaires de la copropriété du
+        14, rue Neuve à Strasbourg.
+    </p>
+
+    <p>
+        Cette assemblée se tiendra aux date, heure et lieu
+        indiqués ci-dessous.
+    </p>
+
+</div>
+
+<table>
+    <tbody>
+        <tr>
+            <th>Date</th>
+            <td>
+                {% if assemblee_generale.date %}
+                    {{ assemblee_generale.date|date('d/m/Y') }}
+                {% else %}
+                    Non définie
+                {% endif %}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Heure</th>
+            <td>
+                {% if assemblee_generale.heure %}
+                    {{ assemblee_generale.heure|date('H:i') }}
+                {% else %}
+                    Non définie
+                {% endif %}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Lieu</th>
+            <td>
+                {{ assemblee_generale.lieu ?: 'Non défini' }}
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="texte-convocation">
+
+    <p>
+        Vous trouverez ci-après l'ordre du jour de cette assemblée
+        ainsi que les documents nécessaires à l'examen des différentes
+        résolutions.
+    </p>
+
+    <p>
+        Si vous ne pouvez pas assister à l'Assemblée Générale,
+        vous pouvez vous faire représenter au moyen du pouvoir joint
+        ou transmettre votre formulaire de vote par correspondance
+        dans les délais indiqués sur celui-ci.
+    </p>
+
+    <p>
+        Le syndic bénévole<br>
+        <strong>Francis Libs</strong>
+    </p>
+
+</div>
+
+<h2>Ordre du jour</h2>
+
+{% for resolution in assemblee_generale.resolutions %}
+    <div class="resolution">
+        <h3>
+            {{ resolution.numero }}.
+            {{ resolution.titre }}
+        </h3>
+
+        {% if resolution.texte %}
+            <p>
+                {{ resolution.texte|nl2br }}
+            </p>
+        {% endif %}
+
+        {% if resolution.majorite %}
+            <p>
+                <strong>Majorité :</strong>
+                {{ resolution.majorite.label }}
+            </p>
+        {% endif %}
+    </div>
+{% else %}
+    <p>
+        Aucun ordre du jour n'a été défini.
+    </p>
+{% endfor %}
+
+<h2>Documents joints</h2>
+
+<ul>
+    <li>
+        Documents comptables de l'exercice
+    </li>
+    <li>
+        Projet de budget prévisionnel
+    </li>
+    <li>
+        Projet individuel de répartition des charges
+    </li>
+    <li>
+        Formulaire de vote par correspondance
+    </li>
+    <li>
+        Pouvoir de représentation
+    </li>
+    <li>
+        Projet de plan pluriannuel de travaux (PPPT) transmis séparément
+    </li>
+</ul>

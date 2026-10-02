@@ -59,7 +59,8 @@ final class FactureFournisseurController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         GenerationFactureFournisseurService $generationService,
-        ExerciceRepository $exerciceRepository
+        ExerciceRepository $exerciceRepository,
+        FactureFournisseurRepository $factureFournisseurRepository
     ): Response {
         $exercice = $exerciceRepository->findActif();
 
@@ -100,6 +101,118 @@ final class FactureFournisseurController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $facture->setExercice($exercice);
+
+            $doublon = $factureFournisseurRepository->findDoublon(
+                $facture->getFournisseur(),
+                $facture->getNumero(),
+                $facture->getMontant()
+            );
+
+            if ($doublon !== null) {
+
+                if ($doublon->isFnp() && !$doublon->isFnpTraitee()) {
+
+                    $this->addFlash(
+                        'warning',
+                        sprintf(
+                            'Cette facture correspond à une FNP enregistrée '
+                                . 'dans l’exercice %s. '
+                                . 'Traitez cette FNP plutôt que de créer une nouvelle facture.',
+                            $doublon->getExercice()->getNom()
+                        )
+                    );
+
+                    return $this->redirectToRoute(
+                        'app_fnp_traiter',
+                        [
+                            'id' => $doublon->getId(),
+                        ]
+                    );
+                }
+
+                if ($doublon->isFnp() && $doublon->isFnpTraitee()) {
+
+                    $this->addFlash(
+                        'warning',
+                        sprintf(
+                            'Cette facture correspond à une FNP déjà traitée '
+                                . 'dans l’exercice %s. '
+                                . 'Aucune nouvelle facture n’a été créée.',
+                            $doublon->getExercice()->getNom()
+                        )
+                    );
+
+                    return $this->redirectToRoute(
+                        'app_facture_fournisseur_show',
+                        [
+                            'id' => $doublon->getId(),
+                        ]
+                    );
+                }
+
+                $this->addFlash(
+                    'warning',
+                    sprintf(
+                        'Cette facture semble déjà avoir été enregistrée '
+                            . 'dans l’exercice %s. '
+                            . 'Aucune nouvelle facture n’a été créée.',
+                        $doublon->getExercice()->getNom()
+                    )
+                );
+
+                return $this->redirectToRoute(
+                    'app_facture_fournisseur_show',
+                    [
+                        'id' => $doublon->getId(),
+                    ]
+                );
+            }
+
+            $correspondancePossible =
+                $factureFournisseurRepository->findCorrespondancePossible(
+                    $facture->getFournisseur(),
+                    $facture->getMontant()
+                );
+
+            if (
+                $correspondancePossible !== null
+                && !$form->get('confirmerCorrespondance')->getData()
+            ) {
+                $this->addFlash(
+                    'warning',
+                    sprintf(
+                        'Attention : une autre facture du fournisseur %s '
+                            . 'd’un montant de %s € existe déjà '
+                            . 'dans l’exercice %s. Vérifiez qu’il ne s’agit pas '
+                            . 'de la même facture.',
+                        $correspondancePossible->getFournisseur()->getNom(),
+                        number_format(
+                            $correspondancePossible->getMontantFacture(),
+                            2,
+                            ',',
+                            ' '
+                        ),
+                        $correspondancePossible->getExercice()->getNom()
+                    )
+                );
+
+                $form = $this->createForm(
+                    FactureFournisseurType::class,
+                    $facture,
+                    [
+                        'confirmation_correspondance' => true,
+                    ]
+                );
+
+                return $this->render(
+                    'facture_fournisseur/new.html.twig',
+                    [
+                        'exercice' => $exercice,
+                        'facture' => $facture,
+                        'form' => $form,
+                    ]
+                );
+            }
 
             try {
                 $entityManager->wrapInTransaction(

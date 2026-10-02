@@ -46,76 +46,20 @@ final class DocumentExerciceController extends AbstractController
         EcritureRepository $ecritureRepository,
         PdfService $pdfService,
     ): Response {
+
         $exercice = $contexteExercice->getExercice();
 
-        $ecritures = $ecritureRepository->findBy(
-            ['exercice' => $exercice]
-        );
+        $donneesBalance =
+            $ecritureRepository->calculerBalance($exercice);
 
-        $balance = [];
-
-        foreach ($ecritures as $ecriture) {
-
-            if (
-                $ecriture->getOperation()->getStatut()
-                !== OperationStatut::VALIDE
-            ) {
-                continue;
-            }
-
-            $compte = $ecriture->getCompte();
-            $numero = $compte->getNumero();
-
-            if (!isset($balance[$numero])) {
-                $balance[$numero] = [
-                    'numero' => $numero,
-                    'libelle' => $compte->getLibelle(),
-                    'debit' => 0.0,
-                    'credit' => 0.0,
-                ];
-            }
-
-            $balance[$numero]['debit'] +=
-                (float) $ecriture->getDebit();
-
-            $balance[$numero]['credit'] +=
-                (float) $ecriture->getCredit();
-        }
-
-        $totalDebit = 0.0;
-        $totalCredit = 0.0;
-        $totalSoldeDebiteur = 0.0;
-        $totalSoldeCrediteur = 0.0;
-
-        foreach ($balance as &$ligne) {
-
-            $solde = round(
-                $ligne['debit'] - $ligne['credit'],
-                2
-            );
-
-            $ligne['soldeDebiteur'] = 0.0;
-            $ligne['soldeCrediteur'] = 0.0;
-
-            if ($solde > 0) {
-                $ligne['soldeDebiteur'] = $solde;
-            } elseif ($solde < 0) {
-                $ligne['soldeCrediteur'] = abs($solde);
-            }
-
-            $totalDebit += $ligne['debit'];
-            $totalCredit += $ligne['credit'];
-
-            $totalSoldeDebiteur += $ligne['soldeDebiteur'];
-            $totalSoldeCrediteur += $ligne['soldeCrediteur'];
-        }
-
-        unset($ligne);
-
-        $equilibree =
-            abs($totalDebit - $totalCredit) < 0.01;
-
-        ksort($balance);
+        $balance = $donneesBalance['balance'];
+        $totalDebit = $donneesBalance['totalDebit'];
+        $totalCredit = $donneesBalance['totalCredit'];
+        $totalSoldeDebiteur =
+            $donneesBalance['totalSoldeDebiteur'];
+        $totalSoldeCrediteur =
+            $donneesBalance['totalSoldeCrediteur'];
+        $equilibree = $donneesBalance['equilibree'];
 
         $css = $pdfService->chargerCss();
 

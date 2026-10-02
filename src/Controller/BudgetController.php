@@ -5,7 +5,10 @@ namespace App\Controller;
 use App\Entity\Budget;
 use App\Entity\LigneBudget;
 use App\Form\BudgetType;
+use App\Form\GenererAppelFondType;
 use App\Repository\BudgetRepository;
+use App\Repository\ExerciceRepository;
+use App\Repository\ApprobationComptesRepository;
 use App\Service\GenerateurAppelFondService;
 use App\Service\GenerationAppelFondService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,7 +16,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-
 
 #[Route('/budget')]
 final class BudgetController extends AbstractController
@@ -129,55 +131,105 @@ final class BudgetController extends AbstractController
         '/{id}/generer-appel',
         name: 'app_budget_generer_appel',
         requirements: ['id' => '\d+'],
-        methods: ['POST']
+        methods: ['GET', 'POST']
     )]
     public function genererAppel(
         Budget $budget,
         GenerateurAppelFondService $generateur,
         GenerationAppelFondService $generationComptable,
+        ExerciceRepository $exerciceRepository,
+        ApprobationComptesRepository $approbationComptesRepository,
         EntityManagerInterface $entityManager,
         Request $request
     ): Response {
-
         if ($budget->isVerrouille()) {
             throw $this->createAccessDeniedException(
                 'Budget verrouillé'
             );
         }
 
-        // =====================
-        // Génération appel métier création des LignesAppelFond
-        // =====================
+        $exercice = $budget->getExercice();
 
-        // $appelFond = $generateur->generer(
-        //     $budget,
-        //     new \DateTimeImmutable(),
-        //     new \DateTimeImmutable('+120days')
-        // );
+        $exercicePrecedent =
+            $exerciceRepository->findPrecedent($exercice);
 
-        $appelFond = $generateur->generer(
-            $budget,
-            new \DateTimeImmutable('2024-06-10'),
-            new \DateTimeImmutable('2024-10-08')
+        if ($exercicePrecedent) {
+
+            $approbation =
+                $approbationComptesRepository
+                ->findPourExercice($exercicePrecedent);
+
+            if (
+                !$approbation
+                || !$approbation->getOperation()
+            ) {
+                $this->addFlash(
+                    'danger',
+                    sprintf(
+                        'Les comptes de l’exercice %s doivent être approuvés et régularisés avant de générer l’appel de fonds.',
+                        $exercicePrecedent->getNom()
+                    )
+                );
+
+                return $this->redirectToRoute(
+                    'app_budget_index'
+                );
+            }
+        }
+
+        $form = $this->createForm(
+            GenererAppelFondType::class
         );
-        
-        // =====================
-        // Génération comptable
-        // =====================
 
-        $generationComptable->generer($appelFond);
+        $form->handleRequest($request);
 
-        $this->addFlash(
-            'success',
-            'Appel de fonds généré'
-        );
+        if ($form->isSubmitted() && $form->isValid()) {
 
-        $budget->setVerrouille(true);
+            $dateAppel = $form->get('dateAppel')->getData();
+            $dateReglement = $form->get('dateReglement')->getData();
 
-        $entityManager->flush();
+            if ($dateReglement < $dateAppel) {
+                $this->addFlash(
+                    'danger',
+                    'La date d\'échéance ne peut pas être antérieure à la date de l\'appel.'
+                );
 
-        return $this->redirectToRoute(
-            'app_appel_fond_index',
+                return $this->redirectToRoute(
+                    'app_budget_generer_appel',
+                    ['id' => $budget->getId()]
+                );
+            }
+
+            // Création de l'appel et de ses lignes
+            $appelFond = $generateur->generer(
+                $budget,
+                $dateAppel,
+                $dateReglement
+            );
+
+            // Génération des écritures comptables
+            $generationComptable->generer($appelFond);
+
+            $budget->setVerrouille(true);
+
+            $entityManager->flush();
+
+            $this->addFlash(
+                'success',
+                'Appel de fonds généré'
+            );
+
+            return $this->redirectToRoute(
+                'app_appel_fond_index'
+            );
+        }
+
+        return $this->render(
+            'budget/generer_appel.html.twig',
+            [
+                'budget' => $budget,
+                'form' => $form,
+            ]
         );
     }
 }

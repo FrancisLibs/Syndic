@@ -35,4 +35,27 @@ class ExerciceRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findPrecedent(Exercice $exercice): ?Exercice
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.dateFin < :date')
+            ->setParameter('date', $exercice->getDateDebut())
+            ->orderBy('e.dateFin', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findPourDate(
+        \DateTimeInterface $date
+    ): ?Exercice {
+        return $this->createQueryBuilder('e')
+            ->where('e.dateDebut <= :date')
+            ->andWhere('e.dateFin >= :date')
+            ->setParameter('date', $date)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

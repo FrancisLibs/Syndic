@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Modifier la résolution
+{% endblock %}
+
+{% block body %}
+
+    <h1>Modifier la résolution {{ resolution.numero }}</h1>
+
+    {{ form_start(form) }}
+
+    {{ form_widget(form) }}
+
+    <button class="btn btn-success">
+        Enregistrer
+    </button>
+
+    {{ form_end(form) }}
+
+    <div class="mt-3">
+        <a
+            href="{{ path(
+                'app_assemblee_generale_show',
+                {'id': resolution.assembleeGenerale.id}
+            ) }}"
+            class="btn btn-secondary"
+        >
+            Retour
+        </a>
+    </div>
+
+{% endblock %}

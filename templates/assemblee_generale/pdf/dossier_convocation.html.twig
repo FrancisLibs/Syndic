@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+
+        <style>
+            {{ css|raw }}
+        </style>
+    </head>
+
+    <body>
+
+        {# =========================
+           CONVOCATION
+           ========================= #}
+
+        {% include 'assemblee_generale/pdf/_convocation_contenu.html.twig' %}
+
+
+        {# =========================
+           RÉPARTITION INDIVIDUELLE
+           ========================= #}
+
+        <div class="page-break"></div>
+
+        {% include 'assemblee_generale/pdf/_repartition_individuelle_contenu.html.twig' %}
+
+        {# =========================
+            BUDGET PRÉVISIONNEL
+            ========================= #}
+
+        {% if exercice_suivant and budget_reference and budget_projet %}
+
+            <div class="page-break"></div>
+
+            {% include 'assemblee_generale/pdf/_budget_previsionnel_contenu.html.twig' %}
+
+        {% endif %}
+
+        {# =========================
+        BALANCE GÉNÉRALE
+        ========================= #}
+
+        <div class="page-break"></div>
+
+        {% include 'document_exercice/pdf/sections/balance.html.twig' %}
+
+        {# =========================
+        ÉTAT DE COMPTE INDIVIDUEL
+        ========================= #}
+        {% if ligneCompte is defined %}
+            <div class="page-break"></div>
+
+            {% with {ligne: ligneCompte} %}
+                {% include 'document_exercice/pdf/sections/compte_coproprietaire.html.twig' %}
+            {% endwith %}
+        {% endif %}
+
+        {# =================================
+        FORMULAIRE DE VOTE PAR CORRESPONDANCE
+        ===================================#}
+        <div class="page-break"></div>
+
+        {% include 'assemblee_generale/pdf/_vote_correspondance_contenu.html.twig' %}
+
+        {# =========================
+        POUVOIR DE REPRÉSENTATION
+        ========================= #}
+
+        <div class="page-break"></div>
+
+        {% include 'assemblee_generale/pdf/_pouvoir_contenu.html.twig' %}
+
+    </body>
+</html>

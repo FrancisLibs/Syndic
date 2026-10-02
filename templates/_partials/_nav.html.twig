@@ -8,7 +8,7 @@
 				{# ========================= #}
 				{# COMPTABILITÉ              #}
 				{# ========================= #}
-					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+				<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Comptabilité
 					</a>
 					<ul class="dropdown-menu">
@@ -42,7 +42,7 @@
 				{# CLOTURE                   #}
 				{# ========================= #}
 
-					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+				<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Clôture
 					</a>
 
@@ -51,31 +51,31 @@
 						{% if contexte.exercice %}
 
 							<li>
-								<a class="dropdown-item" href="{{ path( 'app_cloture_workflow', { id: contexte.exercice.id } ) }}">
+								<a class="dropdown-item" href="{{ path('app_cloture_workflow', {id: contexte.exercice.id}) }}">
 									Assistant de clôture
 								</a>
 							</li>
 
 							<li>
-								<a class="dropdown-item" href="{{ path( 'app_cloture_regularisations', { id: contexte.exercice.id } ) }}">
+								<a class="dropdown-item" href="{{ path('app_cloture_regularisations', {id: contexte.exercice.id}) }}">
 									Régularisations
 								</a>
 							</li>
 
 							<li>
-								<a class="dropdown-item" href="{{ path( 'app_cloture_soldes_reportables', { id: contexte.exercice.id } ) }}">
+								<a class="dropdown-item" href="{{ path('app_cloture_soldes_reportables', {id: contexte.exercice.id}) }}">
 									Soldes reportables
 								</a>
 							</li>
 
 							<li>
-								<a class="dropdown-item" href="{{ path( 'app_cloture_comptes_gestion', { id: contexte.exercice.id } ) }}">
+								<a class="dropdown-item" href="{{ path('app_cloture_comptes_gestion', {id: contexte.exercice.id}) }}">
 									Comptes de gestion
 								</a>
 							</li>
 
 							<li>
-								<a class="dropdown-item" href="{{ path( 'app_cloture_anouveaux', { id: contexte.exercice.id } ) }}">
+								<a class="dropdown-item" href="{{ path('app_cloture_anouveaux', {id: contexte.exercice.id}) }}">
 									À-nouveaux
 								</a>
 							</li>
@@ -96,7 +96,7 @@
 				{# ========================= #}
 				{# EXPLOITATION              #}
 				{# ========================= #}
-					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+				<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Exploitation
 					</a>
 
@@ -129,6 +129,12 @@
 							</a>
 						</li>
 
+						<li>
+							<a class="dropdown-item" href="{{ path('app_fnp_a_traiter') }}">
+								<i class="bi bi-file-earmark-check"></i>
+								FNP à traiter
+							</a>
+						</li>
 
 						<li>
 							<a class="dropdown-item" href="{{ path('app_paiement_index') }}">
@@ -156,6 +162,16 @@
 								Voir la répartition de l’eau
 							</a>
 						</li>
+						
+						<li>
+							<a
+								class="dropdown-item"
+								href="{{ path('app_assemblee_generale_index') }}"
+							>
+								<i class="bi bi-people"></i>
+								Assemblées Générales
+							</a>
+						</li>
 
 					</ul>
 				</li>
@@ -164,18 +180,31 @@
 				{# Gestion eau                #}
 				{# ========================= #}
 
-					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarEau" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+				<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" id="navbarEau" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 						Eau
 					</a>
 
 					<ul class="dropdown-menu" aria-labelledby="navbarEau">
 						<li>
+							<a class="dropdown-item" href="{{ path('app_compteur_eau_index') }}">
+								Liste des compteurs
+							</a>
+						</li>
+
+						<li>
+							<a class="dropdown-item" href="{{ path('app_compteur_eau_new') }}">
+								Nouveau compteur d'eau
+							</a>
+						</li>
+
+						<li>
 							<a class="dropdown-item" href="{{ path('app_eau_compteur_general') }}">
 								Compteur général
 							</a>
 						</li>
+
 						<li>
-							<a class="dropdown-item" href="{{ path('app_eau_releves') }} ">
+							<a class="dropdown-item" href="{{ path('app_eau_releves') }}">
 								Relevés
 							</a>
 						</li>
@@ -197,7 +226,7 @@
 				{# ========================= #}
 				{# PARAMÉTRAGE               #}
 				{# ========================= #}
-					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+				<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Paramétrage
 					</a>
 					<ul class="dropdown-menu">
@@ -239,11 +268,12 @@
 				{# ========================= #}
 				{# Documents                 #}
 				{# ========================= #}
-					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+				<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Documents
 					</a>
 					<ul
-						class="dropdown-menu">
+						class="dropdown-menu"
+					>
 						{# Ajoutez vos liens de documents ici si nécessaire #}
 						<li>
 							<a class="dropdown-item" href="{{ path('app_document_exercice_index') }}">Index</a>
@@ -254,7 +284,7 @@
 				{# ========================= #}
 				{# Initialisation            #}
 				{# ========================= #}
-					<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+				<li class="nav-item dropdown"> <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
 						Initialisation
 					</a>
 
@@ -263,7 +293,7 @@
 						{% if contexte.exercice %}
 
 							<li>
-								<a class="dropdown-item" href="{{ path( 'app_import_solde_ouverture_index', { id: contexte.exercice.id } ) }}">
+								<a class="dropdown-item" href="{{ path('app_import_solde_ouverture_index', {id: contexte.exercice.id}) }}">
 									1) Importer les soldes d’ouverture
 								</a>
 							</li>
@@ -279,7 +309,7 @@
 							</li>
 
 							<li>
-								<a class="dropdown-item" href="{{ path( 'app_import_facture_index', { id: contexte.exercice.id } ) }}">
+								<a class="dropdown-item" href="{{ path('app_import_facture_index', {id: contexte.exercice.id}) }}">
 									3) Traiter les factures importées
 								</a>
 							</li>
@@ -291,7 +321,7 @@
 							</li>
 
 							<li>
-								<a class="dropdown-item" href="{{ path( 'app_import_reglement_index', { id: contexte.exercice.id } ) }}">
+								<a class="dropdown-item" href="{{ path('app_import_reglement_index', {id: contexte.exercice.id}) }}">
 									5) Traiter les règlements importés
 								</a>
 							</li>
@@ -315,7 +345,7 @@
 				{# ACTIONS RAPIDES           #}
 				{# ========================= #}
 
-					<div class="d-flex gap-2"> <a href="{{ path('app_facture_fournisseur_new') }}" class="btn btn-light btn-sm">
+				<div class="d-flex gap-2"> <a href="{{ path('app_facture_fournisseur_new') }}" class="btn btn-light btn-sm">
 						+ Facture fournisseur
 					</a>
 
@@ -336,8 +366,8 @@
 				{# ========================= #}
 				{# EXERCICE COURANT          #}
 				{# ========================= #}
-					{% if contexte.exercices is not empty %}
-						<form method="post" action="{{ path('app_changer_exercice') }}" class="d-flex align-items-center gap-2"> <select name="exercice_id" class="form-select form-select-sm" onchange="this.form.submit();">
+				{% if contexte.exercices is not empty %}
+					<form method="post" action="{{ path('app_changer_exercice') }}" class="d-flex align-items-center gap-2"> <select name="exercice_id" class="form-select form-select-sm" onchange="this.form.submit();">
 							{% for exercice in contexte.exercices %}
 								<option value="{{ exercice.id }}" {{ contexte.exercice and exercice.id == contexte.exercice.id ? 'selected' : '' }}>
 									{{ exercice.nom }}

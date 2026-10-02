@@ -38,16 +38,58 @@ final class ReglementFournisseurController extends AbstractController
             );
         }
 
-        $reglements =
-            $repository->findPourExercice(
-                $exercice
-            );
+        $reglements = $repository->findPourExercice(
+            $exercice
+        );
+
+        $groupes = [];
+        $totalGeneral = 0.0;
+
+        foreach ($reglements as $reglement) {
+
+            $fournisseur = $reglement->getFournisseur();
+
+            if ($fournisseur === null) {
+                continue;
+            }
+
+            $id = $fournisseur->getId();
+
+            if (!isset($groupes[$id])) {
+                $groupes[$id] = [
+                    'fournisseur' => $fournisseur,
+                    'reglements' => [],
+                    'total' => 0.0,
+                ];
+            }
+
+            $montant = (float) $reglement->getMontant();
+
+            $groupes[$id]['reglements'][] = $reglement;
+            $groupes[$id]['total'] += $montant;
+
+            $totalGeneral += $montant;
+        }
+
+        /*
+ * Classement alphabétique des fournisseurs.
+ */
+        uasort(
+            $groupes,
+            static fn(array $a, array $b): int =>
+            strcasecmp(
+                $a['fournisseur']->getNom(),
+                $b['fournisseur']->getNom()
+            )
+        );
 
         return $this->render(
             'reglement_fournisseur/index.html.twig',
             [
                 'exercice' => $exercice,
                 'reglements' => $reglements,
+                'groupes' => $groupes,
+                'totalGeneral' => $totalGeneral,
             ]
         );
     }

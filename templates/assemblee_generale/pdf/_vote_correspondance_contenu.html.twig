@@ -1,0 +1,418 @@
+{# =========================================================
+   PAGE 1 — FORMULAIRE DE VOTE PAR CORRESPONDANCE
+   ========================================================= #}
+
+<div class="vote-page">
+
+    <p class="vote-reference">
+        <em>
+            Modèle conforme à l'arrêté du 2 juillet 2020 fixant le modèle
+            de formulaire de vote par correspondance aux assemblées
+            générales de copropriétaires
+        </em>
+    </p>
+
+    <h1 class="vote-titre">
+        FORMULAIRE DE VOTE PAR CORRESPONDANCE
+    </h1>
+
+    {# OBJET #}
+
+    <div class="vote-objet">
+        <p>
+            <strong>Objet :</strong>
+        </p>
+
+        <p>
+            <strong>
+                ASSEMBLÉE GÉNÉRALE DES COPROPRIÉTAIRES
+            </strong>
+        </p>
+
+        <p>
+            <strong>Date et lieu :</strong>
+        </p>
+
+        <p>
+            Le {{ assemblee_generale.date|date('d/m/Y') }}<br>
+            À {{ assemblee_generale.heure|date('H:i') }}<br>
+            Adresse : {{ assemblee_generale.lieu }}
+        </p>
+    </div>
+
+
+    {# DESTINATAIRE #}
+
+    {% if syndic %}
+        <div class="vote-destinataire">
+
+            <p>
+                <strong>
+                    Ce formulaire doit être adressé à :
+                </strong>
+            </p>
+
+            <p>
+                <strong>Nom :</strong>
+                {{ syndic.prenom }} {{ syndic.nom }}<br>
+
+                <strong>Adresse postale :</strong>
+                {{ syndic.adresse }}<br>
+                {{ syndic.codePostal }} {{ syndic.ville }}<br>
+
+                <strong>Courriel :</strong>
+                {{ syndic.email }}<br>
+
+                <strong>
+                    Avant la date limite de réception le :
+                </strong>
+                {{ date_limite_vote|date('d/m/Y') }}
+            </p>
+
+        </div>
+    {% endif %}
+
+
+    {# IDENTIFICATION DU VOTANT #}
+
+    <div class="vote-identification">
+
+        <p>
+            <strong>Je soussigné(e) :</strong>
+            {{ coproprietaire.prenom }}
+            {{ coproprietaire.nom }}
+        </p>
+
+        <p class="vote-indication">
+            (Indiquer les nom et prénom du copropriétaire,
+            de l'associé ou, en cas d'indivision ou de
+            démembrement du droit de propriété, les nom et
+            prénom du mandataire commun)
+        </p>
+
+        <p>
+            <strong>Domicilié(e) au :</strong>
+            {{ coproprietaire.adresse }},
+            {{ coproprietaire.codePostal }}
+            {{ coproprietaire.ville }}
+        </p>
+
+        <p class="vote-indication">
+            (Indiquer l'adresse de son domicile)
+        </p>
+
+    </div>
+
+
+    {# DÉCLARATION #}
+
+    <div class="vote-declaration">
+
+        <p>
+            Après avoir pris connaissance de l'ordre du jour et des
+            documents annexés à la convocation ou mis à disposition
+            sur le site en ligne sécurisé de la copropriété,
+        </p>
+
+        <p>
+            souhaite émettre sur chacune des questions soumises à la
+            délibération de l'assemblée générale des copropriétaires
+            convoquée le
+            {{ assemblee_generale.date|date('d/m/Y') }},
+            à {{ assemblee_generale.lieu }},
+            à {{ assemblee_generale.heure|date('H:i') }},
+            le vote exprimé dans le tableau ci-joint
+            (indiquer le nombre de pages).
+        </p>
+
+    </div>
+
+
+    {# SIGNATURE #}
+
+    <div class="vote-signature">
+
+        <p>
+            Fait à ........................................,
+            le ........................................
+        </p>
+
+        <p>
+            (Signature du copropriétaire, de l'associé
+            ou du mandataire commun)
+        </p>
+
+        <div class="vote-espace-signature"></div>
+
+    </div>
+
+
+    {# AVERTISSEMENT #}
+
+    <p class="vote-attention">
+        <strong>
+            Attention : les zones grisées doivent être remplies
+            par l'organisateur de l'assemblée
+        </strong>
+    </p>
+
+
+    <p class="vote-tournez">
+        <strong>Tournez la page SVP</strong>
+    </p>
+
+
+    {# INFORMATIONS À RAPPELER SUR LES PAGES DE VOTE #}
+
+    <div class="vote-rappel">
+
+        <p class="vote-indication">
+            (à rappeler en en-tête de chaque page de vote)
+        </p>
+
+        <p>
+            <strong>Adresse du ou des immeubles :</strong>
+            {{ assemblee_generale.lieu }}
+            <br>
+
+            <strong>
+                Nom du copropriétaire/associé/mandataire commun :
+            </strong>
+            {{ coproprietaire.prenom }}
+            {{ coproprietaire.nom }}
+            <br>
+
+            <strong>Date de l'assemblée :</strong>
+            {{ assemblee_generale.date|date('d/m/Y') }}
+        </p>
+
+    </div>
+
+</div>
+
+<div class="page-break"></div>
+
+{# =========================================================
+   PAGE 2 — VOTES
+   ========================================================= #}
+
+<div class="vote-page-votes">
+
+    <div class="vote-entete-page">
+        <strong>Adresse du ou des immeubles :</strong>
+        {{ assemblee_generale.lieu }}
+        <br>
+
+        <strong>
+            Nom du copropriétaire/associé/mandataire commun :
+        </strong>
+        {{ coproprietaire.prenom }} {{ coproprietaire.nom }}
+        <br>
+
+        <strong>Date de l'assemblée :</strong>
+        {{ assemblee_generale.date|date('d/m/Y') }}
+    </div>
+
+    <table class="vote-tableau">
+
+        <thead>
+            <tr>
+                <th class="vote-col-objet">
+                    IDENTIFICATION DE L'OBJET
+                </th>
+
+                <th class="vote-col-question">
+                    QUESTIONS
+                    <br>
+                    <span class="vote-petit">
+                        (suivant leur ordre de présentation
+                        à l'ordre du jour - identification
+                        de la question, par exemple :
+                        numéro et/ou intitulé de la question, etc.)
+                    </span>
+                </th>
+
+                <th class="vote-col-choix">
+                    POUR*
+                </th>
+
+                <th class="vote-col-choix">
+                    CONTRE*
+                </th>
+
+                <th class="vote-col-choix">
+                    ABSTENTION*
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for resolution in assemblee_generale.resolutions %}
+                {% if resolution.majorite %}
+                    <tr>
+                        <td>
+                            Résolution {{ resolution.numero }}
+                        </td>
+
+                        <td>
+                            <strong>{{ resolution.titre }}</strong>
+
+                            {% if resolution.texte %}
+                                <br>
+                                {{ resolution.texte|nl2br }}
+                            {% endif %}
+                        </td>
+
+                        <td class="vote-case">
+                            □
+                        </td>
+
+                        <td class="vote-case">
+                            □
+                        </td>
+
+                        <td class="vote-case">
+                            □
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    <div class="vote-signature-page">
+
+        <p>
+            <strong>Signature**</strong>
+            (du copropriétaire, de l'associé ou du mandataire commun)
+        </p>
+
+        <div class="vote-espace-signature"></div>
+
+    </div>
+
+    <div class="vote-notes">
+        <p>
+            * Cocher la case correspondante
+            <br>
+            ** Si plusieurs pages de vote, parapher les pages
+            intermédiaires et signer la dernière page
+        </p>
+    </div>
+
+</div>
+
+
+{# =========================================================
+   PAGE 3 — TEXTES LEGAUX ET RÉGLEMENTAIRES
+   ========================================================= #}
+
+<div class="page-break"></div>
+
+<div class="vote-page-legale">
+
+    <h2 class="vote-titre-legal">
+        RAPPEL DES DISPOSITIONS LÉGALES ET RÉGLEMENTAIRES
+    </h2>
+
+    <p>
+        Il s'agit du formulaire prévu par l'alinéa 2 de l'article
+        17-1 A de la loi n° 65-557 du 10 juillet 1965 qui précise que :
+    </p>
+
+    <p>
+        « Les copropriétaires peuvent, par ailleurs, voter par
+        correspondance avant la tenue de l'assemblée générale,
+        au moyen d'un formulaire établi conformément à un modèle
+        fixé par arrêté. Si la résolution objet du vote par
+        correspondance est amendée en cours d'assemblée générale,
+        le votant par correspondance ayant voté favorablement est
+        assimilé à un copropriétaire défaillant pour cette résolution. »
+    </p>
+
+    <p>
+        Ce formulaire est régi par les articles 9, alinéa 2,
+        9 bis, 14, alinéas 1 à 4, 14-1 et 17, alinéa 3,
+        du décret n° 67-223 du 17 mars 1967 modifié pris pour
+        l'application de la loi n° 65-557 du 10 juillet 1965
+        fixant le statut de la copropriété des immeubles bâtis,
+        selon lesquels :
+    </p>
+
+    <p>
+        <strong>Alinéa 2 de l'article 9 :</strong>
+    </p>
+
+    <p>
+        « Le formulaire de vote par correspondance mentionné au
+        deuxième alinéa de l'article 17-1 A est joint à la convocation. »
+    </p>
+
+    <p>
+        <strong>Article 9 bis :</strong>
+    </p>
+
+    <p>
+        « Pour être pris en compte lors de l'assemblée générale,
+        le formulaire de vote par correspondance est réceptionné
+        par le syndic au plus tard trois jours francs avant la date
+        de la réunion.
+    </p>
+
+    <p>
+        Lorsque le formulaire de vote est transmis par courrier
+        électronique à l'adresse indiquée par le syndic, il est
+        présumé réceptionné à la date de l'envoi. »
+    </p>
+
+    <p>
+        <strong>Alinéas 1er à 4 de l'article 14 :</strong>
+    </p>
+
+    <p>
+        « Il est tenu une feuille de présence, pouvant comporter
+        plusieurs feuillets, qui indique les nom et domicile de
+        chaque copropriétaire ou associé :
+    </p>
+
+    <p class="vote-retrait">
+        – présent physiquement ou représenté ;<br>
+        – participant à l'assemblée générale par visioconférence,
+        par audioconférence ou par un autre moyen de communication
+        électronique ;<br>
+        – ayant voté par correspondance avec mention de la date
+        de réception du formulaire par le syndic. »
+    </p>
+
+    <p>
+        <strong>Article 14-1 :</strong>
+    </p>
+
+    <p>
+        « Au moment du vote, le formulaire de vote par correspondance
+        n'est pas pris en compte lorsque le copropriétaire, l'associé
+        ou leur mandataire est présent à l'assemblée générale,
+        quelle que soit la date à laquelle a été établi ou reçu
+        le formulaire de vote par correspondance ou le mandat avec
+        délégation de vote, y compris en cas de délégation de vote
+        sans désignation d'un mandataire. »
+    </p>
+
+    <p>
+        <strong>Alinéa 3 de l'article 17 :</strong>
+    </p>
+
+    <p>
+        « Le procès-verbal comporte, sous l'intitulé de chaque
+        question inscrite à l'ordre du jour, le résultat du vote.
+        Il précise les noms et nombre de voix des copropriétaires
+        ou associés qui se sont opposés à la décision, qui se sont
+        abstenus, ou qui sont assimilés à un copropriétaire défaillant
+        en application du deuxième alinéa de l'article 17-1 A
+        de la loi du 10 juillet 1965. »
+    </p>
+
+</div>

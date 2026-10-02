@@ -34,6 +34,29 @@ final class ControleImportReglementFournisseurService
         $lignes = $this->repository
             ->findPourExercice($exercice);
 
+        usort(
+            $lignes,
+            static function (
+                ImportReglementFournisseur $a,
+                ImportReglementFournisseur $b
+            ): int {
+                $nomA = $a->getFournisseur()?->getNom() ?? '';
+                $nomB = $b->getFournisseur()?->getNom() ?? '';
+
+                $comparaisonFournisseur = strcasecmp(
+                    $nomA,
+                    $nomB
+                );
+
+                if ($comparaisonFournisseur !== 0) {
+                    return $comparaisonFournisseur;
+                }
+
+                return $a->getDateReglement()
+                    <=> $b->getDateReglement();
+            }
+        );
+
         $nombreEnAttente = 0;
         $nombreEnTraitement = 0;
         $nombreTraitees = 0;

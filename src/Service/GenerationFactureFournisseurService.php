@@ -3,14 +3,16 @@
 namespace App\Service;
 
 use App\Entity\FactureFournisseur;
-use App\Enum\OperationType;
 use App\Enum\FactureFournisseurType;
+use App\Enum\OperationType;
+use App\Repository\CompteRepository;
 
 class GenerationFactureFournisseurService
 {
     public function __construct(
         private GenerationRepartitionService $generationRepartitionService,
         private ComptabiliteService $comptabiliteService,
+        private CompteRepository $compteRepository,
     ) {}
 
     public function generer(
@@ -65,15 +67,57 @@ class GenerationFactureFournisseurService
         }
 
         /**
-         * 1. Comptabilisation de la facture ou de l'avoir fournisseur
+         * Une FNP :
+         * - doit être une facture, pas un avoir ;
+         * - ne peut pas avoir été avancée par un copropriétaire.
          */
-        
-        $operationFacture = $this
-            ->comptabiliteService
+        if ($facture->isFnp()) {
+
+            if (
+                $facture->getType()
+                !== FactureFournisseurType::FACTURE
+            ) {
+                throw new \LogicException(
+                    'Une FNP ne peut pas être enregistrée comme un avoir.'
+                );
+            }
+
+            if ($coproprietaireAvanceur !== null) {
+                throw new \LogicException(
+                    'Une FNP ne peut pas être associée à un copropriétaire avanceur.'
+                );
+            }
+        }
+
+        /**
+         * Compte de contrepartie :
+         *
+         * Facture normale :
+         * Crédit compte fournisseur
+         *
+         * FNP :
+         * Crédit 408000
+         */
+        $compteContrepartie = $compteFournisseur;
+
+        if ($facture->isFnp()) {
+            $compteContrepartie =
+                $this->compteRepository
+                ->findByNumeroOrFail('408000');
+        }
+
+        /**
+         * 1. Comptabilisation de la facture,
+         * de l'avoir ou de la FNP.
+         */
+        $operationFacture =
+            $this->comptabiliteService
             ->creerOperation(
                 $facture->getDateFacture(),
                 $facture->getLibelle(),
-                OperationType::CHARGE,
+                $facture->isFnp()
+                    ? OperationType::FNP
+                    : OperationType::CHARGE,
                 $facture->getNumero()
             );
 
@@ -81,27 +125,26 @@ class GenerationFactureFournisseurService
             ->setTypeCharge($typeCharge)
             ->setFournisseur($fournisseur);
 
-        if ($facture->getType() === FactureFournisseurType::AVOIR) {
+        if (
+            $facture->getType()
+            === FactureFournisseurType::AVOIR
+        ) {
 
-            /*
-     * Avoir fournisseur
-     *
-     * Débit  : compte fournisseur
-     * Crédit : compte de charge
-     */
+            /**
+             * Avoir fournisseur
+             *
+             * Débit  : compte fournisseur
+             * Crédit : compte de charge
+             */
+            $this->comptabiliteService->creerDebit(
+                $operationFacture,
+                $facture->getExercice(),
+                $compteFournisseur,
+                $facture->getMontant()
+            );
 
-            $this
-                ->comptabiliteService
-                ->creerDebit(
-                    $operationFacture,
-                    $facture->getExercice(),
-                    $compteFournisseur,
-                    $facture->getMontant()
-                );
-
-            $ecritureCharge = $this
-                ->comptabiliteService
-                ->creerCredit(
+            $ecritureCharge =
+                $this->comptabiliteService->creerCredit(
                     $operationFacture,
                     $facture->getExercice(),
                     $compteCharge,
@@ -109,46 +152,48 @@ class GenerationFactureFournisseurService
                 );
         } else {
 
-            /*
-     * Facture fournisseur
-     *
-     * Débit  : compte de charge
-     * Crédit : compte fournisseur
-     */
-
-            $ecritureCharge = $this
-                ->comptabiliteService
-                ->creerDebit(
+            /**
+             * Facture normale :
+             *
+             * Débit  charge
+             * Crédit fournisseur
+             *
+             * FNP :
+             *
+             * Débit  charge
+             * Crédit 408000
+             */
+            $ecritureCharge =
+                $this->comptabiliteService->creerDebit(
                     $operationFacture,
                     $facture->getExercice(),
                     $compteCharge,
                     $facture->getMontant()
                 );
 
-            $this
-                ->comptabiliteService
-                ->creerCredit(
-                    $operationFacture,
-                    $facture->getExercice(),
-                    $compteFournisseur,
-                    $facture->getMontant()
-                );
+            $this->comptabiliteService->creerCredit(
+                $operationFacture,
+                $facture->getExercice(),
+                $compteContrepartie,
+                $facture->getMontant()
+            );
         }
 
         $this->comptabiliteService->enregistrer();
 
-        /*
-         * 2. Transfert éventuel de la dette vers le copropriétaire
+        /**
+         * 2. Transfert éventuel de la dette
+         * vers un copropriétaire.
          *
-         * Débit  : compte fournisseur
-         * Crédit : compte copropriétaire
+         * Ne concerne jamais une FNP.
          */
         if (
-            $coproprietaireAvanceur !== null
+            !$facture->isFnp()
+            && $coproprietaireAvanceur !== null
             && $compteCoproprietaire !== null
         ) {
-            $operationTransfert = $this
-                ->comptabiliteService
+            $operationTransfert =
+                $this->comptabiliteService
                 ->creerOperation(
                     $facture->getDateFacture(),
                     'Transfert de la dette '
@@ -162,60 +207,51 @@ class GenerationFactureFournisseurService
             $operationTransfert
                 ->setFournisseur($fournisseur);
 
-            if ($facture->getType() === FactureFournisseurType::AVOIR) {
+            if (
+                $facture->getType()
+                === FactureFournisseurType::AVOIR
+            ) {
+                /**
+                 * Avoir concernant une dépense avancée
+                 *
+                 * Débit  copropriétaire
+                 * Crédit fournisseur
+                 */
+                $this->comptabiliteService->creerDebit(
+                    $operationTransfert,
+                    $facture->getExercice(),
+                    $compteCoproprietaire,
+                    $facture->getMontant(),
+                    $coproprietaireAvanceur
+                );
 
-                /*
-         * Avoir concernant une dépense avancée
-         *
-         * Débit  : compte copropriétaire
-         * Crédit : compte fournisseur
-         */
-
-                $this
-                    ->comptabiliteService
-                    ->creerDebit(
-                        $operationTransfert,
-                        $facture->getExercice(),
-                        $compteCoproprietaire,
-                        $facture->getMontant(),
-                        $coproprietaireAvanceur
-                    );
-
-                $this
-                    ->comptabiliteService
-                    ->creerCredit(
-                        $operationTransfert,
-                        $facture->getExercice(),
-                        $compteFournisseur,
-                        $facture->getMontant()
-                    );
+                $this->comptabiliteService->creerCredit(
+                    $operationTransfert,
+                    $facture->getExercice(),
+                    $compteFournisseur,
+                    $facture->getMontant()
+                );
             } else {
+                /**
+                 * Facture concernant une dépense avancée
+                 *
+                 * Débit  fournisseur
+                 * Crédit copropriétaire
+                 */
+                $this->comptabiliteService->creerDebit(
+                    $operationTransfert,
+                    $facture->getExercice(),
+                    $compteFournisseur,
+                    $facture->getMontant()
+                );
 
-                /*
-         * Facture concernant une dépense avancée
-         *
-         * Débit  : compte fournisseur
-         * Crédit : compte copropriétaire
-         */
-
-                $this
-                    ->comptabiliteService
-                    ->creerDebit(
-                        $operationTransfert,
-                        $facture->getExercice(),
-                        $compteFournisseur,
-                        $facture->getMontant()
-                    );
-
-                $this
-                    ->comptabiliteService
-                    ->creerCredit(
-                        $operationTransfert,
-                        $facture->getExercice(),
-                        $compteCoproprietaire,
-                        $facture->getMontant(),
-                        $coproprietaireAvanceur
-                    );
+                $this->comptabiliteService->creerCredit(
+                    $operationTransfert,
+                    $facture->getExercice(),
+                    $compteCoproprietaire,
+                    $facture->getMontant(),
+                    $coproprietaireAvanceur
+                );
             }
 
             $this->comptabiliteService->enregistrer();
@@ -225,16 +261,29 @@ class GenerationFactureFournisseurService
             ->setOperation($operationFacture)
             ->setComptabilisee(true);
 
-        /*
-         * La répartition repose uniquement sur l’écriture
-         * de charge de la facture.
+        /**
+         * 3. Répartition de la charge.
+         *
+         * La FNP est bien une charge de l'exercice :
+         * elle doit donc être répartie normalement.
          */
         if (!$typeCharge->isEau()) {
-            $this
-                ->generationRepartitionService
+            $montantARepartir =
+                (float) $facture->getMontant();
+
+            if (
+                $facture->getType()
+                === FactureFournisseurType::AVOIR
+            ) {
+                $montantARepartir *= -1;
+            }
+
+            $this->generationRepartitionService
                 ->generer(
                     $ecritureCharge,
-                    $facture
+                    $facture->getExercice(),
+                    $facture->getDateFacture(),
+                    $montantARepartir
                 );
         }
     }

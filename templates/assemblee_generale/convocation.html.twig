@@ -1,0 +1,383 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Convocation à l'Assemblée Générale
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Convocation à l'Assemblée Générale</h1>
+            <h2>{{ assemblee_generale.exercice.nom }}</h2>
+        </div>
+    </div>
+
+    <div class="mb-4">
+
+        <p>
+            Vous êtes convoqué(e) à l'Assemblée Générale de la copropriété.
+        </p>
+
+        <p>
+            Cette assemblée aura notamment pour objet l'examen
+            et l'approbation des comptes de
+            {{ assemblee_generale.exercice.nom }}.
+        </p>
+
+    </div>
+
+    <table class="table mb-5">
+
+        <tbody>
+
+            <tr>
+                <th>Exercice concerné</th>
+                <td>
+                    {{ assemblee_generale.exercice.nom }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Date</th>
+                <td>
+                    {{ assemblee_generale.date
+                        ? assemblee_generale.date|date('d/m/Y')
+                        : 'À définir'
+                    }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Heure</th>
+                <td>
+                    {{ assemblee_generale.heure
+                        ? assemblee_generale.heure|date('H:i')
+                        : 'À définir'
+                    }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Lieu</th>
+                <td>
+                    {{ assemblee_generale.lieu ?: 'À définir' }}
+                </td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+
+    <h2 class="mb-3">
+        Ordre du jour
+    </h2>
+
+
+    {% if assemblee_generale.resolutions is empty %}
+
+        <div class="alert alert-warning">
+            Aucune résolution n'a encore été enregistrée pour cette assemblée.
+        </div>
+
+    {% else %}
+
+        <div class="mb-5">
+
+            {% for resolution in assemblee_generale.resolutions %}
+
+                <div class="mb-4">
+
+                    <h4>
+                        {{ resolution.numero }}.
+                        {{ resolution.titre }}
+                    </h4>
+
+                    <p>
+                        {{ resolution.texte|nl2br }}
+                    </p>
+
+                    {% if resolution.majorite %}
+
+                        <p>
+                            <strong>
+                                Majorité requise :
+                            </strong>
+
+                            {{ resolution.majorite ? resolution.majorite.label : 'Aucune' }}
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+    <h2 class="mb-3">
+        Documents joints à la convocation
+    </h2>
+
+    <div class="card mb-5">
+        <div class="card-body">
+
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th class="text-center">État</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>Projet individuel de répartition des charges</td>
+                        <td class="text-center">
+                            <span class="badge bg-success">
+                                Disponible — {{ simulation.lignes|length }} copropriétaires
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            Projet de budget prévisionnel avec comparatif
+                        </td>
+                        <td class="text-end">
+                            <a
+                                href="{{ path(
+                    'app_assemblee_generale_budget_previsionnel_pdf',
+                    { id: assemblee_generale.id }
+                ) }}"
+                                class="btn btn-sm btn-outline-danger"
+                                target="_blank"
+                            >
+                                PDF
+                            </a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Balance générale</td>
+                        <td class="text-center">
+                            <span class="badge bg-success">
+                                Disponible
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Répartition des charges</td>
+                        <td class="text-center">
+                            <span class="badge bg-success">
+                                Disponible
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Répartition de l'eau</td>
+                        <td class="text-center">
+                            <span class="badge bg-success">
+                                Disponible
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>État de compte individuel du copropriétaire</td>
+                        <td class="text-center">
+                            <span class="badge bg-success">
+                                Disponible
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Formulaire de vote par correspondance</td>
+
+                        <td class="text-center">
+                            <span class="badge bg-success">
+                                Disponible — nominatif
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Pouvoir de représentation</td>
+                        <td class="text-center">
+                            <span class="badge bg-success">
+                                Disponible — nominatif
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Projet de plan pluriannuel de travaux (PPPT)</td>
+                        <td class="text-center">
+                            <span class="badge bg-info text-dark">
+                                Transmis séparément
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <h3 class="mb-3">
+        Projets individuels de répartition
+    </h3>
+
+    <div class="card mb-5">
+        <div class="card-body">
+
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Copropriétaire</th>
+                        <th class="text-end">Tantièmes</th>
+                        <th class="text-end">Appels</th>
+                        <th class="text-end">Charges</th>
+                        <th class="text-end">Régularisation</th>
+                        <th class="text-end">Convocation</th>
+                        <th class="text-end">Répartition</th>
+                        <th class="text-end">Vote</th>
+                        <th class="text-end">Pouvoir</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for ligne in simulation.lignes %}
+                        <tr>
+                            <td>
+                                {{ ligne.coproprietaire }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ ligne.tantiemes }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ ligne.totalAppele|number_format(2, ',', ' ') }} €
+                            </td>
+
+                            <td class="text-end">
+                                {{ ligne.quotePartReelle|number_format(2, ',', ' ') }} €
+                            </td>
+
+                            <td class="text-end">
+                                {% if ligne.estCrediteur %}
+                                    <span class="text-success">
+                                        {{ ligne.regularisation|number_format(2, ',', ' ') }} €
+                                    </span>
+                                {% elseif ligne.estDebiteur %}
+                                    <span class="text-danger">
+                                        {{ ligne.regularisation|number_format(2, ',', ' ') }} €
+                                    </span>
+                                {% else %}
+                                    0,00 €
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a
+                                    href="{{ path(
+                                        'app_assemblee_generale_convocation_pdf',
+                                        {
+                                            id: assemblee_generale.id,
+                                            coproprietaire: ligne.coproprietaire.id
+                                        }
+                                    ) }}"
+                                    class="btn btn-sm btn-outline-danger"
+                                    target="_blank"
+                                >
+                                    Convocation
+                                </a>
+                            </td>
+                            <td class="text-end">
+                                <a
+                                    href="{{ path(
+                                        'app_assemblee_generale_repartition_individuelle',
+                                        {
+                                            id: assemblee_generale.id,
+                                            coproprietaire: ligne.coproprietaire.id
+                                        }
+                                    ) }}"
+                                    class="btn btn-sm btn-outline-primary"
+                                >
+                                    Répartition
+                                </a>
+
+                                <a
+                                    href="{{ path(
+                                        'app_assemblee_generale_dossier_convocation_pdf',
+                                        {
+                                            id: assemblee_generale.id,
+                                            coproprietaire: ligne.coproprietaire.id
+                                        }
+                                    ) }}"
+                                    class="btn btn-sm btn-success"
+                                    target="_blank"
+                                >
+                                    Dossier
+                                </a>
+
+                            </td>
+                            <td class="text-end">
+                                <a
+                                    href="{{ path(
+                                        'app_assemblee_generale_vote_correspondance_pdf',
+                                        {
+                                            id: assemblee_generale.id,
+                                            coproprietaire: ligne.coproprietaire.id
+                                        }
+                                    ) }}"
+                                    class="btn btn-sm btn-outline-danger"
+                                    target="_blank"
+                                >
+                                    Vote
+                                </a>
+                            </td>
+                            <td class="text-end">
+                                <a
+                                    href="{{ path(
+                                        'app_assemblee_generale_pouvoir_pdf',
+                                        {
+                                            id: assemblee_generale.id,
+                                            coproprietaire: ligne.coproprietaire.id
+                                        }
+                                    ) }}"
+                                    class="btn btn-sm btn-outline-danger"
+                                    target="_blank"
+                                >
+                                    Pouvoir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+    <div class="mt-4">
+
+        <a
+            href="{{ path(
+                'app_assemblee_generale_show',
+                {'id': assemblee_generale.id}
+            ) }}"
+            class="btn btn-secondary"
+        >
+            Retour
+        </a>
+
+    </div>
+
+{% endblock %}

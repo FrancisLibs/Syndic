@@ -1,0 +1,879 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Assemblée Générale
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h1>Assemblée Générale</h1>
+            <h2>{{ assemblee_generale.exercice.nom }}</h2>
+        </div>
+        <p>
+            <strong>Statut :</strong>
+            {{ assemblee_generale.statut.label }}
+        </p>
+
+        <div>
+            {% if assemblee_generale.statut.value != 'cloturee' %}
+
+                <a
+                    href="{{ path(
+                'app_assemblee_generale_edit',
+                {'id': assemblee_generale.id}
+            ) }}"
+                    class="btn btn-outline-secondary"
+                >
+                    Modifier
+                </a>
+
+            {% endif %}
+        </div>
+
+    </div>
+
+    <table class="table mb-5">
+        <tbody>
+
+            <tr>
+                <th>Exercice soumis à approbation</th>
+                <td>{{ assemblee_generale.exercice.nom }}</td>
+            </tr>
+
+            <tr>
+                <th>Date</th>
+                <td>
+                    {{ assemblee_generale.date
+                        ? assemblee_generale.date|date('d/m/Y')
+                        : 'Non définie'
+                    }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Heure début </th>
+                <td>
+                    {{ assemblee_generale.heure
+                        ? assemblee_generale.heure|date('H:i')
+                        : 'Non définie'
+                    }}
+                </td>
+            </tr>
+
+            {% if assemblee_generale.heureCloture %}
+                <tr>
+                    <th>Heure fin</th>
+                    <td>
+                        {{ assemblee_generale.heureCloture|date('H:i') }}
+                    </td>
+                </tr>
+            {% endif %}
+
+            <tr>
+                <th>Lieu</th>
+                <td>
+                    {{ assemblee_generale.lieu ?: 'Non défini' }}
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+
+    {# ========================================================= #}
+    {# ORDRE DU JOUR                                             #}
+    {# ========================================================= #}
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Ordre du jour</h2>
+
+        {% if assemblee_generale.statut.value != 'cloturee' %}
+            <a
+                href="{{ path(
+                'app_assemblee_generale_resolution_new',
+                {'id': assemblee_generale.id}
+            ) }}"
+                class="btn btn-success"
+            >
+                Ajouter une résolution
+            </a>
+        {% endif %}
+    </div>
+
+
+    {% if assemblee_generale.resolutions is empty %}
+
+        <div class="alert alert-info">
+            Aucune résolution n'a encore été enregistrée.
+        </div>
+
+        <form
+            method="post"
+            action="{{ path(
+                'app_assemblee_generale_initialiser_ordre_du_jour',
+                {'id': assemblee_generale.id}
+            ) }}"
+            class="mb-4"
+        >
+            <button class="btn btn-primary">
+                Initialiser l'ordre du jour
+            </button>
+        </form>
+
+    {% else %}
+
+        <table class="table mb-5">
+
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Résolution</th>
+                    <th>Majorité</th>
+                    <th class="text-center">Résultat</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for resolution in assemblee_generale.resolutions %}
+
+                    <tr>
+
+                        <td class="text-center">
+                            {{ resolution.numero }}
+                        </td>
+
+                        <td>
+
+                            <strong>
+                                {{ resolution.titre }}
+                            </strong>
+
+                            {% if resolution.amendeeEnSeance %}
+                                <span class="badge bg-warning text-dark ms-2">
+                                    Amendée en séance
+                                </span>
+                            {% endif %}
+
+                            <div class="mt-2">
+                                {{ resolution.texte|nl2br }}
+                            </div>
+
+                            {% if resolution.decision %}
+                                <div class="alert alert-light border mt-3 mb-0">
+                                    <strong>Décision soumise au vote :</strong>
+
+                                    <div class="mt-2">
+                                        {{ resolution.decision|nl2br }}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                        </td>
+
+                        <td class="text-center">
+                            {{ resolution.majorite ? resolution.majorite.label : 'Aucune' }}
+                        </td>
+
+                        <td class="text-center">
+
+                            {% if resolution.adoptee is same as(true) %}
+
+                                {% if resolution.tantiemesPourSecondTour is not null %}
+
+                                    <span class="badge bg-success">
+                                        Adoptée au 2ᵉ vote
+                                    </span>
+
+                                    <div class="small mt-2 text-start text-nowrap">
+                                        <div>
+                                            1er vote :
+                                            <strong>{{ resolution.tantiemesPour }}</strong> pour ·
+                                            {{ resolution.tantiemesContre }} contre ·
+                                            {{ resolution.tantiemesAbstention }} abst.
+                                        </div>
+
+                                        <div>
+                                            2ᵉ vote :
+                                            <strong>{{ resolution.tantiemesPourSecondTour }}</strong> pour ·
+                                            {{ resolution.tantiemesContreSecondTour }} contre ·
+                                            {{ resolution.tantiemesAbstentionSecondTour }} abst.
+                                        </div>
+                                    </div>
+
+                                {% else %}
+
+                                    <span class="badge bg-success">
+                                        Adoptée
+                                    </span>
+
+                                    <div class="small mt-2 text-nowrap">
+                                        <strong>{{ resolution.tantiemesPour }}</strong> pour ·
+                                        {{ resolution.tantiemesContre }} contre ·
+                                        {{ resolution.tantiemesAbstention }} abst.
+                                    </div>
+
+                                {% endif %}
+
+                            {% elseif resolution.secondVoteNecessaire %}
+
+                                <span class="badge bg-warning text-dark">
+                                    Second vote requis
+                                </span>
+
+                                <div class="small mt-2 text-nowrap">
+                                    <strong>{{ resolution.tantiemesPour }}</strong> pour ·
+                                    {{ resolution.tantiemesContre }} contre ·
+                                    {{ resolution.tantiemesAbstention }} abst.
+                                </div>
+
+                            {% elseif resolution.adoptee is same as(false) %}
+
+                                <span class="badge bg-danger">
+                                    Rejetée
+                                </span>
+
+                                <div class="small mt-2 text-nowrap">
+                                    <strong>{{ resolution.tantiemesPour }}</strong> pour ·
+                                    {{ resolution.tantiemesContre }} contre ·
+                                    {{ resolution.tantiemesAbstention }} abst.
+                                </div>
+
+                            {% elseif resolution.majorite %}
+
+                                <span class="badge bg-secondary">
+                                    Non votée
+                                </span>
+
+                            {% else %}
+
+                                <span class="text-muted">—</span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1 flex-nowrap">
+                                {% if assemblee_generale.statut.value == 'cloturee' %}
+
+                                    <span class="text-muted">
+                                        Clôturée
+                                    </span>
+
+                                {% else %}
+
+                                    <a
+                                        href="{{ path(
+                                        'app_assemblee_generale_resolution_edit',
+                                        {'id': resolution.id}
+                                    ) }}"
+                                        class="btn btn-sm btn-outline-secondary"
+                                    >
+                                        Modifier
+                                    </a>
+                                    
+                                    {% if resolution.majorite %}
+                                        {% if resolution.tantiemesPour is null
+                                            and resolution.tantiemesContre is null
+                                            and resolution.tantiemesAbstention is null
+                                        %}
+                                            <a
+                                                href="{{ path(
+                                                    'app_assemblee_generale_resolution_decision',
+                                                    {'id': resolution.id}
+                                                ) }}"
+                                                class="btn btn-sm btn-outline-primary"
+                                            >
+                                                Décision
+                                            </a>
+                                        {% elseif resolution.decision %}
+                                            <span
+                                                class="badge bg-secondary"
+                                                title="La décision est verrouillée après le vote"
+                                            >
+                                                Décision enregistrée
+                                            </span>
+                                        {% endif %}
+
+                                        {% if
+                                            assemblee_generale.statut.value == 'en_cours'
+                                            and not resolution.hasSecondVoteEnregistre
+                                        %}
+                                            <a
+                                                href="{{ path(
+                                                    'app_assemblee_generale_resolution_vote',
+                                                    {id: resolution.id}
+                                                ) }}"
+                                                class="btn btn-sm btn-success"
+                                            >
+                                                Voter
+                                            </a>
+                                        {% endif %}
+
+                                        {% if
+                                            resolution.tantiemesPour is not null
+                                            or resolution.tantiemesContre is not null
+                                            or resolution.tantiemesAbstention is not null
+                                        %}
+                                            <form
+                                                method="post"
+                                                action="{{ path(
+                                                    'app_assemblee_generale_resolution_reinitialiser_vote',
+                                                    {'id': resolution.id}
+                                                ) }}"
+                                                class="d-inline"
+                                                onsubmit="return confirm(
+                                                    'Réinitialiser le vote de cette résolution ?'
+                                                );"
+                                            >
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                >
+                                                    Réinitialiser
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+
+                                    {% if resolution.secondVoteNecessaire %}
+                                        <a
+                                            href="{{ path(
+                                            'app_assemblee_generale_resolution_second_vote',
+                                            {'id': resolution.id}
+                                         ) }}"
+                                            class="btn btn-sm btn-warning"
+                                            title="Second vote selon l'article 25-1"
+                                        >
+                                            2ᵉ vote
+                                        </a>
+                                    {% endif %}
+
+                                    {% if
+                                    resolution.titre == 'Approbation des comptes'
+                                    and resolution.adoptee is same as(true)
+                                %}
+
+                                        {% if
+                                        approbation_comptes
+                                        and approbation_comptes.operation
+                                    %}
+
+                                            <span class="badge bg-success">
+                                                Comptabilisée
+                                            </span>
+
+                                        {% else %}
+
+                                            <form
+                                                method="post"
+                                                action="{{ path(
+                                                'app_assemblee_generale_comptabiliser_approbation',
+                                                {'id': resolution.id}
+                                            ) }}"
+                                                class="d-inline"
+                                                onsubmit="return confirm(
+                                                'Comptabiliser définitivement l’approbation des comptes ?'
+                                            );"
+                                            >
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-primary"
+                                                >
+                                                    Comptabiliser
+                                                </button>
+                                            </form>
+
+                                        {% endif %}
+
+                                    {% endif %}
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% endif %}
+
+
+    {# ========================================================= #}
+    {# PRÉPARATION DE L'ASSEMBLÉE GÉNÉRALE                      #}
+    {# ========================================================= #}
+
+    <h2>
+        Préparation de l'Assemblée Générale
+    </h2>
+
+    <table class="table">
+
+        <thead>
+
+            <tr>
+                <th>
+                    Document
+                </th>
+
+                <th class="text-center">
+                    État
+                </th>
+
+                <th class="text-center">
+                    Action
+                </th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            <tr>
+
+                <td>
+                    Convocation
+                </td>
+
+                <td class="text-center">
+                    {% if
+                        assemblee_generale.date
+                        and assemblee_generale.heure
+                        and assemblee_generale.lieu
+                        and not assemblee_generale.resolutions is empty
+                    %}
+                        <span class="badge bg-success">
+                            Préparée
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">
+                            À préparer
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+
+                    <a
+                        href="{{ path(
+                            'app_assemblee_generale_convocation',
+                            {'id': assemblee_generale.id}
+                        ) }}"
+                        class="btn btn-sm btn-primary"
+                    >
+                        {% if
+                            assemblee_generale.date
+                            and assemblee_generale.heure
+                            and assemblee_generale.lieu
+                            and not assemblee_generale.resolutions is empty
+                        %}
+                            Consulter
+                        {% else %}
+                            Préparer
+                        {% endif %}
+                    </a>
+
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Ordre du jour et résolutions
+                </td>
+
+                <td class="text-center">
+                    {% if assemblee_generale.resolutions is empty %}
+                        <span class="badge bg-warning text-dark">
+                            À préparer
+                        </span>
+                    {% else %}
+                        <span class="badge bg-success">
+                            Préparé
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    —
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Documents comptables
+                </td>
+
+                <td class="text-center">
+                    <span class="badge bg-success">
+                        Disponibles
+                    </span>
+                </td>
+
+                <td class="text-center">
+
+                    <a
+                        href="{{ path(
+                'app_assemblee_generale_documents_comptables',
+                {'id': assemblee_generale.id}
+            ) }}"
+                        class="btn btn-sm btn-primary"
+                    >
+                        Consulter
+                    </a>
+
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Projet de budget prévisionnel
+                    {% if budget_projet %}
+                        {{ budget_projet.exercice.nom }}
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    {% if budget_projet %}
+                        <span class="badge bg-success">
+                            Préparé
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">
+                            À préparer
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    <a
+                        href="{{ path(
+                            'app_assemblee_generale_budget_previsionnel',
+                            {'id': assemblee_generale.id}
+                        ) }}"
+                        class="btn btn-sm btn-primary"
+                    >
+                        {% if budget_projet %}
+                            Voir le budget et le comparatif
+                        {% else %}
+                            Préparer
+                        {% endif %}
+                    </a>
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <td>
+                    Votes par correspondance
+                </td>
+
+                <td class="text-center">
+                    {% if nombre_votes_correspondance == 0 %}
+
+                        <span class="badge bg-secondary">
+                            Aucun formulaire
+                        </span>
+
+                    {% elseif nombre_votes_correspondance_saisis == nombre_votes_correspondance %}
+
+                        <span class="badge bg-success">
+                            {{ nombre_votes_correspondance_saisis }}
+                            /
+                            {{ nombre_votes_correspondance }}
+                            formulaire(s) saisi(s)
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge bg-warning text-dark">
+                            {{ nombre_votes_correspondance_saisis }}
+                            /
+                            {{ nombre_votes_correspondance }}
+                            formulaire(s) saisi(s)
+                        </span>
+
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    <a
+                        href="{{ path(
+                            'app_assemblee_generale_votes_correspondance',
+                            {id: assemblee_generale.id}
+                        ) }}"
+                        class="btn btn-sm btn-primary"
+                    >
+                        {% if nombre_votes_correspondance_saisis > 0 %}
+                            Consulter
+                        {% else %}
+                            Renseigner
+                        {% endif %}
+                    </a>
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+    {# ========================================================= #}
+    {# TENUE DE L'ASSEMBLÉE GÉNÉRALE                            #}
+    {# ========================================================= #}
+
+    <h2 class="mt-5">
+        Tenue de l'Assemblée Générale
+    </h2>
+
+    {% if assemblee_generale.statut.value == 'preparation' %}
+
+        <form
+            method="post"
+            action="{{ path(
+            'app_assemblee_generale_demarrer',
+            {id: assemblee_generale.id}
+        ) }}"
+            class="mb-3"
+        >
+            <button
+                type="submit"
+                class="btn btn-success"
+            >
+                Démarrer l'Assemblée Générale
+            </button>
+        </form>
+
+    {% endif %}
+
+    {% if assemblee_generale.statut.value == 'en_cours' %}
+
+        {% if assemblee_generale.statut.value == 'en_cours' %}
+
+            <div class="mb-3">
+                <a
+                    href="{{ path(
+                'app_assemblee_generale_cloturer',
+                {id: assemblee_generale.id}
+            ) }}"
+                    class="btn btn-danger"
+                >
+                    Clôturer l'Assemblée Générale
+                </a>
+            </div>
+
+        {% endif %}
+
+    {% endif %}
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Élément</th>
+                <th class="text-center">État</th>
+                <th class="text-center">Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>
+                    Présents / Représentés
+                </td>
+
+                <td class="text-center">
+                    {% if assemblee_generale.tantiemesPresentsRepresentes is not null %}
+
+                        <strong>
+                            {{ assemblee_generale.nombrePresents }}
+                            présent{{ assemblee_generale.nombrePresents > 1 ? 's' : '' }}
+                        </strong>
+
+                        —
+
+                        <strong>
+                            {{ assemblee_generale.nombreRepresentes }}
+                            représenté{{ assemblee_generale.nombreRepresentes > 1 ? 's' : '' }}
+                        </strong>
+
+                        —
+
+                        <strong>
+                            {{ assemblee_generale.tantiemesPresentsRepresentes|number_format(0, ',', ' ') }}
+                            / 10 000 voix
+                        </strong>
+
+                    {% else %}
+                        À renseigner
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    {% if assemblee_generale.statut.value != 'cloturee' %}
+
+                        <a
+                            href="{{ path(
+                                'app_assemblee_generale_presences',
+                                {'id': assemblee_generale.id}
+                            ) }}"
+                            class="btn btn-sm btn-primary"
+                        >
+                            {% if assemblee_generale.tantiemesPresentsRepresentes is not null %}
+                                Modifier
+                            {% else %}
+                                Renseigner
+                            {% endif %}
+                        </a>
+
+                    {% else %}
+
+                        <span class="text-muted">
+                            Clôturée
+                        </span>
+
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    Constitution du bureau
+                </td>
+
+                <td class="text-center">
+                    {% if assemblee_generale.presidentSeance
+                        and assemblee_generale.secretaireSeance
+                    %}
+                        <span class="badge bg-success">
+                            Renseigné
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">
+                            À renseigner
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    {% if assemblee_generale.statut.value != 'cloturee' %}
+
+                        <a
+                            href="{{ path(
+                                'app_assemblee_generale_bureau',
+                                {'id': assemblee_generale.id}
+                            ) }}"
+                            class="btn btn-sm btn-primary"
+                        >
+                            {% if assemblee_generale.presidentSeance
+                                and assemblee_generale.secretaireSeance
+                            %}
+                                Modifier
+                            {% else %}
+                                Renseigner
+                            {% endif %}
+                        </a>
+
+                    {% else %}
+
+                        <span class="text-muted">
+                            Clôturée
+                        </span>
+
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
+                <td>Procès-verbal</td>
+
+                <td class="text-center">
+                    {% if assemblee_generale.statut.value == 'cloturee' %}
+                        <span class="badge bg-success">
+                            Définitif
+                        </span>
+                    {% else %}
+                        À préparer
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    <a
+                        href="{{ path(
+                            'app_assemblee_generale_proces_verbal',
+                            {id: assemblee_generale.id}
+                        ) }}"
+                        class="btn btn-sm btn-primary"
+                    >
+                        {% if assemblee_generale.statut.value == 'cloturee' %}
+                            Consulter
+                        {% else %}
+                            Préparer
+                        {% endif %}
+                    </a>
+                    <a
+                        href="{{ path(
+                            'app_assemblee_generale_proces_verbal_pdf',
+                            {id: assemblee_generale.id}
+                        ) }}"
+                        class="btn btn-danger btn-sm"
+                        target="_blank"
+                    >
+                        PDF
+                    </a>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+
+    <div class="mt-4 d-flex justify-content-between">
+
+        <a
+            href="{{ path('app_assemblee_generale_index') }}"
+            class="btn btn-secondary"
+        >
+            Retour à la liste
+        </a>
+
+        <form
+            method="post"
+            action="{{ path(
+            'app_assemblee_generale_reinitialiser',
+            {'id': assemblee_generale.id}
+        ) }}"
+            onsubmit="return confirm(
+            'Réinitialiser complètement cette Assemblée Générale ? Les présences, votes et résolutions seront supprimés.'
+        );"
+        >
+            <button
+                type="submit"
+                class="btn btn-outline-danger"
+            >
+                Réinitialiser l'AG
+            </button>
+        </form>
+
+    </div>
+
+{% endblock %}

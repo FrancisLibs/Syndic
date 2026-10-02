@@ -9,6 +9,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -39,14 +40,24 @@ class CompteurEauType extends AbstractType
             );
 
         if ($options['avec_actif']) {
-            $builder->add(
-                'actif',
-                CheckboxType::class,
-                [
-                    'label' => 'Actif',
-                    'required' => false,
-                ]
-            );
+            $builder
+                ->add(
+                    'actif',
+                    CheckboxType::class,
+                    [
+                        'label' => 'Actif',
+                        'required' => false,
+                    ]
+                )
+                ->add(
+                    'dateDepose',
+                    DateType::class,
+                    [
+                        'label' => 'Date de dépose',
+                        'required' => false,
+                        'widget' => 'single_text',
+                    ]
+                );
         }
 
         if ($options['avec_lot']) {

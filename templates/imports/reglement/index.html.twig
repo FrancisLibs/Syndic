@@ -168,7 +168,44 @@
 
 		<tbody>
 
+			{% set fournisseurCourant = null %}
+			{% set sousTotal = 0 %}
+			{% set totalGeneral = 0 %}
+
 			{% for ligne in controle.lignes %}
+
+				{% set nomFournisseur = ligne.fournisseur %}
+
+				{% if fournisseurCourant is not null and fournisseurCourant != nomFournisseur %}
+
+					<tr class="table-secondary">
+						<td colspan="3">
+							<strong>
+								Sous-total
+								{{ fournisseurCourant }}
+							</strong>
+						</td>
+
+						<td class="text-end">
+							<strong>
+								{{ sousTotal|number_format(2, ',', ' ') }}
+								€
+							</strong>
+						</td>
+
+						<td colspan="2"></td>
+					</tr>
+
+					{% set sousTotal = 0 %}
+
+				{% endif %}
+
+				{% if fournisseurCourant != nomFournisseur %}
+					{% set fournisseurCourant = nomFournisseur %}
+				{% endif %}
+
+				{% set sousTotal = sousTotal + ligne.montant %}
+				{% set totalGeneral = totalGeneral + ligne.montant %}
 
 				<tr>
 
@@ -190,33 +227,23 @@
 					</td>
 
 					<td>
-
 						{% if ligne.estTraitee %}
-
 							<span class="badge bg-success">
 								Importé
 							</span>
-
 						{% elseif ligne.estEnErreur %}
-
 							<span class="badge bg-danger">
 								Erreur
 							</span>
-
 						{% elseif ligne.estEnTraitement %}
-
 							<span class="badge bg-warning">
 								Traitement
 							</span>
-
 						{% else %}
-
 							<span class="badge bg-primary">
 								En attente
 							</span>
-
 						{% endif %}
-
 					</td>
 
 					<td>
@@ -226,6 +253,45 @@
 				</tr>
 
 			{% endfor %}
+
+			{% if fournisseurCourant is not null %}
+
+				<tr class="table-secondary">
+					<td colspan="3">
+						<strong>
+							Sous-total
+							{{ fournisseurCourant }}
+						</strong>
+					</td>
+
+					<td class="text-end">
+						<strong>
+							{{ sousTotal|number_format(2, ',', ' ') }}
+							€
+						</strong>
+					</td>
+
+					<td colspan="2"></td>
+				</tr>
+
+				<tr class="table-dark">
+					<td colspan="3">
+						<strong>
+							Total général
+						</strong>
+					</td>
+
+					<td class="text-end">
+						<strong>
+							{{ totalGeneral|number_format(2, ',', ' ') }}
+							€
+						</strong>
+					</td>
+
+					<td colspan="2"></td>
+				</tr>
+
+			{% endif %}
 
 		</tbody>
 

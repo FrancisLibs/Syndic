@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Exercice;
 use App\Entity\FactureFournisseur;
+use App\Entity\Fournisseur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Enum\FactureFournisseurType;
@@ -89,6 +90,114 @@ class FactureFournisseurRepository extends ServiceEntityRepository
             ->leftJoin('e.repartitions', 'r')
             ->andWhere('f.id = :id')
             ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @return FactureFournisseur[]
+     */
+    public function findFnpATraiter(
+        Exercice $exercice
+    ): array {
+        return $this->createQueryBuilder('f')
+            ->innerJoin('f.exercice', 'e')
+            ->addSelect('e')
+            ->leftJoin('f.fournisseur', 'fournisseur')
+            ->addSelect('fournisseur')
+            ->leftJoin('f.typeCharge', 'typeCharge')
+            ->addSelect('typeCharge')
+            ->andWhere('f.fnp = :fnp')
+            ->andWhere('f.fnpTraitee = :traitee')
+            ->andWhere('e.dateFin < :dateDebut')
+            ->setParameter('fnp', true)
+            ->setParameter('traitee', false)
+            ->setParameter('dateDebut', $exercice->getDateDebut())
+            ->orderBy('e.dateFin', 'ASC')
+            ->addOrderBy('f.dateFacture', 'ASC')
+            ->addOrderBy('f.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findFnpCorrespondante(
+        Fournisseur $fournisseur,
+        ?string $numero,
+        string $montant
+    ): ?FactureFournisseur {
+        if ($numero === null || trim($numero) === '') {
+            return null;
+        }
+
+        return $this->createQueryBuilder('f')
+            ->andWhere('f.fournisseur = :fournisseur')
+            ->andWhere('f.fnp = true')
+            ->andWhere('f.fnpTraitee = false')
+            ->andWhere('f.numero = :numero')
+            ->andWhere('f.montant = :montant')
+            ->setParameter('fournisseur', $fournisseur)
+            ->setParameter('numero', trim($numero))
+            ->setParameter('montant', $montant)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findDoublon(
+        Fournisseur $fournisseur,
+        ?string $numero,
+        string $montant
+    ): ?FactureFournisseur {
+
+        $numeroNormalise = $this->normaliserNumero($numero);
+
+        if ($numeroNormalise === '') {
+            return null;
+        }
+
+        $factures = $this->createQueryBuilder('f')
+            ->andWhere('f.fournisseur = :fournisseur')
+            ->andWhere('f.montant = :montant')
+            ->setParameter('fournisseur', $fournisseur)
+            ->setParameter('montant', $montant)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($factures as $facture) {
+
+            if (
+                $this->normaliserNumero($facture->getNumero())
+                === $numeroNormalise
+            ) {
+                return $facture;
+            }
+        }
+
+        return null;
+    }
+
+    private function normaliserNumero(?string $numero): string
+    {
+        $numero = mb_strtoupper(trim($numero ?? ''));
+
+        // Supprime le préfixe éventuel "Facture"
+        $numero = preg_replace('/^FACTURE\s*/u', '', $numero);
+
+        // Supprime les séparateurs
+        return preg_replace('/[\s\-\/\.]+/u', '', $numero);
+    }
+
+    public function findCorrespondancePossible(
+        Fournisseur $fournisseur,
+        string $montant
+    ): ?FactureFournisseur {
+        return $this->createQueryBuilder('f')
+            ->andWhere('f.fournisseur = :fournisseur')
+            ->andWhere('f.montant = :montant')
+            ->setParameter('fournisseur', $fournisseur)
+            ->setParameter('montant', $montant)
+            ->orderBy('f.id', 'DESC')
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
     }

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Travaux\Chantier;
 use App\Repository\AppelFondRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -17,8 +18,12 @@ class AppelFond
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'appels')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Budget $budget = null;
+
+    #[ORM\ManyToOne(inversedBy: 'appels')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Chantier $chantier = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
     private ?\DateTimeImmutable $dateAppel = null;
@@ -63,11 +68,33 @@ class AppelFond
         return $this->budget;
     }
 
-    public function setBudget(
-        ?Budget $budget
-    ): static {
+    public function setBudget(?Budget $budget): static
+    {
+        if ($budget !== null && $this->chantier !== null) {
+            throw new \LogicException(
+                'Un appel de fonds ne peut pas être rattaché à la fois à un budget et à un chantier.'
+            );
+        }
 
         $this->budget = $budget;
+
+        return $this;
+    }
+
+    public function getChantier(): ?Chantier
+    {
+        return $this->chantier;
+    }
+
+    public function setChantier(?Chantier $chantier): static
+    {
+        if ($chantier !== null && $this->budget !== null) {
+            throw new \LogicException(
+                'Un appel de fonds ne peut pas être rattaché à la fois à un budget et à un chantier.'
+            );
+        }
+
+        $this->chantier = $chantier;
 
         return $this;
     }

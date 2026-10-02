@@ -20,7 +20,7 @@ final class GestionRelevesCompteurService
         Exercice $exercice
     ): array {
         $compteurs = $this->compteurEauRepository
-            ->findTousActifs();
+            ->findPourExercice($exercice);
 
         $lignes = [];
         $dateReleve = new \DateTimeImmutable();
@@ -75,7 +75,7 @@ final class GestionRelevesCompteurService
         );
 
         $compteurs = $this->compteurEauRepository
-            ->findTousActifs();
+            ->findPourExercice($exercice);
 
         $nombreReleves = 0;
 

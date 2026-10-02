@@ -1,0 +1,200 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Vote de la résolution
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1>Vote de la résolution {{ resolution.numero }}</h1>
+
+            <h2>{{ resolution.titre }}</h2>
+
+            {% if resolution.majorite %}
+                <p class="text-muted mb-0">
+                    Majorité : 
+                    {{ resolution.majorite ? resolution.majorite.label : 'Aucune' }}
+                </p>
+            {% endif %}
+        </div>
+
+        <a
+            href="{{ path(
+                'app_assemblee_generale_show',
+                {id: assemblee_generale.id}
+            ) }}"
+            class="btn btn-secondary"
+        >
+            Retour à l'Assemblée Générale
+        </a>
+    </div>
+
+    {{ form_start(form) }}
+
+    <table class="table table-hover table-striped align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Copropriétaire</th>
+                <th class="text-end">Voix</th>
+                <th>Mode</th>
+                <th>Vote</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for voteForm in form.votes %}
+
+                {% set vote = voteForm.vars.data %}
+                {% set presenceVote = null %}
+
+                {# Recherche de la présence correspondant au copropriétaire #}
+                {% for presence in presences %}
+                    {% if presence.coproprietaire == vote.coproprietaire %}
+                        {% set presenceVote = presence %}
+                    {% endif %}
+                {% endfor %}
+
+                <tr data-voix="{{ vote.nombreVoix }}">
+
+                    <td>
+                        {{ vote.coproprietaire }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ vote.nombreVoix }}
+                    </td>
+
+                    <td>
+                        {% if presenceVote %}
+                            {{ presenceVote.statut.label() }}
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if presenceVote and presenceVote.statut.value == 'vote_correspondance' %}
+
+                            <strong>
+                                {% if vote.choix %}
+                                    {{ vote.choix.label() }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </strong>
+
+                            <input
+                                type="hidden"
+                                class="choix-vote"
+                                value="{{ vote.choix ? vote.choix.value : '' }}"
+                            >
+
+                            {% do voteForm.choix.setRendered %}
+
+
+                        {% else %}
+
+                            {{ form_widget(
+                                voteForm.choix,
+                                {
+                                    attr: {
+                                        class: 'form-select choix-vote'
+                                    }
+                                }
+                            ) }}
+
+                            {{ form_errors(voteForm.choix) }}
+
+                        {% endif %}
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+            {% for vote in votes_correspondance %}
+
+                <tr data-voix="{{ vote.nombreVoix }}">
+
+                    <td>
+                        {{ vote.coproprietaire }}
+                    </td>
+
+                    <td class="text-end">
+                        {{ vote.nombreVoix }}
+                    </td>
+
+                    <td>
+                        Vote par correspondance
+                    </td>
+
+                    <td>
+                        <strong>
+                            {% if vote.choix %}
+                                {{ vote.choix.label() }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </strong>
+
+                        {# Utilisé uniquement par le calcul JavaScript #}
+                        <input
+                            type="hidden"
+                            class="choix-vote"
+                            value="{{ vote.choix ? vote.choix.value : '' }}"
+                        >
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+        <tfoot>
+            <tr class="fw-bold">
+                <td>Pour</td>
+                <td class="text-end">
+                    <span id="total-pour">0</span>
+                </td>
+                <td></td>
+            </tr>
+
+            <tr class="fw-bold">
+                <td>Contre</td>
+                <td class="text-end">
+                    <span id="total-contre">0</span>
+                </td>
+                <td></td>
+            </tr>
+
+            <tr class="fw-bold">
+                <td>Abstention</td>
+                <td class="text-end">
+                    <span id="total-abstention">0</span>
+                </td>
+                <td></td>
+            </tr>
+
+            <tr class="fw-bold">
+                <td>Total votants</td>
+                <td class="text-end">
+                    <span id="total-votants">0</span>
+                </td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <button type="submit" class="btn btn-primary">
+        Enregistrer le vote
+    </button>
+
+    {{ form_end(form) }}
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('assets/js/vote-resolution.js') }}"></script>
+{% endblock %}

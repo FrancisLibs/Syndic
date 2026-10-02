@@ -1,0 +1,228 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Projet de répartition individuelle
+{% endblock %}
+
+{% block body %}
+
+    <div class="container mt-4">
+
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h1>Projet de répartition individuelle</h1>
+                <h2>{{ assemblee_generale.exercice.nom }}</h2>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+
+                <h4 class="mb-3">
+                    {{ ligne.coproprietaire }}
+                </h4>
+
+                <p class="mb-0">
+                    <strong>Tantièmes :</strong>
+                    {{ ligne.tantiemes }}
+                </p>
+
+            </div>
+        </div>
+
+        <table class="table">
+            <tbody>
+
+                <tr>
+                    <th>Provisions appelées</th>
+                    <td class="text-end">
+                        {{ ligne.totalAppele|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Quote-part des charges réelles</th>
+                    <td class="text-end">
+                        {{ ligne.quotePartReelle|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+
+                <tr class="table-light fw-bold">
+                    <th>Régularisation</th>
+                    <td class="text-end">
+                        {{ ligne.montant|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <div class="mt-4">
+
+            {% if ligne.estCrediteur %}
+
+                <div class="alert alert-success">
+                    <strong>
+                        Montant en faveur du copropriétaire :
+                        {{ ligne.montant|number_format(2, ',', ' ') }} €
+                    </strong>
+                </div>
+
+            {% elseif ligne.estDebiteur %}
+
+                <div class="alert alert-warning">
+                    <strong>
+                        Montant restant à la charge du copropriétaire :
+                        {{ ligne.montant|number_format(2, ',', ' ') }} €
+                    </strong>
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-secondary">
+                    Aucune régularisation.
+                </div>
+
+            {% endif %}
+
+        </div>
+        <h3 class="mt-5 mb-3">
+            Situation du compte après répartition
+        </h3>
+
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>
+                        Solde du compte au
+                        {{ date_situation|date('d/m/Y') }}
+                    </th>
+
+                    <td class="text-end">
+                        {% if solde_avant_repartition < - 0.01 %}
+                            {{ solde_avant_repartition|abs|number_format(2, ',', ' ') }} €
+                            <span class="text-success">
+                                (créditeur)
+                            </span>
+
+                        {% elseif solde_avant_repartition > 0.01 %}
+                            {{ solde_avant_repartition|number_format(2, ',', ' ') }} €
+                            <span class="text-danger">
+                                (débiteur)
+                            </span>
+
+                        {% else %}
+                            0,00 € (soldé)
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>
+                        Régularisation des charges
+                        {{ assemblee_generale.exercice.nom }}
+                    </th>
+
+                    <td class="text-end">
+                        {% if ligne.estCrediteur %}
+                            {{ ligne.montant|number_format(2, ',', ' ') }} €
+                            <span class="text-success">
+                                (en faveur du copropriétaire)
+                            </span>
+
+                        {% elseif ligne.estDebiteur %}
+                            {{ ligne.montant|number_format(2, ',', ' ') }} €
+                            <span class="text-danger">
+                                (à la charge du copropriétaire)
+                            </span>
+
+                        {% else %}
+                            0,00 €
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr class="table-light fw-bold">
+                    <th>
+                        Solde après répartition des charges
+                    </th>
+
+                    <td class="text-end">
+                        {% if solde_apres_repartition < - 0.01 %}
+                            {{ solde_apres_repartition|abs|number_format(2, ',', ' ') }} €
+                            <span class="text-success">
+                                (créditeur)
+                            </span>
+
+                        {% elseif solde_apres_repartition > 0.01 %}
+                            {{ solde_apres_repartition|number_format(2, ',', ' ') }} €
+                            <span class="text-danger">
+                                (débiteur)
+                            </span>
+
+                        {% else %}
+                            0,00 € (soldé)
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        {% if solde_apres_repartition < - 0.01 %}
+            <div class="alert alert-success">
+                <strong>
+                    Solde créditeur :
+                    {{ solde_apres_repartition|abs|number_format(2, ',', ' ') }} €
+                    — En faveur du copropriétaire
+                </strong>
+            </div>
+
+        {% elseif solde_apres_repartition > 0.01 %}
+            <div class="alert alert-warning">
+                <strong>
+                    Solde débiteur :
+                    {{ solde_apres_repartition|number_format(2, ',', ' ') }} €
+                    — À payer par le copropriétaire
+                </strong>
+            </div>
+
+        {% else %}
+            <div class="alert alert-secondary">
+                <strong>Compte soldé</strong>
+            </div>
+        {% endif %}
+
+        <div class="alert alert-info mt-3">
+            Situation établie sous réserve de l'approbation des comptes
+            par l'Assemblée Générale.
+        </div>
+
+        <div class="mt-4">
+            <a
+                href="{{ path(
+                    'app_assemblee_generale_convocation',
+                    {'id': assemblee_generale.id}
+                ) }}"
+                class="btn btn-secondary"
+            >
+                Retour à la convocation
+            </a>
+
+            <a
+                href="{{ path(
+                    'app_assemblee_generale_repartition_individuelle_pdf',
+                    {
+                        id: assemblee_generale.id,
+                        coproprietaire: ligne.coproprietaire.id
+                    }
+                ) }}"
+                class="btn btn-primary"
+                target="_blank"
+            >
+                PDF
+            </a>
+        </div>
+
+    </div>
+
+{% endblock %}

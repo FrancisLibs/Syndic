@@ -147,6 +147,7 @@
 				<th class="text-end">Montant</th>
 				<th>Statut</th>
 				<th>Erreur</th>
+				<th>Actions</th>
 			</tr>
 		</thead>
 
@@ -240,6 +241,18 @@
 
 						{{ ligne.erreur }}
 
+					</td>
+					
+					<td>
+						{% if ligne.estEnErreur and ligne.factureCreee is null %}
+							<form method="post" action="{{ path('app_import_facture_supprimer', { id: exercice.id, importId: ligne.id }) }}" onsubmit="return confirm('Supprimer cette ligne d\'import ?');">
+								<input type="hidden" name="_token" value="{{ csrf_token('supprimer_import_facture_' ~ ligne.id) }}">
+
+								<button class="btn btn-sm btn-danger">
+									Supprimer
+								</button>
+							</form>
+						{% endif %}
 					</td>
 
 				</tr>

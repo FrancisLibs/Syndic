@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Votes par correspondance
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Votes par correspondance</h1>
+            <h2>
+                Assemblée Générale
+                {{ assemblee_generale.exercice.nom }}
+            </h2>
+        </div>
+
+        <a
+            href="{{ path(
+                'app_assemblee_generale_show',
+                {id: assemblee_generale.id}
+            ) }}"
+            class="btn btn-secondary"
+        >
+            Retour à l'Assemblée Générale
+        </a>
+    </div>
+
+    <div class="alert alert-info">
+        {% if votants_correspondance is empty %}
+
+            <div class="alert alert-info">
+                Aucun copropriétaire n'est enregistré
+                comme votant par correspondance.
+            </div>
+
+        {% else %}
+
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Copropriétaire</th>
+                        <th class="text-end">Voix</th>
+                        <th>Date de réception</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for presence in votants_correspondance %}
+                        <tr>
+                            <td>
+                                {{ presence.coproprietaire }}
+                            </td>
+
+                            <td class="text-end">
+                                {{ presence.nombreVoix }}
+                            </td>
+
+                            <td>
+                                {{ presence.dateReceptionVoteCorrespondance
+                            ? presence.dateReceptionVoteCorrespondance|date('d/m/Y')
+                            : 'Non renseignée'
+                        }}
+                            </td>
+
+                            <td class="text-center">
+                                <a
+                                    href="{{ path(
+                                        'app_assemblee_generale_saisir_votes_correspondance',
+                                        {id: presence.id}
+                                    ) }}"
+                                    class="btn btn-sm btn-primary"
+                                >
+                                    Saisir les votes
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% endif %}
+    </div>
+
+{% endblock %}

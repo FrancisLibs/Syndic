@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Ecriture;
 use App\Entity\Exercice;
 use App\Entity\Lot;
+use App\Entity\Compte;
 use App\Enum\CompteType;
 use App\Enum\OperationType;
 use App\Enum\OperationStatut;
@@ -167,15 +168,191 @@ class EcritureRepository extends ServiceEntityRepository
             ->join('operation.typeCharge', 'typeCharge')
             ->join('typeCharge.compte', 'compteCharge')
             ->andWhere('e.exercice = :exercice')
-            ->andWhere('operation.type = :type')
+            ->andWhere('operation.type IN (:types)')
             ->andWhere('e.compte = compteCharge')
             ->andWhere('operation.statut = :statut')
             ->setParameter('exercice', $exercice)
-            ->setParameter('type', OperationType::CHARGE)
+            ->setParameter(
+                'types',
+                [
+                    OperationType::CHARGE,
+                    OperationType::FNP,
+                ]
+            )
             ->setParameter('statut', OperationStatut::VALIDE)
             ->orderBy('operation.date', 'ASC')
             ->addOrderBy('operation.id', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function calculerSoldeCompte(
+        Exercice $exercice,
+        Compte $compte
+    ): float {
+        $resultat = $this->createQueryBuilder('e')
+            ->select(
+                'COALESCE(SUM(e.debit) - SUM(e.credit), 0)'
+            )
+            ->join('e.operation', 'o')
+            ->andWhere('e.exercice = :exercice')
+            ->andWhere('e.compte = :compte')
+            ->andWhere('o.statut = :statut')
+            ->setParameter('exercice', $exercice)
+            ->setParameter('compte', $compte)
+            ->setParameter('statut', OperationStatut::VALIDE)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (float) $resultat;
+    }
+
+    public function calculerSoldeCompteADate(
+        Exercice $exercice,
+        Compte $compte,
+        \DateTimeInterface $date
+    ): float {
+        $resultat = $this->createQueryBuilder('e')
+            ->select(
+                'COALESCE(SUM(e.debit) - SUM(e.credit), 0)'
+            )
+            ->join('e.operation', 'o')
+            ->andWhere('e.exercice = :exercice')
+            ->andWhere('e.compte = :compte')
+            ->andWhere('e.date <= :date')
+            ->andWhere('o.statut = :statut')
+            ->setParameter('exercice', $exercice)
+            ->setParameter('compte', $compte)
+            ->setParameter('date', $date)
+            ->setParameter('statut', OperationStatut::VALIDE)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (float) $resultat;
+    }
+
+    public function calculerRealiseParTypeCharge(
+        Exercice $exercice
+    ): array {
+        $resultats = $this->createQueryBuilder('e')
+            ->select('tc.id AS typeChargeId')
+            ->addSelect('IDENTITY(tc.typeChargeBudget) AS typeChargeBudgetId')
+            ->addSelect('SUM(e.debit) - SUM(e.credit) AS montant')
+            ->join('e.operation', 'o')
+            ->join('e.compte', 'c')
+            ->join('o.typeCharge', 'tc')
+            ->andWhere('e.exercice = :exercice')
+            ->andWhere('o.statut = :statut')
+            ->andWhere('c.type = :typeCompte')
+            ->setParameter('exercice', $exercice)
+            ->setParameter(
+                'statut',
+                OperationStatut::VALIDE
+            )
+            ->setParameter(
+                'typeCompte',
+                CompteType::CHARGE
+            )
+            ->groupBy('tc.id')
+            ->addGroupBy('tc.typeChargeBudget')
+            ->getQuery()
+            ->getArrayResult();
+
+        $regroupes = [];
+
+        foreach ($resultats as $ligne) {
+
+            $typeChargeId = $ligne['typeChargeBudgetId']
+                ? (int) $ligne['typeChargeBudgetId']
+                : (int) $ligne['typeChargeId'];
+
+            if (!isset($regroupes[$typeChargeId])) {
+                $regroupes[$typeChargeId] = [
+                    'typeChargeId' => $typeChargeId,
+                    'montant' => 0.0,
+                ];
+            }
+
+            $regroupes[$typeChargeId]['montant'] +=
+                (float) $ligne['montant'];
+        }
+
+        return array_values($regroupes);
+    }
+
+    public function calculerBalance(Exercice $exercice): array
+    {
+        $ecritures = $this->findBy([
+            'exercice' => $exercice,
+        ]);
+
+        $balance = [];
+
+        foreach ($ecritures as $ecriture) {
+            if (
+                $ecriture->getOperation()->getStatut()
+                !== OperationStatut::VALIDE
+            ) {
+                continue;
+            }
+
+            $compte = $ecriture->getCompte();
+            $numero = $compte->getNumero();
+
+            if (!isset($balance[$numero])) {
+                $balance[$numero] = [
+                    'numero' => $numero,
+                    'libelle' => $compte->getLibelle(),
+                    'debit' => 0.0,
+                    'credit' => 0.0,
+                ];
+            }
+
+            $balance[$numero]['debit'] +=
+                (float) $ecriture->getDebit();
+
+            $balance[$numero]['credit'] +=
+                (float) $ecriture->getCredit();
+        }
+
+        $totalDebit = 0.0;
+        $totalCredit = 0.0;
+        $totalSoldeDebiteur = 0.0;
+        $totalSoldeCrediteur = 0.0;
+
+        foreach ($balance as &$ligne) {
+            $solde = round(
+                $ligne['debit'] - $ligne['credit'],
+                2
+            );
+
+            $ligne['soldeDebiteur'] = 0.0;
+            $ligne['soldeCrediteur'] = 0.0;
+
+            if ($solde > 0) {
+                $ligne['soldeDebiteur'] = $solde;
+            } elseif ($solde < 0) {
+                $ligne['soldeCrediteur'] = abs($solde);
+            }
+
+            $totalDebit += $ligne['debit'];
+            $totalCredit += $ligne['credit'];
+            $totalSoldeDebiteur += $ligne['soldeDebiteur'];
+            $totalSoldeCrediteur += $ligne['soldeCrediteur'];
+        }
+
+        unset($ligne);
+
+        ksort($balance);
+
+        return [
+            'balance' => $balance,
+            'totalDebit' => $totalDebit,
+            'totalCredit' => $totalCredit,
+            'totalSoldeDebiteur' => $totalSoldeDebiteur,
+            'totalSoldeCrediteur' => $totalSoldeCrediteur,
+            'equilibree' =>
+            abs($totalDebit - $totalCredit) < 0.01,
+        ];
     }
 }

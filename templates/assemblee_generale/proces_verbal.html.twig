@@ -1,0 +1,344 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Procès-verbal - {{ assemblee_generale.exercice.nom }}
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h1>Procès-verbal de l'Assemblée Générale</h1>
+            <h2>{{ assemblee_generale.exercice.nom }}</h2>
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a
+                href="{{ path(
+                    'app_assemblee_generale_proces_verbal_pdf',
+                    {id: assemblee_generale.id}
+                ) }}"
+                class="btn btn-danger"
+                target="_blank"
+            >
+                PDF
+            </a>
+
+            <a
+                href="{{ path(
+                    'app_assemblee_generale_show',
+                    {id: assemblee_generale.id}
+                ) }}"
+                class="btn btn-secondary"
+            >
+                Retour à l'assemblée
+            </a>
+
+        </div>
+
+    </div>
+
+    <p>
+        <strong>Date :</strong>
+        {{ assemblee_generale.date|date('d/m/Y') }}
+    </p>
+
+    <p>
+        <strong>Heure :</strong>
+        {{ assemblee_generale.heure|date('H:i') }}
+    </p>
+
+    <p>
+        <strong>Lieu :</strong>
+        {{ assemblee_generale.lieu }}
+    </p>
+
+    <hr>
+
+    <h2>Constitution du bureau</h2>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Président de séance</th>
+                <td>
+                    {{ assemblee_generale.presidentSeance ?: 'Non renseigné' }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Scrutateur</th>
+                <td>
+                    {{ assemblee_generale.scrutateur ?: 'Non renseigné' }}
+                </td>
+            </tr>
+
+            <tr>
+                <th>Secrétaire de séance</th>
+                <td>
+                    {{ assemblee_generale.secretaireSeance ?: 'Non renseigné' }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="mt-4">Présence à l'Assemblée Générale</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Copropriétaire</th>
+                <th>Statut</th>
+                <th>Mandataire</th>
+                <th class="text-end">Voix</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for presence in assemblee_generale.presences %}
+
+                <tr>
+                    <td>
+                        {{ presence.coproprietaire }}
+                    </td>
+
+                    <td>
+                        {{ presence.statut.label }}
+                    </td>
+
+                    <td>
+                        {% if presence.mandataire %}
+                            {{ presence.mandataire }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end">
+                        {{ presence.nombreVoix }}
+                    </td>
+                </tr>
+
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="table table-sm mt-3">
+        <thead>
+            <tr>
+                <th>Situation</th>
+                <th class="text-end">Copropriétaires</th>
+                <th class="text-end">Voix</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>Présents</td>
+                <td class="text-end">
+                    {{ participation.presents.nombre }}
+                </td>
+                <td class="text-end">
+                    {{ participation.presents.voix }}
+                </td>
+            </tr>
+
+            <tr>
+                <td>Représentés</td>
+                <td class="text-end">
+                    {{ participation.representes.nombre }}
+                </td>
+                <td class="text-end">
+                    {{ participation.representes.voix }}
+                </td>
+            </tr>
+
+            <tr>
+                <td>Votes par correspondance</td>
+                <td class="text-end">
+                    {{ participation.correspondance.nombre }}
+                </td>
+                <td class="text-end">
+                    {{ participation.correspondance.voix }}
+                </td>
+            </tr>
+
+            <tr>
+                <td>Absents</td>
+                <td class="text-end">
+                    {{ participation.absents.nombre }}
+                </td>
+                <td class="text-end">
+                    {{ participation.absents.voix }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="mt-4">Résolutions</h2>
+
+    {% for resolution in assemblee_generale.resolutions %}
+
+        <div class="mb-4">
+
+            <h3>
+                Résolution n° {{ resolution.numero }}
+                — {{ resolution.titre }}
+            </h3>
+
+            {% if resolution.amendeeEnSeance %}
+                <div class="mb-2">
+                    <span class="badge bg-warning text-dark">
+                        Amendée en séance
+                    </span>
+                </div>
+            {% endif %}
+
+            <p>
+                {{ resolution.texte|nl2br }}
+            </p>
+
+            {% if resolution.decision %}
+                <div class="alert alert-light border">
+                    <strong>Décision de l'Assemblée Générale :</strong>
+
+                    <div class="mt-2">
+                        {{ resolution.decision|nl2br }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <p>
+                <strong>Majorité :</strong>
+                {{ resolution.majorite ? resolution.majorite.label : 'Aucune' }}
+            </p>
+
+            {% if resolution.adoptee is null %}
+
+                <p>
+                    <strong>Résultat :</strong>
+                    Non votée
+                </p>
+
+            {% elseif resolution.hasSecondVoteEnregistre %}
+
+                <p>
+                    <strong>Premier vote :</strong>
+                    {{ resolution.tantiemesPour ?? 0 }} pour —
+                    {{ resolution.tantiemesContre ?? 0 }} contre —
+                    {{ resolution.tantiemesAbstention ?? 0 }} abstention
+                </p>
+
+                <p>
+                    <strong>Second vote :</strong>
+                    {{ resolution.tantiemesPourSecondTour ?? 0 }} pour —
+                    {{ resolution.tantiemesContreSecondTour ?? 0 }} contre —
+                    {{ resolution.tantiemesAbstentionSecondTour ?? 0 }} abstention
+                </p>
+
+                <p>
+                    <strong>Résultat :</strong>
+                    {% if resolution.adoptee %}
+                        Adoptée au second vote
+                    {% else %}
+                        Rejetée au second vote
+                    {% endif %}
+                </p>
+
+            {% else %}
+
+                <p>
+                    <strong>Vote :</strong>
+                    {{ resolution.tantiemesPour ?? 0 }} pour —
+                    {{ resolution.tantiemesContre ?? 0 }} contre —
+                    {{ resolution.tantiemesAbstention ?? 0 }} abstention
+                </p>
+
+                <p>
+                    <strong>Résultat :</strong>
+                    {% if resolution.adoptee %}
+                        Adoptée
+                    {% else %}
+                        Rejetée
+                    {% endif %}
+                </p>
+
+            {% endif %}
+
+            {# Défaillants en cas d'amendement de la résolution #}
+            {% set defaillants =
+                defaillants_amendements[resolution.id] ?? []
+            %}
+
+            {% if defaillants is not empty %}
+                <div class="alert alert-warning mt-3">
+
+                    <strong>
+                        Vote par correspondance – résolution amendée en séance
+                    </strong>
+
+                    <p class="mb-1 mt-2">
+                        Les copropriétaires suivants, ayant voté favorablement
+                        par correspondance sur le projet de résolution initial,
+                        sont assimilés à des copropriétaires défaillants pour
+                        cette résolution :
+                    </p>
+
+                    <ul class="mb-0">
+                        {% for defaillant in defaillants %}
+                            <li>
+                                {{ defaillant.coproprietaire }}
+                                — {{ defaillant.nombreVoix }} voix
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+                </div>
+            {% endif %}
+
+        </div>
+
+    {% endfor %}
+
+    <hr class="mt-5">
+
+    <h2>Clôture de l'Assemblée Générale</h2>
+
+    <p>
+        L'ordre du jour étant épuisé, la séance est levée
+        {% if assemblee_generale.heureCloture %}
+            à {{ assemblee_generale.heureCloture|date('H\\hi') }}.
+        {% else %}
+            à ____ h ____.
+        {% endif %}
+    </p>
+
+    <p class="mt-4">
+        Le présent procès-verbal est établi à l'issue de l'Assemblée Générale.
+    </p>
+
+    <div class="row mt-5">
+
+        <div class="col-4">
+            <strong>Le président de séance</strong>
+            <br><br><br>
+            {{ assemblee_generale.presidentSeance ?: '____________________' }}
+        </div>
+
+        <div class="col-4">
+            <strong>Le scrutateur</strong>
+            <br><br><br>
+            {{ assemblee_generale.scrutateur ?: '____________________' }}
+        </div>
+
+        <div class="col-4">
+            <strong>Le secrétaire de séance</strong>
+            <br><br><br>
+            {{ assemblee_generale.secretaireSeance ?: '____________________' }}
+        </div>
+
+    </div>
+
+{% endblock %}

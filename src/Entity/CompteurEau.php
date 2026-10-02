@@ -6,6 +6,7 @@ use App\Repository\CompteurEauRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\DBAL\Types\Types;
 
 #[ORM\Entity(repositoryClass: CompteurEauRepository::class)]
 class CompteurEau
@@ -21,8 +22,8 @@ class CompteurEau
     #[ORM\Column(length: 50, unique: true)]
     private ?string $reference = null;
 
-    #[ORM\OneToOne(inversedBy: 'compteurEau')]
-    #[ORM\JoinColumn(nullable: true, unique: true)]
+    #[ORM\ManyToOne(inversedBy: 'compteursEau')]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Lot $lot = null;
 
     #[ORM\Column(nullable: true)]
@@ -30,6 +31,12 @@ class CompteurEau
 
     #[ORM\Column(options: ['default' => true])]
     private bool $actif = true;
+
+    #[ORM\Column(
+        type: Types::DATE_IMMUTABLE,
+        nullable: true
+    )]
+    private ?\DateTimeImmutable $dateDepose = null;
 
 
     #[ORM\OneToMany(
@@ -85,12 +92,6 @@ class CompteurEau
     public function setLot(?Lot $lot): static
     {
         $this->lot = $lot;
-        if (
-            $lot !== null
-            && $lot->getCompteurEau() !== $this
-        ) {
-            $lot->setCompteurEau($this);
-        }
 
         return $this;
     }
@@ -115,6 +116,19 @@ class CompteurEau
     public function setActif(bool $actif): static
     {
         $this->actif = $actif;
+
+        return $this;
+    }
+
+    public function getDateDepose(): ?\DateTimeImmutable
+    {
+        return $this->dateDepose;
+    }
+
+    public function setDateDepose(
+        ?\DateTimeImmutable $dateDepose
+    ): static {
+        $this->dateDepose = $dateDepose;
 
         return $this;
     }
@@ -152,6 +166,6 @@ class CompteurEau
 
     public function __toString(): string
     {
-        return $this->numero ?? 'Compteur sans numéro';
+        return $this->reference ?? 'Compteur sans référence';
     }
 }

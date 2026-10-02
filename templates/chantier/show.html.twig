@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ chantier.libelle }}{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ chantier.libelle }}</h1>
+
+        <a
+            href="{{ path('app_chantier_index') }}"
+            class="btn btn-secondary"
+        >
+            Retour aux chantiers
+        </a>
+    </div>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ chantier.id }}</td>
+            </tr>
+            <tr>
+                <th>Description</th>
+                <td>{{ chantier.description ?: '-' }}</td>
+            </tr>
+
+            <tr>
+                <th>Date du vote</th>
+                <td>{{ chantier.dateVote|date('d/m/Y') }}</td>
+            </tr>
+
+            <tr>
+                <th>Résolution</th>
+                <td>{{ chantier.numeroResolution ?: '-' }}</td>
+            </tr>
+
+            <tr>
+                <th>Montant voté</th>
+                <td>
+                    {{ chantier.montantVote|number_format(2, ',', ' ') }} €
+                </td>
+            </tr>
+
+            <tr>
+                <th>Répartition</th>
+                <td>{{ chantier.modeRepartition.label }}</td>
+            </tr>
+
+            <tr>
+                <th>État</th>
+                <td>
+                    {% if chantier.cloture %}
+                        <span class="badge bg-secondary">
+                            Clôturé
+                        </span>
+                    {% else %}
+                        <span class="badge bg-success">
+                            En cours
+                        </span>
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="mt-5">Appel de fonds</h2>
+
+    {% if chantier.appels is empty %}
+
+        <div class="alert alert-warning">
+            Aucun appel de fonds n'a encore été généré
+            pour ce chantier.
+        </div>
+
+    {% else %}
+
+        {% for appel in chantier.appels %}
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>Numéro</th>
+                        <td>{{ appel.numero }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Date</th>
+                        <td>{{ appel.dateAppel|date('d/m/Y') }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Montant</th>
+                        <td>
+                            {{ appel.montantTotal|number_format(2, ',', ' ') }} €
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        {% endfor %}
+
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Chantiers{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Chantiers</h1>
+
+        <a
+            href="{{ path('app_chantier_new') }}"
+            class="btn btn-primary"
+        >
+            Nouveau chantier
+        </a>
+    </div>
+
+    {% if chantiers is empty %}
+
+        <div class="alert alert-info">
+            Aucun chantier enregistré.
+        </div>
+
+    {% else %}
+
+        <table class="table table-hover table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Chantier</th>
+                    <th class="text-center">Date du vote</th>
+                    <th class="text-center">Résolution</th>
+                    <th class="text-center">Montant voté</th>
+                    <th class="text-center">Répartition</th>
+                    <th class="text-center">État</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for chantier in chantiers %}
+                    <tr>
+                        <td>
+                            {{ chantier.libelle }}
+                        </td>
+
+                        <td class="text-center">
+                            {{ chantier.dateVote|date('d/m/Y') }}
+                        </td>
+
+                        <td class="text-center">
+                            {{ chantier.numeroResolution ?: '-' }}
+                        </td>
+
+                        <td class="text-center">
+                            {{ chantier.montantVote|number_format(2, ',', ' ') }} €
+                        </td>
+
+                        <td class="text-center">
+                            {{ chantier.modeRepartition.label }}
+                        </td>
+
+                        <td class="text-center">
+                            {% if chantier.cloture %}
+                                <span class="badge bg-secondary">
+                                    Clôturé
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    En cours
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ path('app_chantier_show', {id: chantier.id}) }}">
+                                Voir
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% endif %}
+
+{% endblock %}

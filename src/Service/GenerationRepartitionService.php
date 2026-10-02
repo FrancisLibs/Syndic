@@ -3,9 +3,8 @@
 namespace App\Service;
 
 use App\Entity\Ecriture;
-use App\Entity\FactureFournisseur;
+use App\Entity\Exercice;
 use App\Entity\Repartition;
-use App\Enum\FactureFournisseurType;
 use Doctrine\ORM\EntityManagerInterface;
 
 class GenerationRepartitionService
@@ -16,13 +15,15 @@ class GenerationRepartitionService
 
     public function generer(
         Ecriture $ecritureCharge,
-        FactureFournisseur $facture
+        Exercice $exercice,
+        \DateTimeInterface $dateRepartition,
+        float $montantARepartir
     ): void {
-        $copropriete = $facture
-            ->getExercice()
-            ->getCopropriete();
+        $copropriete = $exercice->getCopropriete();
 
-        $lots = $copropriete->getLots()->toArray();
+        $lots = $copropriete
+            ->getLots()
+            ->toArray();
 
         if ($lots === []) {
             throw new \LogicException(
@@ -30,12 +31,18 @@ class GenerationRepartitionService
             );
         }
 
+        /*
+         * Calcul du total des tantièmes.
+         */
         $totalTantiemes = 0;
 
         foreach ($lots as $lot) {
             $tantiemes = $lot->getTantiemes();
 
-            if ($tantiemes === null || $tantiemes <= 0) {
+            if (
+                $tantiemes === null
+                || $tantiemes <= 0
+            ) {
                 throw new \LogicException(
                     sprintf(
                         'Les tantièmes du lot %s sont invalides.',
@@ -54,22 +61,23 @@ class GenerationRepartitionService
         }
 
         /*
-         * On prépare uniquement les lots ayant un copropriétaire
-         * à la date de la facture.
+         * Recherche du copropriétaire de chaque lot
+         * à la date de la charge.
          */
         $lotsARepartir = [];
 
         foreach ($lots as $lot) {
-            $coproprietaire = $lot->getCoproprietaireActuel(
-                $facture->getDateFacture()
-            );
+            $coproprietaire =
+                $lot->getCoproprietaireActuel(
+                    $dateRepartition
+                );
 
             if ($coproprietaire === null) {
                 throw new \LogicException(
                     sprintf(
                         'Aucun copropriétaire actif pour le lot %s à la date du %s.',
                         $lot->getReference(),
-                        $facture->getDateFacture()->format('d/m/Y')
+                        $dateRepartition->format('d/m/Y')
                     )
                 );
             }
@@ -80,30 +88,36 @@ class GenerationRepartitionService
             ];
         }
 
-        $montantFacture = (float) $facture->getMontant();
-
-        if ($facture->getType() === FactureFournisseurType::AVOIR) {
-            $montantFacture *= -1;
-        }
+        /*
+         * Répartition.
+         */
         $totalReparti = 0.0;
-        $dernierIndex = count($lotsARepartir) - 1;
 
-        foreach ($lotsARepartir as $index => $ligne) {
+        $dernierIndex =
+            count($lotsARepartir) - 1;
+
+        foreach (
+            $lotsARepartir
+            as $index => $ligne
+        ) {
             $lot = $ligne['lot'];
-            $coproprietaire = $ligne['coproprietaire'];
 
+            $coproprietaire =
+                $ligne['coproprietaire'];
+
+            /*
+             * Le dernier lot absorbe
+             * l'éventuel écart d'arrondi.
+             */
             if ($index === $dernierIndex) {
-                /*
-                 * Le dernier lot absorbe l’éventuel écart
-                 * causé par les arrondis.
-                 */
                 $montant = round(
-                    $montantFacture - $totalReparti,
+                    $montantARepartir
+                        - $totalReparti,
                     2
                 );
             } else {
                 $montant = round(
-                    $montantFacture
+                    $montantARepartir
                         * $lot->getTantiemes()
                         / $totalTantiemes,
                     2
@@ -112,14 +126,23 @@ class GenerationRepartitionService
                 $totalReparti += $montant;
             }
 
-            $repartition = new Repartition();
+            $repartition =
+                new Repartition();
 
             $repartition
                 ->setLot($lot)
-                ->setCoproprietaire($coproprietaire)
-                ->setEcriture($ecritureCharge)
-                ->setExercice($facture->getExercice())
-                ->setTantiemes($lot->getTantiemes())
+                ->setCoproprietaire(
+                    $coproprietaire
+                )
+                ->setEcriture(
+                    $ecritureCharge
+                )
+                ->setExercice(
+                    $exercice
+                )
+                ->setTantiemes(
+                    $lot->getTantiemes()
+                )
                 ->setMontant(
                     number_format(
                         $montant,
@@ -129,7 +152,9 @@ class GenerationRepartitionService
                     )
                 );
 
-            $this->em->persist($repartition);
+            $this->em->persist(
+                $repartition
+            );
         }
     }
 }

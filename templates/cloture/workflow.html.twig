@@ -57,19 +57,19 @@
 
 					<div class="list-group mb-3">
 
-						<a href="{{ path('app_cloture_regularisations', { id: exercice.id }) }}" class="list-group-item list-group-item-action">
+						<a href="{{ path('app_cloture_regularisations', {id: exercice.id}) }}" class="list-group-item list-group-item-action">
 							📄 Répartition des charges
 						</a>
 
-						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="list-group-item list-group-item-action">
+						<a href="{{ path('app_cloture_soldes_reportables', {id: exercice.id}) }}" class="list-group-item list-group-item-action">
 							📄 Soldes reportables
 						</a>
 
-						<a href="{{ path('app_cloture_comptes_gestion', { id: exercice.id }) }}" class="list-group-item list-group-item-action">
+						<a href="{{ path('app_cloture_comptes_gestion', {id: exercice.id}) }}" class="list-group-item list-group-item-action">
 							📄 Clôture des comptes de gestion
 						</a>
 
-						<a href="{{ path('app_cloture_anouveaux', { id: exercice.id }) }}" class="list-group-item list-group-item-action">
+						<a href="{{ path('app_cloture_anouveaux', {id: exercice.id}) }}" class="list-group-item list-group-item-action">
 							📄 À-nouveaux
 						</a>
 
@@ -81,7 +81,12 @@
 
 					<hr>
 
-					<a href="{{ path('app_assemblee_generale', { id: exercice.id }) }}" class="btn btn-primary">
+					<a
+						href="{{ path('app_assemblee_generale_new', {
+							exercice: exercice.id
+						}) }}"
+						class="btn btn-primary"
+					>
 						Préparer l'Assemblée Générale
 					</a>
 
@@ -170,15 +175,15 @@
 
 					<p>
 						Les charges réparties entre les copropriétaires peuvent être
-																		contrôlées avant la clôture.
+						contrôlées avant la clôture.
 					</p>
 
 					<p class="text-muted">
 						Aucune écriture comptable de régularisation n'est générée
-																		à cette étape.
+						à cette étape.
 					</p>
 
-					<a href="{{ path('app_cloture_regularisations', { id: exercice.id }) }}" class="btn btn-outline-primary">
+					<a href="{{ path('app_cloture_regularisations', {id: exercice.id}) }}" class="btn btn-outline-primary">
 						Consulter les répartitions
 					</a>
 
@@ -243,8 +248,8 @@
 								€
 							</strong>.
 														
-																					Ce montant sera transféré au compte 489000 lors de la
-																					clôture des comptes de gestion.
+							Ce montant sera transféré au compte 489000 lors de la
+							clôture des comptes de gestion.
 						</div>
 
 					{% else %}
@@ -256,8 +261,8 @@
 								€
 							</strong>.
 														
-																					Ce montant sera transféré au compte 489000 lors de la
-																					clôture des comptes de gestion.
+							Ce montant sera transféré au compte 489000 lors de la
+							clôture des comptes de gestion.
 						</div>
 
 					{% endif %}
@@ -279,10 +284,10 @@
 
 						<div class="alert alert-success">
 							✅ Les comptes de charges et de produits ont été soldés
-																					par le compte 489000.
+							par le compte 489000.
 						</div>
 
-						<a href="{{ path('app_cloture_comptes_gestion', { id: exercice.id }) }}" class="btn btn-outline-primary">
+						<a href="{{ path('app_cloture_comptes_gestion', {id: exercice.id}) }}" class="btn btn-outline-primary">
 							Consulter les écritures générées
 						</a>
 
@@ -290,19 +295,19 @@
 
 						<div class="alert alert-warning">
 							Les écritures de clôture des comptes de gestion ne sont
-																					pas encore générées.
+							pas encore générées.
 						</div>
 
 						<p>
 							Cette opération soldera les comptes de classes 6 et 7
-																					par le compte 489000.
+							par le compte 489000.
 						</p>
 
-						<a href="{{ path('app_cloture_comptes_gestion', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+						<a href="{{ path('app_cloture_comptes_gestion', {id: exercice.id}) }}" class="btn btn-outline-secondary">
 							Afficher le détail
 						</a>
 
-						<form method="post" action="{{ path('app_cloture_generer_comptes_gestion', { id: exercice.id }) }}" class="d-inline">
+						<form method="post" action="{{ path('app_cloture_generer_comptes_gestion', {id: exercice.id}) }}" class="d-inline">
 							<button type="submit" class="btn btn-primary" onclick="return confirm('Confirmer la génération des écritures de clôture des comptes de gestion ?')">
 								Générer les écritures
 							</button>
@@ -312,7 +317,7 @@
 
 						<div class="alert alert-secondary mb-0">
 							Les écritures de clôture des comptes de gestion ne peuvent
-																					pas encore être générées.
+							pas encore être générées.
 						</div>
 
 					{% endif %}
@@ -363,10 +368,10 @@
 
 						<p>
 							La clôture des comptes de gestion est terminée.
-																					L'exercice suivant peut maintenant être créé.
+							L'exercice suivant peut maintenant être créé.
 						</p>
 
-						<form method="post" action="{{ path('app_cloture_creer_exercice_suivant', { id: exercice.id }) }}" class="d-inline">
+						<form method="post" action="{{ path('app_cloture_creer_exercice_suivant', {id: exercice.id}) }}" class="d-inline">
 							<button type="submit" class="btn btn-primary" onclick="return confirm('Créer l’exercice suivant ?')">
 								Créer l'exercice suivant
 							</button>
@@ -397,14 +402,14 @@
 
 						<div class="alert alert-success">
 							✅ Les écritures d'à-nouveaux ont été générées dans
-																					l'exercice suivant.
+							l'exercice suivant.
 						</div>
 
-						<a href="{{ path('app_cloture_anouveaux', { id: exercice.id }) }}" class="btn btn-outline-primary">
+						<a href="{{ path('app_cloture_anouveaux', {id: exercice.id}) }}" class="btn btn-outline-primary">
 							Consulter les écritures générées
 						</a>
 
-						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+						<a href="{{ path('app_cloture_soldes_reportables', {id: exercice.id}) }}" class="btn btn-outline-secondary">
 							Consulter les soldes reportables
 						</a>
 
@@ -416,18 +421,18 @@
 
 						<p>
 							Les comptes de bilan, dont le compte 489000, seront
-																					repris dans l'exercice suivant.
+							repris dans l'exercice suivant.
 						</p>
 
-						<a href="{{ path('app_cloture_anouveaux', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+						<a href="{{ path('app_cloture_anouveaux', {id: exercice.id}) }}" class="btn btn-outline-secondary">
 							Afficher le détail
 						</a>
 
-						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+						<a href="{{ path('app_cloture_soldes_reportables', {id: exercice.id}) }}" class="btn btn-outline-secondary">
 							Consulter les soldes reportables
 						</a>
 
-						<form method="post" action="{{ path('app_cloture_generer_anouveaux', { id: exercice.id }) }}" class="d-inline">
+						<form method="post" action="{{ path('app_cloture_generer_anouveaux', {id: exercice.id}) }}" class="d-inline">
 							<button type="submit" class="btn btn-primary" onclick="return confirm('Confirmer la génération des à-nouveaux ?')">
 								Générer les à-nouveaux
 							</button>
@@ -439,7 +444,7 @@
 							Les à-nouveaux ne peuvent pas encore être générés.
 						</div>
 
-						<a href="{{ path('app_cloture_soldes_reportables', { id: exercice.id }) }}" class="btn btn-outline-secondary">
+						<a href="{{ path('app_cloture_soldes_reportables', {id: exercice.id}) }}" class="btn btn-outline-secondary">
 							Consulter les soldes reportables
 						</a>
 
@@ -462,15 +467,15 @@
 
 						<div class="alert alert-warning">
 							Toutes les étapes techniques sont terminées.
-																					L'exercice peut être clôturé.
+							L'exercice peut être clôturé.
 						</div>
 
 						<p>
 							Le solde du compte 489000 restera en attente jusqu'à
-																					l'approbation des comptes par l'Assemblée Générale.
+							l'approbation des comptes par l'Assemblée Générale.
 						</p>
 
-						<form method="post" action="{{ path('app_cloture_exercice', { id: exercice.id }) }}" class="d-inline">
+						<form method="post" action="{{ path('app_cloture_exercice', {id: exercice.id}) }}" class="d-inline">
 							<button type="submit" class="btn btn-danger" onclick="return confirm('Confirmer la clôture définitive de l’exercice ?')">
 								Clôturer l'exercice
 							</button>

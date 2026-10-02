@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Décision - Résolution {{ resolution.numero }}
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
+        <h1>Décision de l'Assemblée Générale</h1>
+        <h2>{{ assemblee_generale.exercice.nom }}</h2>
+    </div>
+
+    <div class="mb-4">
+        <h3>
+            Résolution {{ resolution.numero }} -
+            {{ resolution.titre }}
+        </h3>
+
+        <p>
+            {{ resolution.texte }}
+        </p>
+
+        {% if resolution.majorite %}
+            <p>
+                <strong>Majorité :</strong>
+                {{ resolution.majorite.label }}
+            </p>
+        {% endif %}
+    </div>
+
+    {{ form_start(form) }}
+
+    {{ form_row(form.decision) }}
+    {{ form_row(form.amendeeEnSeance) }}
+
+    <div class="mt-4">
+        <button class="btn btn-primary">
+            Enregistrer la décision
+        </button>
+
+        <a
+            href="{{ path(
+                    'app_assemblee_generale_show',
+                    {id: assemblee_generale.id}
+                ) }}"
+            class="btn btn-secondary"
+        >
+            Retour
+        </a>
+    </div>
+
+    {{ form_end(form) }}
+
+{% endblock %}

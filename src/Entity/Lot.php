@@ -56,11 +56,14 @@ class Lot
     #[ORM\OneToMany(targetEntity: LigneAppelFond::class, mappedBy: 'lot')]
     private Collection $ligneAppelFonds;
 
-    #[ORM\OneToOne(
+    /**
+     * @var Collection<int, CompteurEau>
+     */
+    #[ORM\OneToMany(
         mappedBy: 'lot',
         targetEntity: CompteurEau::class
     )]
-    private ?CompteurEau $compteurEau = null;
+    private Collection $compteursEau;
 
     public function __construct()
     {
@@ -68,6 +71,7 @@ class Lot
         $this->lotCoproprietaires = new ArrayCollection();
         $this->operations = new ArrayCollection();
         $this->ligneAppelFonds = new ArrayCollection();
+        $this->compteursEau = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -304,23 +308,45 @@ class Lot
         return $this;
     }
 
-    public function getCompteurEau(): ?CompteurEau
+    /**
+     * @return Collection<int, CompteurEau>
+     */
+    public function getCompteursEau(): Collection
     {
-        return $this->compteurEau;
+        return $this->compteursEau;
     }
 
-    public function setCompteurEau(
-        ?CompteurEau $compteurEau
+    public function addCompteurEau(
+        CompteurEau $compteurEau
     ): static {
-        // unset the owning side of the relation if necessary
-        if ($compteurEau === null && $this->compteurEau !== null) {
-            $this->compteurEau->setLot(null);
-        }
-        // set the owning side of the relation if necessary
-        if ($compteurEau !== null && $compteurEau->getLot() !== $this) {
+        if (!$this->compteursEau->contains($compteurEau)) {
+            $this->compteursEau->add($compteurEau);
             $compteurEau->setLot($this);
         }
-        $this->compteurEau = $compteurEau;
+
         return $this;
+    }
+
+    public function removeCompteurEau(
+        CompteurEau $compteurEau
+    ): static {
+        if ($this->compteursEau->removeElement($compteurEau)) {
+            if ($compteurEau->getLot() === $this) {
+                $compteurEau->setLot(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getCompteurEau(): ?CompteurEau
+    {
+        foreach ($this->compteursEau as $compteur) {
+            if ($compteur->isActif()) {
+                return $compteur;
+            }
+        }
+
+        return null;
     }
 }

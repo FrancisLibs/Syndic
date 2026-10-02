@@ -135,6 +135,7 @@ final class EauService
         ConsommationImmeuble $consommations
     ): int {
         $total = 0;
+        $lotsTraites = [];
 
         foreach (
             $consommations->getCompteursIndividuels()
@@ -151,9 +152,24 @@ final class EauService
                 );
             }
 
+            $lotId = $lot->getId();
+
+            if ($lotId === null) {
+                throw new \DomainException(
+                    'Un lot utilisé pour la répartition n’est pas enregistré.'
+                );
+            }
+
+            if (isset($lotsTraites[$lotId])) {
+                continue;
+            }
+
             $tantiemes = $lot->getTantiemes();
 
-            if ($tantiemes === null || $tantiemes <= 0) {
+            if (
+                $tantiemes === null
+                || $tantiemes <= 0
+            ) {
                 throw new \DomainException(
                     sprintf(
                         'Les tantièmes du lot %s sont absents ou invalides.',
@@ -163,6 +179,8 @@ final class EauService
             }
 
             $total += $tantiemes;
+
+            $lotsTraites[$lotId] = true;
         }
 
         if ($total <= 0) {
@@ -197,6 +215,9 @@ final class EauService
     /**
      * @return CalculEauLot[]
      */
+    /**
+     * @return CalculEauLot[]
+     */
     private function calculerLots(
         ConsommationImmeuble $consommations,
         float $prixM3,
@@ -219,7 +240,18 @@ final class EauService
         $coutCommuns =
             $consommationCommune * $prixM3;
 
-        $lots = [];
+        /*
+     * Regroupement des consommations par lot.
+     *
+     * Cela permet de gérer le cas d'un remplacement
+     * de compteur pendant l'exercice.
+     *
+     * Exemple :
+     * ancien compteur = 25 m³
+     * nouveau compteur = 30 m³
+     * consommation du lot = 55 m³
+     */
+        $consommationsParLot = [];
 
         foreach (
             $consommations->getCompteursIndividuels()
@@ -236,6 +268,14 @@ final class EauService
                 );
             }
 
+            $lotId = $lot->getId();
+
+            if ($lotId === null) {
+                throw new \DomainException(
+                    'Un lot utilisé pour la répartition n’est pas enregistré.'
+                );
+            }
+
             $consommation =
                 $consommationCompteur->getConsommation();
 
@@ -247,6 +287,27 @@ final class EauService
                     )
                 );
             }
+
+            if (!isset($consommationsParLot[$lotId])) {
+                $consommationsParLot[$lotId] = [
+                    'lot' => $lot,
+                    'consommation' => 0,
+                ];
+            }
+
+            $consommationsParLot[$lotId]['consommation']
+                += $consommation;
+        }
+
+        /*
+     * Calcul de la part individuelle
+     * et de la part commune pour chaque lot.
+     */
+        $lots = [];
+
+        foreach ($consommationsParLot as $donneesLot) {
+            $lot = $donneesLot['lot'];
+            $consommation = $donneesLot['consommation'];
 
             $tantiemes = $lot->getTantiemes();
 
@@ -262,16 +323,19 @@ final class EauService
                 );
             }
 
-            $coproprietaire = $lot->getCoproprietaireActuel(
-                $exercice->getDateFin()
-            );
+            $coproprietaire =
+                $lot->getCoproprietaireActuel(
+                    $exercice->getDateFin()
+                );
 
             if ($coproprietaire === null) {
                 throw new \DomainException(
                     sprintf(
                         'Aucun copropriétaire n’est défini pour le lot %s au %s.',
                         $lot->getReference(),
-                        $exercice->getDateFin()->format('d/m/Y')
+                        $exercice
+                            ->getDateFin()
+                            ->format('d/m/Y')
                     )
                 );
             }
@@ -303,18 +367,19 @@ final class EauService
         }
 
         /*
- * Correction de l'écart d'arrondi.
- *
- * La somme des montants par lot peut différer
- * de quelques centimes du montant total des factures,
- * car chaque part est arrondie individuellement.
- *
- * On affecte l'écart au dernier lot.
- */
+     * Correction de l'écart d'arrondi.
+     *
+     * La somme des montants par lot peut différer
+     * de quelques centimes du montant total des factures,
+     * car chaque part est arrondie individuellement.
+     *
+     * On affecte l'écart au dernier lot.
+     */
         $totalReparti = 0.0;
 
         foreach ($lots as $lotCalcule) {
-            $totalReparti += $lotCalcule->getMontantTotal();
+            $totalReparti +=
+                $lotCalcule->getMontantTotal();
         }
 
         $ecart = round(
