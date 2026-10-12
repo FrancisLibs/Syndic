@@ -167,11 +167,6 @@ class Exercice
         return $this;
     }
 
-    public function __toString(): string
-    {
-        return $this->nom;
-    }
-
     /**
      * @return Collection<int, Budget>
      */
@@ -369,5 +364,10 @@ class Exercice
         $this->approbationComptes = $approbationComptes;
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->nom;
     }
 }

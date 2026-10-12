@@ -7,6 +7,7 @@ enum OperationType: string
     case CHARGE = 'charge';
     case PAIEMENT = 'paiement';
     case APPEL_FONDS = 'appel_fonds';
+    case REALISATION_TRAVAUX = 'realisation_travaux';
     case REGULARISATION = 'regularisation';
     case PAIEMENT_FOURNISSEUR = 'paiement_fournisseur';
     case A_NOUVEAU = 'a_nouveau';
@@ -18,4 +19,5 @@ enum OperationType: string
     case REMBOURSEMENT_FOURNISSEUR = 'remboursement_fournisseur';
     case FNP = 'fnp';
     case TRAITEMENT_FNP = 'traitement_fnp';
+    case REGULARISATION_TRAVAUX = 'regularisation_travaux';
 }

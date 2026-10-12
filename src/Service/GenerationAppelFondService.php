@@ -82,7 +82,7 @@ class GenerationAppelFondService
             );
         }
 
-        $this->comptabiliteService->enregistrer($operation);
+        $this->comptabiliteService->enregistrer();
 
         $this->entityManager->flush();
     }

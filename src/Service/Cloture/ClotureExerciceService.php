@@ -307,7 +307,7 @@ class ClotureExerciceService
             }
         }
 
-        $this->comptabiliteService->enregistrer($operation);
+        $this->comptabiliteService->enregistrer();
 
         $this->em->flush();
     }
@@ -626,7 +626,7 @@ class ClotureExerciceService
             }
         }
 
-        $this->comptabiliteService->enregistrer($operation);
+        $this->comptabiliteService->enregistrer();
 
         $this->em->flush();
     }

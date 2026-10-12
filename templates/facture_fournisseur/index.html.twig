@@ -55,18 +55,25 @@
 
 						{% for facture in factures %}
 
+							{% if facture.chantier %}
+								{% set groupeFacture = 'Travaux - ' ~ facture.chantier.libelle %}
+							{% elseif facture.typeCharge %}
+								{% set groupeFacture = facture.typeCharge.nom %}
+							{% else %}
+								{% set groupeFacture = 'Sans affectation' %}
+							{% endif %}
+
 							{# ============================ #}
 							{# Changement de type de charge #}
 							{# ============================ #}
 
-								{% if typeCourant != facture.typeCharge.nom %}
+							{% if typeCourant != groupeFacture %}
 
 								{# Sous-total du groupe précédent #}
-									{% if typeCourant is not null %}
+								{% if typeCourant is not null %}
 
-										<tr class="table-secondary"> <td colspan="5" class="text-end fw-bold">
-											Sous-total
-											{{ typeCourant }}
+									<tr class="table-secondary"> <td colspan="5" class="text-end fw-bold">
+											Sous-total {{ typeCourant }}
 										</td>
 
 										<td class="text-end fw-bold text-nowrap">
@@ -80,7 +87,7 @@
 
 								{% endif %}
 
-								{% set typeCourant = facture.typeCharge.nom %}
+								{% set typeCourant = groupeFacture %}
 								{% set sousTotal = 0 %}
 
 								{# Titre du nouveau groupe #}
@@ -105,11 +112,11 @@
 							{# Facture                      #}
 							{# ============================ #}
 
-								<tr>
+							<tr>
 
-									<td>
+								<td>
 
-										<div class="fw-semibold"> {{ facture.exercice.nom }}
+									<div class="fw-semibold"> {{ facture.exercice.nom }}
 									</div>
 
 									{% if facture.exercice.cloture %}
@@ -200,7 +207,7 @@
 
 									<div class="d-flex justify-content-end gap-2">
 
-										<a class="btn btn-sm btn-outline-primary" href="{{ path( 'app_facture_fournisseur_show', { id: facture.id } ) }}">
+										<a class="btn btn-sm btn-outline-primary" href="{{ path('app_facture_fournisseur_show', { id: facture.id }) }}">
 											Voir
 										</a>
 
@@ -209,7 +216,7 @@
                                             and not facture.exercice.cloture
                                         %}
 
-											<a class="btn btn-sm btn-outline-secondary" href="{{ path( 'app_facture_fournisseur_edit', { id: facture.id } ) }}">
+											<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_facture_fournisseur_edit', { id: facture.id }) }}">
 												Modifier
 											</a>
 
@@ -221,7 +228,7 @@
                                             and facture.coproprietaireAvanceur is null
                                         %}
 
-											<a class="btn btn-sm btn-outline-warning" href="{{ path( 'app_facture_fournisseur_corriger_montant', { id: facture.id } ) }}">
+											<a class="btn btn-sm btn-outline-warning" href="{{ path('app_facture_fournisseur_corriger_montant', { id: facture.id }) }}">
 												Corriger montant
 											</a>
 
@@ -247,9 +254,9 @@
 						{# Sous-total du dernier groupe #}
 						{# ============================ #}
 
-							{% if typeCourant is not null %}
+						{% if typeCourant is not null %}
 
-								<tr class="table-secondary"> <td colspan="5" class="text-end fw-bold">
+							<tr class="table-secondary"> <td colspan="5" class="text-end fw-bold">
 									Sous-total
 									{{ typeCourant }}
 								</td>

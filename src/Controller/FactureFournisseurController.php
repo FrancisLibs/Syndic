@@ -283,7 +283,8 @@ final class FactureFournisseurController extends AbstractController
     public function edit(
         Request $request,
         FactureFournisseur $facture,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        GenerationFactureFournisseurService $generationService,
     ): Response {
         if ($facture->isComptabilisee()) {
 
@@ -295,7 +296,7 @@ final class FactureFournisseurController extends AbstractController
             return $this->redirectToRoute(
                 'app_facture_fournisseur_show',
                 [
-                    'id' => $facture->getId()
+                    'id' => $facture->getId(),
                 ]
             );
         }
@@ -311,12 +312,36 @@ final class FactureFournisseurController extends AbstractController
             $form->isSubmitted()
             && $form->isValid()
         ) {
+            try {
+                $entityManager->wrapInTransaction(
+                    function () use (
+                        $entityManager,
+                        $generationService,
+                        $facture
+                    ): void {
+                        $generationService->generer($facture);
+                    }
+                );
 
-            $entityManager->flush();
+                $this->addFlash(
+                    'success',
+                    'La facture a été modifiée et comptabilisée.'
+                );
 
-            return $this->redirectToRoute(
-                'app_facture_fournisseur_index',
-            );
+                return $this->redirectToRoute(
+                    'app_facture_fournisseur_show',
+                    [
+                        'id' => $facture->getId(),
+                    ]
+                );
+            } catch (\Throwable $exception) {
+
+                $this->addFlash(
+                    'danger',
+                    'La facture n’a pas pu être comptabilisée : '
+                        . $exception->getMessage()
+                );
+            }
         }
 
         return $this->render(

@@ -36,8 +36,8 @@ class InitPlanComptableCommand extends Command
             // =====================
 
             [
-                'numero' => '102000',
-                'libelle' => 'Fonds de réserve',
+                'numero' => '103100',
+                'libelle' => 'Avances de trésorerie',
                 'type' => CompteType::PASSIF,
             ],
 

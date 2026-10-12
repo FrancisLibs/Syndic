@@ -10,26 +10,34 @@
 	<table class="table">
 		<thead>
 			<tr>
-				<th>Exercice</th>
-				<th>Date Appel</th>
-				<th>Date Reglement</th>
-				<th>Libelle</th>
-				<th>Montant Total</th>
-				<th>Numero</th>
-				<th>actions</th>
+				<th>Origine de l'appel</th>
+				<th class="text-center">Date Appel</th>
+				<th class="text-center">Date Reglement</th>
+				<th class="text-center">Libelle</th>
+				<th class="text-center">Montant Total</th>
+				<th class="text-center">Numero</th>
+				<th class="text-center">actions</th>
 			</tr>
 		</thead>
 		<tbody>
 			{% for appel_fond in appel_fonds %}
 				<tr>
-					<td>{{ appel_fond.budget.exercice.nom }}</td>
-
-					<td>{{ appel_fond.dateAppel ? appel_fond.dateAppel|date('Y-m-d') : '' }}</td>
-					<td>{{ appel_fond.dateReglement ? appel_fond.dateReglement|date('Y-m-d') : '' }}</td>
-					<td>{{ appel_fond.libelle }}</td>
-					<td>{{ appel_fond.montantTotal }}</td>
-					<td>{{ appel_fond.numero }}</td>
 					<td>
+						{% if appel_fond.budget %}
+							{{ appel_fond.budget.exercice.nom }}
+						{% elseif appel_fond.chantier %}
+							Chantier : {{ appel_fond.chantier.libelle }}
+						{% else %}
+							Non défini
+						{% endif %}
+					</td>
+
+					<td class="text-center">{{ appel_fond.dateAppel ? appel_fond.dateAppel|date('Y-m-d') : '' }}</td>
+					<td class="text-center">{{ appel_fond.dateReglement ? appel_fond.dateReglement|date('Y-m-d') : '' }}</td>
+					<td class="text-center">{{ appel_fond.libelle }}</td>
+					<td class="text-center">{{ appel_fond.montantTotal }}</td>
+					<td class="text-center">{{ appel_fond.numero }}</td>
+					<td class="text-center">
 						<a href="{{ path('app_appel_fond_show', {'id': appel_fond.id}) }}">Voir</a>
 						{# <a href="{{ path('app_appel_fond_edit', {'id': appel_fond.id}) }}">edit</a> #}
 					</td>

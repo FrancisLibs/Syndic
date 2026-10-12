@@ -202,7 +202,9 @@ class ComptabiliteService
             OperationType::APPROBATION_COMPTES,
             OperationType::TRANSFERT_DETTE,
             OperationType::OPERATION_DIVERSE,
-            OperationType::FNP
+            OperationType::FNP,
+            OperationType::REALISATION_TRAVAUX,
+            OperationType::REGULARISATION_TRAVAUX
             => JournalCode::OD,
         };
     }

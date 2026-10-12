@@ -195,12 +195,6 @@ class AppelFond
         return $this;
     }
 
-    public function __toString(): string
-    {
-        return $this->libelle
-            ?? 'Nouvel appel de fonds';
-    }
-
     public function getOperation(): ?Operation
     {
         return $this->operation;
@@ -223,5 +217,11 @@ class AppelFond
         $this->numero = $numero;
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->libelle
+            ?? 'Nouvel appel de fonds';
     }
 }

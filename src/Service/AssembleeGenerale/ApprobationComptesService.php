@@ -238,7 +238,7 @@ final class ApprobationComptesService
 
         $approbation->setOperation($operation);
 
-        $this->comptabiliteService->enregistrer($operation);
+        $this->comptabiliteService->enregistrer();
 
         $this->entityManager->flush();
 

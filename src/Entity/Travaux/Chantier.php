@@ -4,6 +4,8 @@ namespace App\Entity\Travaux;
 
 use App\Entity\Copropriete;
 use App\Entity\AppelFond;
+use App\Entity\Compte;
+use App\Entity\Operation;
 use App\Enum\ModeRepartition;
 use App\Repository\Travaux\ChantierRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -57,9 +59,43 @@ class Chantier
     )]
     private Collection $appels;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Compte $compteProvision = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Compte $compteCharge = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Compte $compteProduit = null;
+
+    /**
+     * @var Collection<int, VoteComplementaireChantier>
+     */
+    #[ORM\OneToMany(
+        mappedBy: 'chantier',
+        targetEntity: VoteComplementaireChantier::class,
+        orphanRemoval: true
+    )]
+    private Collection $votesComplementaires;
+
+    #[ORM\OneToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?AppelFond $appelInitial = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $dateCloture = null;
+
+    #[ORM\OneToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Operation $operationRegularisation = null;
+
     public function __construct()
     {
         $this->appels = new ArrayCollection();
+        $this->votesComplementaires = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -194,6 +230,122 @@ class Chantier
                 $appel->setChantier(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCompteProvision(): ?Compte
+    {
+        return $this->compteProvision;
+    }
+
+    public function setCompteProvision(?Compte $compteProvision): static
+    {
+        $this->compteProvision = $compteProvision;
+
+        return $this;
+    }
+
+    public function getCompteCharge(): ?Compte
+    {
+        return $this->compteCharge;
+    }
+
+    public function setCompteCharge(?Compte $compteCharge): static
+    {
+        $this->compteCharge = $compteCharge;
+
+        return $this;
+    }
+
+    public function getCompteProduit(): ?Compte
+    {
+        return $this->compteProduit;
+    }
+
+    public function setCompteProduit(?Compte $compteProduit): static
+    {
+        $this->compteProduit = $compteProduit;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, VoteComplementaireChantier>
+     */
+    public function getVotesComplementaires(): Collection
+    {
+        return $this->votesComplementaires;
+    }
+
+    public function addVoteComplementaire(
+        VoteComplementaireChantier $vote
+    ): static {
+        if (!$this->votesComplementaires->contains($vote)) {
+            $this->votesComplementaires->add($vote);
+            $vote->setChantier($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVoteComplementaire(
+        VoteComplementaireChantier $vote
+    ): static {
+        if ($this->votesComplementaires->removeElement($vote)) {
+            if ($vote->getChantier() === $this) {
+                $vote->setChantier(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getMontantTotalVote(): float
+    {
+        $total = (float) $this->montantVote;
+
+        foreach ($this->votesComplementaires as $vote) {
+            $total += (float) $vote->getMontant();
+        }
+
+        return round($total, 2);
+    }
+
+    public function getAppelInitial(): ?AppelFond
+    {
+        return $this->appelInitial;
+    }
+
+    public function setAppelInitial(?AppelFond $appelInitial): static
+    {
+        $this->appelInitial = $appelInitial;
+
+        return $this;
+    }
+
+    public function getDateCloture(): ?\DateTimeImmutable
+    {
+        return $this->dateCloture;
+    }
+
+    public function setDateCloture(
+        ?\DateTimeImmutable $dateCloture
+    ): static {
+        $this->dateCloture = $dateCloture;
+
+        return $this;
+    }
+
+    public function getOperationRegularisation(): ?Operation
+    {
+        return $this->operationRegularisation;
+    }
+
+    public function setOperationRegularisation(
+        ?Operation $operationRegularisation
+    ): static {
+        $this->operationRegularisation = $operationRegularisation;
 
         return $this;
     }

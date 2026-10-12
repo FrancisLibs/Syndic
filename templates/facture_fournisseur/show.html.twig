@@ -21,12 +21,12 @@
                     and not facture_fournisseur.exercice.cloture
                     and facture_fournisseur.coproprietaireAvanceur is null
                 %}
-					<a class="btn btn-outline-warning" href="{{ path( 'app_facture_fournisseur_corriger_montant', { id: facture_fournisseur.id } ) }}">
+					<a class="btn btn-outline-warning" href="{{ path('app_facture_fournisseur_corriger_montant', { id: facture_fournisseur.id }) }}">
 						Corriger montant
 					</a>
 				{% endif %}
 
-				<a class="btn btn-outline-secondary" href="{{ path( 'app_facture_fournisseur_index' ) }}">
+				<a class="btn btn-outline-secondary" href="{{ path('app_facture_fournisseur_index') }}">
 					Retour
 				</a>
 
@@ -142,6 +142,15 @@
 							{% else %}
 								—
 							{% endif %}
+						</td>
+					</tr>
+					<tr>
+						<th>Type</th>
+						<td>
+							{{ facture_fournisseur.estAvoir
+							? "Avoir"
+							: "Facture"
+						}}
 						</td>
 					</tr>
 

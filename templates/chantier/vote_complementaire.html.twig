@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Vote complémentaire - {{ chantier.libelle }}
+{% endblock %}
+
+{% block body %}
+
+    <h1>Vote complémentaire</h1>
+
+    <h2>{{ chantier.libelle }}</h2>
+
+    <p>
+        Montant actuellement voté :
+        <strong>
+            {{ chantier.montantTotalVote|number_format(2, ',', ' ') }} €
+        </strong>
+    </p>
+
+    {{ form_start(form) }}
+
+        {{ form_row(form.montant) }}
+        {{ form_row(form.dateVote) }}
+        {{ form_row(form.numeroResolution) }}
+
+        <button class="btn btn-primary">
+            Enregistrer
+        </button>
+
+    {{ form_end(form) }}
+
+    <a
+        href="{{ path('app_chantier_show', {id: chantier.id}) }}"
+        class="btn btn-secondary mt-3"
+    >
+        Retour au chantier
+    </a>
+
+{% endblock %}

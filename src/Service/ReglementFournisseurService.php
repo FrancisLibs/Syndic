@@ -76,8 +76,7 @@ final class ReglementFournisseurService
             $reglement
         );
 
-        $this->comptabiliteService
-            ->enregistrer();
+        $this->comptabiliteService->enregistrer();
 
         return $reglement;
     }

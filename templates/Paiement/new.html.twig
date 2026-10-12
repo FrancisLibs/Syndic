@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+
 	<div class="d-flex justify-content-start align-items-baseline gap-3 mb-4">
 		<h1>Enregistrer un paiement</h1>
 		<h2>{{ exercice.nom }}</h2>
@@ -9,7 +10,6 @@
 	{{ form_start(form) }}
 
 	<div class="row">
-
 		<div class="col-md-3">
 			{{ form_row(form.datePaiement) }}
 		</div>
@@ -17,11 +17,9 @@
 		<div class="col-md-3">
 			{{ form_row(form.coproprietaire) }}
 		</div>
-
 	</div>
 
 	<div class="row mt-3">
-
 		<div class="col-md-3">
 			{{ form_row(form.montant) }}
 		</div>
@@ -29,13 +27,113 @@
 		<div class="col-md-3">
 			{{ form_row(form.piece) }}
 		</div>
-
 	</div>
 
-	<button type="submit" class="btn btn-success mt-3">
+	<h4 class="mb-3">Ventilation du paiement</h4>
+
+	<div class="row">
+		<div class="col-md-8">
+
+			<table class="table table-bordered table-sm align-middle">
+				<colgroup>
+					<col style="width: 45%;">
+					<col style="width: 25%;">
+					<col style="width: 30%;">
+				</colgroup>
+				<thead class="table-light">
+					<tr>
+						<th>Poste</th>
+						<th class="text-center">Reste à payer</th>
+						<th>Affectation (€)</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					<tr>
+						<td>Charges courantes</td>
+
+						<td class="text-center">
+							<strong id="solde-charges">—</strong>
+						</td>
+
+						<td>
+							<input
+								type="number"
+								name="ventilation[charges]"
+								class="form-control form-control-sm montant-ventilation text-end"
+								min="0"
+								step="0.01"
+								value="{{ app.request.request.all('ventilation').charges|default('0.00') }}"
+							>
+						</td>
+					</tr>
+
+					{% for chantier in chantiers %}
+						<tr>
+							<td>{{ chantier.libelle }}</td>
+
+							<td class="text-center">
+								<strong
+									class="solde-chantier"
+									data-chantier-id="{{ chantier.id }}"
+								>—</strong>
+							</td>
+
+							<td>
+								<input
+									type="number"
+									name="chantiers[{{ chantier.id }}]"
+									class="form-control form-control-sm montant-ventilation text-end"
+									min="0"
+									step="0.01"
+									value="{{ app.request.request.all('chantiers')[chantier.id]|default('0.00') }}"
+								>
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+
+				<tfoot class="table-light">
+					<tr>
+						<th colspan="2">Total ventilé</th>
+						<th class="text-end" id="total-ventile">
+							0,00 €
+						</th>
+					</tr>
+
+					<tr>
+						<th colspan="2">Reste non affecté</th>
+						<th class="text-end" id="reste-affecter">
+							0,00 €
+						</th>
+					</tr>
+				</tfoot>
+			</table>
+
+			<div
+				id="erreur-ventilation"
+				class="text-danger d-none mb-3"
+			>
+				Le total ventilé dépasse le montant reçu.
+			</div>
+
+		</div>
+	</div>
+
+
+	<button
+		type="submit"
+		class="btn btn-success mt-3"
+		id="valider-paiement"
+	>
 		Valider le paiement
 	</button>
 
 	{{ form_end(form) }}
 
+{% endblock %}
+
+{% block javascripts %}
+	{{ parent() }}
+	<script src="{{ asset('assets/js/Paiement/paiement.js') }}"></script>
 {% endblock %}

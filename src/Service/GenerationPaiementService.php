@@ -46,8 +46,6 @@ class GenerationPaiementService
 
         $paiement->setOperation($operation);
 
-        $this->comptabiliteService->enregistrer($operation);
-
-        $this->entityManager->flush();
+        $this->comptabiliteService->enregistrer();
     }
 }

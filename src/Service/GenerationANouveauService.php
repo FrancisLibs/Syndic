@@ -77,12 +77,12 @@ class GenerationANouveauService
         }
 
         $compteFondsRoulement = $this->compteRepository->findOneBy([
-            'numero' => '102000',
+            'numero' => '103100',
         ]);
 
         if (!$compteFondsRoulement) {
             throw new \RuntimeException(
-                'Le compte d\'avance de trésorerie 102000 est introuvable.'
+                'Le compte d\'avance de trésorerie 103100 est introuvable.'
             );
         }
 

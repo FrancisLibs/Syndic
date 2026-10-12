@@ -6,6 +6,7 @@ use App\Entity\FactureFournisseur;
 use App\Entity\Fournisseur;
 use App\Entity\TypeCharge;
 use App\Entity\Coproprietaire;
+use App\Entity\Travaux\Chantier;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -13,9 +14,9 @@ use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 class FactureFournisseurType extends AbstractType
 {
@@ -25,6 +26,20 @@ class FactureFournisseurType extends AbstractType
     ): void {
 
         $builder
+
+            ->add(
+                'type',
+                ChoiceType::class,
+                [
+                    'label' => 'Type de document',
+                    'choices' => [
+                        'Facture' => \App\Enum\FactureFournisseurType::FACTURE,
+                        'Avoir' => \App\Enum\FactureFournisseurType::AVOIR,
+                    ],
+                    'expanded' => true,
+                    'multiple' => false,
+                ]
+            )
 
             ->add(
                 'numero',
@@ -94,6 +109,8 @@ class FactureFournisseurType extends AbstractType
                     'class' => TypeCharge::class,
                     'choice_label' => 'nom',
                     'label' => 'Type de charge',
+                    'required' => false,
+                    'placeholder' => 'Aucun — facture de travaux',
                     'choice_attr' => function (TypeCharge $typeCharge) {
                         return [
                             'data-est-eau' => $typeCharge->isEau()
@@ -101,6 +118,18 @@ class FactureFournisseurType extends AbstractType
                                 : '0',
                         ];
                     },
+                ]
+            )
+
+            ->add(
+                'chantier',
+                EntityType::class,
+                [
+                    'class' => Chantier::class,
+                    'choice_label' => 'libelle',
+                    'label' => 'Chantier',
+                    'required' => false,
+                    'placeholder' => 'Aucun — charge courante',
                 ]
             )
 
@@ -137,12 +166,12 @@ class FactureFournisseurType extends AbstractType
                     'label' => 'Je confirme qu’il s’agit d’une nouvelle facture',
                     'required' => false,
                     'mapped' => false,
-                'row_attr' => [
-                    'class' => $options['confirmation_correspondance']
-                        ? ''
-                        : 'd-none',
-                    'id' => 'confirmation-correspondance-row',
-                ],
+                    'row_attr' => [
+                        'class' => $options['confirmation_correspondance']
+                            ? ''
+                            : 'd-none',
+                        'id' => 'confirmation-correspondance-row',
+                    ],
                 ]
             );
     }

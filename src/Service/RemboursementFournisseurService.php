@@ -44,8 +44,7 @@ final class RemboursementFournisseurService
             $reference
         );
 
-        $this->comptabiliteService
-            ->enregistrer();
+        $this->comptabiliteService->enregistrer();
 
         return $operation;
     }

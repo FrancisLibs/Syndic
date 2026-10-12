@@ -261,6 +261,21 @@ final class OperationController extends AbstractController
                     ]);
 
                 if ($facture) {
+
+                    // Une facture de travaux possède une seconde opération
+                    // représentant la réalisation comptable du chantier.
+                    $operationRealisation =
+                        $facture->getOperationRealisationTravaux();
+
+                    if (
+                        $operationRealisation !== null
+                        && $operationRealisation->getStatut()
+                        !== OperationStatut::ANNULE
+                    ) {
+                        $operationRealisation
+                            ->setStatut(OperationStatut::ANNULE);
+                    }
+
                     $facture->setComptabilisee(false);
                 }
 

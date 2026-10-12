@@ -153,8 +153,7 @@ final class ImportSoldeOuvertureService
             $this->comptabiliteService
                 ->verifierEquilibre($operation);
 
-            $this->comptabiliteService
-                ->enregistrer();
+            $this->comptabiliteService->enregistrer();
 
             $connection->commit();
         } catch (\Throwable $exception) {

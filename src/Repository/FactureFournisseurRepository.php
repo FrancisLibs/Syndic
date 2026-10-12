@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Exercice;
 use App\Entity\FactureFournisseur;
 use App\Entity\Fournisseur;
+use App\Entity\Travaux\Chantier;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Enum\FactureFournisseurType;
@@ -200,5 +201,40 @@ class FactureFournisseurRepository extends ServiceEntityRepository
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * @return FactureFournisseur[]
+     */
+    public function findPourChantier(
+        Chantier $chantier
+    ): array {
+        return $this->createQueryBuilder('f')
+            ->leftJoin('f.fournisseur', 'fournisseur')
+            ->addSelect('fournisseur')
+            ->leftJoin(
+                'f.operationRealisationTravaux',
+                'operationRealisation'
+            )
+            ->addSelect('operationRealisation')
+            ->andWhere('f.chantier = :chantier')
+            ->andWhere('f.comptabilisee = true')
+            ->setParameter('chantier', $chantier)
+            ->orderBy('f.dateFacture', 'ASC')
+            ->addOrderBy('f.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findNonComptabiliseesPourChantier(
+        Chantier $chantier
+    ): array {
+        return $this->createQueryBuilder('f')
+            ->andWhere('f.chantier = :chantier')
+            ->andWhere('f.comptabilisee = false')
+            ->setParameter('chantier', $chantier)
+            ->orderBy('f.dateFacture', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }

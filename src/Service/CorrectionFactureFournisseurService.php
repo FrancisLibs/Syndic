@@ -61,38 +61,52 @@ final class CorrectionFactureFournisseurService
             );
         }
 
-        $ecritureCharge = null;
-        $ecritureFournisseur = null;
+        [
+            $ecritureDebit,
+            $ecritureCredit,
+        ] = $this->trouverEcrituresDebitCredit(
+            $operation
+        );
 
-        foreach ($operation->getEcritures() as $ecriture) {
-
-            if ((float) $ecriture->getDebit() > 0) {
-                if ($ecritureCharge !== null) {
-                    throw new \LogicException(
-                        'Plusieurs écritures de débit ont été trouvées.'
-                    );
-                }
-
-                $ecritureCharge = $ecriture;
-            }
-
-            if ((float) $ecriture->getCredit() > 0) {
-                if ($ecritureFournisseur !== null) {
-                    throw new \LogicException(
-                        'Plusieurs écritures de crédit ont été trouvées.'
-                    );
-                }
-
-                $ecritureFournisseur = $ecriture;
-            }
+        if ($facture->estFacture()) {
+            $ecritureCharge = $ecritureDebit;
+            $ecritureFournisseur = $ecritureCredit;
+        } else {
+            $ecritureCharge = $ecritureCredit;
+            $ecritureFournisseur = $ecritureDebit;
         }
 
-        if (
-            !$ecritureCharge instanceof Ecriture
-            || !$ecritureFournisseur instanceof Ecriture
-        ) {
-            throw new \LogicException(
-                'Les écritures comptables de la facture sont incomplètes.'
+        $ecritureProvision = null;
+        $ecritureProduit = null;
+
+        if ($facture->getChantier() !== null) {
+
+            $operationRealisation =
+                $facture->getOperationRealisationTravaux();
+
+            if ($operationRealisation === null) {
+                throw new \LogicException(
+                    'L’opération de réalisation des travaux est introuvable.'
+                );
+            }
+
+            if (
+                $operationRealisation->getType()
+                !== OperationType::REALISATION_TRAVAUX
+            ) {
+                throw new \LogicException(
+                    'L’opération associée n’est pas une réalisation de travaux.'
+                );
+            }
+
+            $ecritureRealisationDebit = null;
+            $ecritureRealisationCredit = null;
+
+            [
+                $ecritureRealisationDebit,
+                $ecritureRealisationCredit,
+            ] = $this->trouverEcrituresDebitCredit(
+                $operationRealisation
             );
         }
 
@@ -101,7 +115,9 @@ final class CorrectionFactureFournisseurService
                 $facture,
                 $nouveauMontant,
                 $ecritureCharge,
-                $ecritureFournisseur
+                $ecritureFournisseur,
+                $ecritureRealisationDebit,
+                $ecritureRealisationCredit
             ): void {
 
                 foreach (
@@ -117,13 +133,40 @@ final class CorrectionFactureFournisseurService
                     $nouveauMontant
                 );
 
-                $ecritureCharge->setDebit(
-                    $nouveauMontant
-                );
+                if ($facture->estFacture()) {
 
-                $ecritureFournisseur->setCredit(
-                    $nouveauMontant
-                );
+                    $ecritureCharge->setDebit(
+                        $nouveauMontant
+                    );
+
+                    $ecritureFournisseur->setCredit(
+                        $nouveauMontant
+                    );
+                } else {
+
+                    $ecritureCharge->setCredit(
+                        $nouveauMontant
+                    );
+
+                    $ecritureFournisseur->setDebit(
+                        $nouveauMontant
+                    );
+                }
+
+                // Réalisation comptable du chantier
+
+                if (
+                    $ecritureRealisationDebit !== null
+                    && $ecritureRealisationCredit !== null
+                ) {
+                    $ecritureRealisationDebit->setDebit(
+                        $nouveauMontant
+                    );
+
+                    $ecritureRealisationCredit->setCredit(
+                        $nouveauMontant
+                    );
+                }
 
                 $typeCharge = $facture->getTypeCharge();
 
@@ -131,12 +174,23 @@ final class CorrectionFactureFournisseurService
                     $typeCharge !== null
                     && !$typeCharge->isEau()
                 ) {
+                    $montantARepartir =
+                        (float) $nouveauMontant;
+
+                    if ($facture->estAvoir()) {
+                        $montantARepartir *= -1;
+                    }
+
                     $this->generationRepartitionService
                         ->generer(
                             $ecritureCharge,
-                            $facture
+                            $facture->getExercice(),
+                            $facture->getDateFacture(),
+                            $montantARepartir
                         );
                 }
+
+                // Vérification de l'opération fournisseur
 
                 if (
                     !$facture->getOperation()
@@ -144,6 +198,18 @@ final class CorrectionFactureFournisseurService
                 ) {
                     throw new \LogicException(
                         'L’opération comptable n’est plus équilibrée après correction.'
+                    );
+                }
+
+                // Vérification de la réalisation du chantier
+
+                if (
+                    $facture->getChantier() !== null
+                    && !$facture->getOperationRealisationTravaux()
+                        ?->isEquilibree()
+                ) {
+                    throw new \LogicException(
+                        'L’opération de réalisation des travaux n’est plus équilibrée après correction.'
                     );
                 }
 
@@ -176,5 +242,51 @@ final class CorrectionFactureFournisseurService
             '.',
             ''
         );
+    }
+
+    private function trouverEcrituresDebitCredit(
+        \App\Entity\Operation $operation
+    ): array {
+        $ecritureDebit = null;
+        $ecritureCredit = null;
+
+        foreach ($operation->getEcritures() as $ecriture) {
+
+            if ((float) $ecriture->getDebit() > 0) {
+
+                if ($ecritureDebit !== null) {
+                    throw new \LogicException(
+                        'Plusieurs écritures de débit ont été trouvées.'
+                    );
+                }
+
+                $ecritureDebit = $ecriture;
+            }
+
+            if ((float) $ecriture->getCredit() > 0) {
+
+                if ($ecritureCredit !== null) {
+                    throw new \LogicException(
+                        'Plusieurs écritures de crédit ont été trouvées.'
+                    );
+                }
+
+                $ecritureCredit = $ecriture;
+            }
+        }
+
+        if (
+            !$ecritureDebit instanceof Ecriture
+            || !$ecritureCredit instanceof Ecriture
+        ) {
+            throw new \LogicException(
+                'Les écritures comptables de l’opération sont incomplètes.'
+            );
+        }
+
+        return [
+            $ecritureDebit,
+            $ecritureCredit,
+        ];
     }
 }

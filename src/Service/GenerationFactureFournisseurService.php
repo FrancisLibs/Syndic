@@ -6,6 +6,7 @@ use App\Entity\FactureFournisseur;
 use App\Enum\FactureFournisseurType;
 use App\Enum\OperationType;
 use App\Repository\CompteRepository;
+use App\Service\Travaux\GenerationRealisationChantierService;
 
 class GenerationFactureFournisseurService
 {
@@ -13,25 +14,51 @@ class GenerationFactureFournisseurService
         private GenerationRepartitionService $generationRepartitionService,
         private ComptabiliteService $comptabiliteService,
         private CompteRepository $compteRepository,
+        private GenerationRealisationChantierService $generationRealisationChantierService,
     ) {}
 
     public function generer(
         FactureFournisseur $facture
     ): void {
         $typeCharge = $facture->getTypeCharge();
+        $chantier = $facture->getChantier();
 
-        if ($typeCharge === null) {
+        /*
+ * Une facture doit concerner soit :
+ * - une charge courante ;
+ * - un chantier.
+ */
+        if ($typeCharge === null && $chantier === null) {
             throw new \LogicException(
-                'Aucun type de charge n’est défini.'
+                'La facture doit être rattachée à un type de charge ou à un chantier.'
             );
         }
 
-        $compteCharge = $typeCharge->getCompte();
-
-        if (!$compteCharge) {
+        if ($typeCharge !== null && $chantier !== null) {
             throw new \LogicException(
-                'Compte de charge introuvable.'
+                'Une facture ne peut pas être rattachée à la fois à un type de charge et à un chantier.'
             );
+        }
+
+        /*
+ * Détermination du compte de charge.
+ */
+        if ($chantier !== null) {
+            $compteCharge = $chantier->getCompteCharge();
+
+            if (!$compteCharge) {
+                throw new \LogicException(
+                    'Le compte de charge du chantier est introuvable.'
+                );
+            }
+        } else {
+            $compteCharge = $typeCharge->getCompte();
+
+            if (!$compteCharge) {
+                throw new \LogicException(
+                    'Compte de charge introuvable.'
+                );
+            }
         }
 
         $fournisseur = $facture->getFournisseur();
@@ -130,7 +157,7 @@ class GenerationFactureFournisseurService
             === FactureFournisseurType::AVOIR
         ) {
 
-            /**
+            /** $typeCharge
              * Avoir fournisseur
              *
              * Débit  : compte fournisseur
@@ -267,7 +294,20 @@ class GenerationFactureFournisseurService
          * La FNP est bien une charge de l'exercice :
          * elle doit donc être répartie normalement.
          */
-        if (!$typeCharge->isEau()) {
+        /*
+        * 3. Répartition de la charge.
+        *
+        * Une facture de chantier n'est pas répartie ici :
+        * la répartition entre copropriétaires est déjà portée
+        * par l'appel de fonds du chantier.
+        *
+        * Seules les charges courantes sont réparties.
+        */
+        if (
+            $chantier === null
+            && $typeCharge !== null
+            && !$typeCharge->isEau()
+        ) {
             $montantARepartir =
                 (float) $facture->getMontant();
 
@@ -285,6 +325,22 @@ class GenerationFactureFournisseurService
                     $facture->getDateFacture(),
                     $montantARepartir
                 );
+        }
+
+        /**
+         * 4. Réalisation des travaux.
+         *
+         * Une facture rattachée à un chantier entraîne :
+         *
+         * Facture :
+         * 671xxx D / 401xxx C
+         *
+         * Réalisation :
+         * 102xxx D / 702xxx C
+         */
+        if ($chantier !== null) {
+            $this->generationRealisationChantierService
+                ->generer($facture);
         }
     }
 }

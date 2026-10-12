@@ -76,8 +76,7 @@ final class ImportReglementFournisseurService
                 ) {
 
                     $reglement =
-                        $this->reglementService
-                        ->enregistrer(
+                        $this->reglementService->enregistrer(
                             fournisseur: $fournisseur,
                             exercice: $ligne->getExercice(),
                             dateReglement: $dateReglement,
@@ -90,8 +89,7 @@ final class ImportReglementFournisseurService
                     );
                 } else {
 
-                    $this->remboursementService
-                        ->enregistrer(
+                    $this->remboursementService->enregistrer(
                             fournisseur: $fournisseur,
                             exercice: $ligne->getExercice(),
                             dateRemboursement: $dateReglement,

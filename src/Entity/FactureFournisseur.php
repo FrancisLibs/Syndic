@@ -7,6 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Enum\FactureFournisseurType;
+use App\Entity\Travaux\Chantier;
 
 #[ORM\Entity(
     repositoryClass: FactureFournisseurRepository::class
@@ -53,13 +54,21 @@ class FactureFournisseur
     private ?Coproprietaire $coproprietaireAvanceur = null;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?TypeCharge $typeCharge = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Chantier $chantier = null;
 
     #[ORM\OneToOne(
         cascade: ['persist', 'remove']
     )]
     private ?Operation $operation = null;
+
+    #[ORM\OneToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Operation $operationRealisationTravaux = null;
 
     #[ORM\ManyToOne(
         inversedBy: 'factureFournisseurs',
@@ -79,7 +88,7 @@ class FactureFournisseur
 
     #[ORM\Column]
     private bool $fnpTraitee = false;
-    
+
     public function getId(): ?int
     {
         return $this->id;
@@ -217,6 +226,18 @@ class FactureFournisseur
         return $this;
     }
 
+    public function getChantier(): ?Chantier
+    {
+        return $this->chantier;
+    }
+
+    public function setChantier(?Chantier $chantier): static
+    {
+        $this->chantier = $chantier;
+
+        return $this;
+    }
+
     public function getOperation(): ?Operation
     {
         return $this->operation;
@@ -226,6 +247,19 @@ class FactureFournisseur
         ?Operation $operation
     ): static {
         $this->operation = $operation;
+
+        return $this;
+    }
+
+    public function getOperationRealisationTravaux(): ?Operation
+    {
+        return $this->operationRealisationTravaux;
+    }
+
+    public function setOperationRealisationTravaux(
+        ?Operation $operationRealisationTravaux
+    ): static {
+        $this->operationRealisationTravaux = $operationRealisationTravaux;
 
         return $this;
     }

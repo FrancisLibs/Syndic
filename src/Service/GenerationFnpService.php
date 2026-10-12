@@ -98,7 +98,6 @@ class GenerationFnpService
          * opération + écritures + répartitions.
          */
         $this
-            ->comptabiliteService
-            ->enregistrer();
+            ->comptabiliteService->enregistrer();
     }
 }

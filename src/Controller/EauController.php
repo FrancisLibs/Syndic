@@ -120,8 +120,7 @@ final class EauController extends AbstractController
             }
 
             try {
-                $nombreReleves = $gestionRelevesService
-                    ->enregistrer(
+                $nombreReleves = $gestionRelevesService->enregistrer(
                         $exercice,
                         $request->request->getString(
                             'date_releve'
