@@ -71,6 +71,7 @@ class AssembleeGenerale
         mappedBy: 'assembleeGenerale',
         orphanRemoval: true
     )]
+    #[ORM\OrderBy(['numero' => 'ASC'])]
     private Collection $resolutions;
 
     /**

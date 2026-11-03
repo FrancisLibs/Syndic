@@ -7,14 +7,18 @@ use App\Form\FactureFournisseurType;
 use App\Form\CorrectionMontantFactureFournisseurType;
 use App\Repository\ExerciceRepository;
 use App\Repository\FactureFournisseurRepository;
+use App\Repository\ReglementFournisseurRepository;
 use App\Service\GenerationFactureFournisseurService;
 use App\Service\ContexteExerciceService;
 use App\Service\CorrectionFactureFournisseurService;
+use App\Service\Travaux\CoutReelChantierService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Service\ReglementFournisseurService;
+
 
 #[Route('/facture/fournisseur')]
 final class FactureFournisseurController extends AbstractController
@@ -60,7 +64,8 @@ final class FactureFournisseurController extends AbstractController
         EntityManagerInterface $entityManager,
         GenerationFactureFournisseurService $generationService,
         ExerciceRepository $exerciceRepository,
-        FactureFournisseurRepository $factureFournisseurRepository
+        FactureFournisseurRepository $factureFournisseurRepository,
+        CoutReelChantierService $coutReelChantierService,
     ): Response {
         $exercice = $exerciceRepository->findActif();
 
@@ -94,7 +99,10 @@ final class FactureFournisseurController extends AbstractController
 
         $form = $this->createForm(
             FactureFournisseurType::class,
-            $facture
+            $facture,
+            [
+                'confirmation_correspondance' => $request->isMethod('POST'),
+            ]
         );
 
         $form->handleRequest($request);
@@ -196,14 +204,6 @@ final class FactureFournisseurController extends AbstractController
                     )
                 );
 
-                $form = $this->createForm(
-                    FactureFournisseurType::class,
-                    $facture,
-                    [
-                        'confirmation_correspondance' => true,
-                    ]
-                );
-
                 return $this->render(
                     'facture_fournisseur/new.html.twig',
                     [
@@ -212,6 +212,65 @@ final class FactureFournisseurController extends AbstractController
                         'form' => $form,
                     ]
                 );
+            }
+
+            // Contrôle du montant autorisé pour les travaux
+            $chantier = $facture->getChantier();
+
+            if ($chantier !== null) {
+
+                if ($chantier->isCloture()) {
+                    $this->addFlash(
+                        'danger',
+                        'Impossible d’enregistrer une facture sur un chantier clôturé.'
+                    );
+
+                    return $this->render(
+                        'facture_fournisseur/new.html.twig',
+                        [
+                            'exercice' => $exercice,
+                            'facture' => $facture,
+                            'form' => $form,
+                        ]
+                    );
+                }
+
+                $montantAutorise = $chantier->getMontantTotalVote();
+
+                $coutActuel = $coutReelChantierService->calculer($chantier);
+
+                $nouveauCout = round(
+                    $coutActuel + $facture->getMontantFacture(),
+                    2
+                );
+
+                if ($nouveauCout > $montantAutorise + 0.009) {
+
+                    $depassement = $nouveauCout - $montantAutorise;
+
+                    $this->addFlash(
+                        'danger',
+                        sprintf(
+                            'Impossible d’enregistrer cette facture : '
+                                . 'le coût du chantier atteindrait %s €, '
+                                . 'alors que le montant total voté est de %s €. '
+                                . 'Dépassement : %s €. '
+                                . 'Un vote complémentaire est nécessaire.',
+                            number_format($nouveauCout, 2, ',', ' '),
+                            number_format($montantAutorise, 2, ',', ' '),
+                            number_format($depassement, 2, ',', ' ')
+                        )
+                    );
+
+                    return $this->render(
+                        'facture_fournisseur/new.html.twig',
+                        [
+                            'exercice' => $exercice,
+                            'facture' => $facture,
+                            'form' => $form,
+                        ]
+                    );
+                }
             }
 
             try {
@@ -264,12 +323,45 @@ final class FactureFournisseurController extends AbstractController
         requirements: ['id' => '\d+']
     )]
     public function show(
-        FactureFournisseur $facture
+        FactureFournisseur $factureFournisseur,
+        ReglementFournisseurRepository $reglementRepository,
     ): Response {
+
+        $reglements = [];
+
+        if (
+            $factureFournisseur->isComptabilisee()
+            && $factureFournisseur->estFacture()
+            && !$factureFournisseur->isFnp()
+            && $factureFournisseur->getCoproprietaireAvanceur() === null
+            && !$factureFournisseur->getExercice()->isCloture()
+        ) {
+
+            $candidats = $reglementRepository->findBy(
+                [
+                    'fournisseur' => $factureFournisseur->getFournisseur(),
+                    'exercice' => $factureFournisseur->getExercice(),
+                ],
+                [
+                    'dateReglement' => 'ASC',
+                ]
+            );
+
+            foreach ($candidats as $reglement) {
+
+                if ($reglement->getMontantNonAffecte() <= 0) {
+                    continue;
+                }
+
+                $reglements[] = $reglement;
+            }
+        }
+
         return $this->render(
             'facture_fournisseur/show.html.twig',
             [
-                'facture_fournisseur' => $facture,
+                'facture_fournisseur' => $factureFournisseur,
+                'reglements' => $reglements,
             ]
         );
     }
@@ -473,6 +565,139 @@ final class FactureFournisseurController extends AbstractController
                 'facture' => $facture,
                 'form' => $form,
             ]
+        );
+    }
+
+    #[Route(
+        '/{id}/affecter-reglements',
+        name: 'app_facture_fournisseur_affecter_reglements',
+        requirements: ['id' => '\d+'],
+        methods: ['POST']
+    )]
+    public function affecterReglements(
+        FactureFournisseur $factureFournisseur,
+        Request $request,
+        ReglementFournisseurRepository $reglementRepository,
+        ReglementFournisseurService $reglementService,
+        EntityManagerInterface $entityManager,
+    ): Response {
+
+        $retour = [
+            'id' => $factureFournisseur->getId(),
+        ];
+
+        if (!$this->isCsrfTokenValid(
+            'affecter-reglements-facture-' . $factureFournisseur->getId(),
+            (string) $request->request->get('_token')
+        )) {
+            throw $this->createAccessDeniedException(
+                'Jeton CSRF invalide.'
+            );
+        }
+
+        try {
+
+            if ($factureFournisseur->getExercice()->isCloture()) {
+                throw new \LogicException(
+                    'Impossible de modifier les affectations d’un exercice clôturé.'
+                );
+            }
+
+            if (
+                !$factureFournisseur->isComptabilisee()
+                || !$factureFournisseur->estFacture()
+                || $factureFournisseur->isFnp()
+                || $factureFournisseur->getCoproprietaireAvanceur() !== null
+            ) {
+                throw new \LogicException(
+                    'Cette facture ne peut pas recevoir de règlement fournisseur.'
+                );
+            }
+
+            $ids = $request->request->all('reglements');
+
+            if ($ids === []) {
+                throw new \LogicException(
+                    'Aucun règlement sélectionné.'
+                );
+            }
+
+            $entityManager->wrapInTransaction(
+                function () use (
+                    $ids,
+                    $factureFournisseur,
+                    $reglementRepository,
+                    $reglementService
+                ): void {
+
+                    foreach (array_unique($ids) as $id) {
+
+                        if (!is_scalar($id) || !ctype_digit((string) $id)) {
+                            throw new \LogicException(
+                                'Identifiant de règlement invalide.'
+                            );
+                        }
+
+                        $reglement = $reglementRepository->find((int) $id);
+
+                        if ($reglement === null) {
+                            throw new \LogicException(
+                                'Règlement introuvable.'
+                            );
+                        }
+
+                        if (
+                            $reglement->getFournisseur() !== $factureFournisseur->getFournisseur()
+                            || $reglement->getExercice() !== $factureFournisseur->getExercice()
+                        ) {
+                            throw new \LogicException(
+                                'Ce règlement ne correspond pas à la facture.'
+                            );
+                        }
+
+                        $disponible = (int) round(
+                            $reglement->getMontantNonAffecte() * 100
+                        );
+
+                        $reste = (int) round(
+                            $factureFournisseur->getResteARegler() * 100
+                        );
+
+                        $montantCentimes = min($disponible, $reste);
+
+                        if ($montantCentimes <= 0) {
+                            break;
+                        }
+
+                        $reglementService->affecterFacture(
+                            $reglement,
+                            $factureFournisseur,
+                            number_format(
+                                $montantCentimes / 100,
+                                2,
+                                '.',
+                                ''
+                            )
+                        );
+                    }
+                }
+            );
+
+            $this->addFlash(
+                'success',
+                'Les règlements ont été affectés à la facture.'
+            );
+        } catch (\LogicException $exception) {
+
+            $this->addFlash(
+                'danger',
+                $exception->getMessage()
+            );
+        }
+
+        return $this->redirectToRoute(
+            'app_facture_fournisseur_show',
+            $retour
         );
     }
 }

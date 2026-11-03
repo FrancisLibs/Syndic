@@ -5,8 +5,11 @@ namespace App\Service;
 use App\Entity\FactureFournisseur;
 use App\Enum\FactureFournisseurType;
 use App\Enum\OperationType;
+use App\Enum\CompteType;
 use App\Repository\CompteRepository;
 use App\Service\Travaux\GenerationRealisationChantierService;
+use App\Service\Travaux\CoutReelChantierService;
+
 
 class GenerationFactureFournisseurService
 {
@@ -15,6 +18,7 @@ class GenerationFactureFournisseurService
         private ComptabiliteService $comptabiliteService,
         private CompteRepository $compteRepository,
         private GenerationRealisationChantierService $generationRealisationChantierService,
+        private readonly CoutReelChantierService $coutReelChantierService,
     ) {}
 
     public function generer(
@@ -23,42 +27,106 @@ class GenerationFactureFournisseurService
         $typeCharge = $facture->getTypeCharge();
         $chantier = $facture->getChantier();
 
-        /*
- * Une facture doit concerner soit :
- * - une charge courante ;
- * - un chantier.
- */
-        if ($typeCharge === null && $chantier === null) {
+        // Contrôle du montant autorisé pour le chantier
+        if ($chantier !== null) {
+
+            if ($chantier->isCloture()) {
+                throw new \LogicException(
+                    'Impossible de comptabiliser une facture sur un chantier clôturé.'
+                );
+            }
+
+            $montantAutorise = $chantier->getMontantTotalVote();
+
+            $coutActuel = $this->coutReelChantierService
+                ->calculer($chantier, $facture);
+
+            $montantFacture = (float) $facture->getMontant();
+
+            if ($facture->getType() === FactureFournisseurType::AVOIR) {
+                $montantFacture *= -1;
+            }
+
+            $nouveauCout = round(
+                $coutActuel + $montantFacture,
+                2
+            );
+
+            if ($nouveauCout > $montantAutorise + 0.009) {
+
+                throw new \LogicException(sprintf(
+                    'Impossible de comptabiliser cette facture : '
+                        . 'le coût du chantier atteindrait %s €, '
+                        . 'alors que le montant total voté est de %s €. '
+                        . 'Un vote complémentaire est nécessaire.',
+                    number_format($nouveauCout, 2, ',', ' '),
+                    number_format($montantAutorise, 2, ',', ' ')
+                ));
+            }
+        }
+
+        if ($chantier === null && $typeCharge === null) {
             throw new \LogicException(
                 'La facture doit être rattachée à un type de charge ou à un chantier.'
             );
         }
 
-        if ($typeCharge !== null && $chantier !== null) {
-            throw new \LogicException(
-                'Une facture ne peut pas être rattachée à la fois à un type de charge et à un chantier.'
-            );
+        /*
+        * Une facture doit concerner soit :
+        * - une charge courante ;
+        * - un chantier.
+        */
+        if ($chantier !== null) {
+
+            if (
+                $chantier->estFinanceParAppels()
+                && $typeCharge !== null
+            ) {
+                throw new \LogicException(
+                    'Une facture de chantier financé par appels spécifiques '
+                        . 'ne doit pas avoir de type de charge.'
+                );
+            }
+
+            if (
+                $chantier->estFinanceParChargesCourantes()
+                && $typeCharge === null
+            ) {
+                throw new \LogicException(
+                    'Un chantier financé par charges courantes '
+                        . 'nécessite un type de charge.'
+                );
+            }
         }
 
         /*
- * Détermination du compte de charge.
- */
-        if ($chantier !== null) {
+        * Détermination du compte de charge.
+        */
+        if (
+            $chantier !== null
+            && $chantier->estFinanceParAppels()
+        ) {
+            // Travaux financés par appels spécifiques
             $compteCharge = $chantier->getCompteCharge();
-
-            if (!$compteCharge) {
-                throw new \LogicException(
-                    'Le compte de charge du chantier est introuvable.'
-                );
-            }
         } else {
-            $compteCharge = $typeCharge->getCompte();
+            // Charges courantes, avec ou sans chantier
+            $compteCharge = $typeCharge?->getCompte();
+        }
 
-            if (!$compteCharge) {
-                throw new \LogicException(
-                    'Compte de charge introuvable.'
-                );
-            }
+        if ($compteCharge === null) {
+            throw new \LogicException(
+                'Le compte de charge est introuvable.'
+            );
+        }
+
+        if ($compteCharge->getType() !== CompteType::CHARGE) {
+            throw new \LogicException(sprintf(
+                'Le compte %s (%s) ne peut pas être utilisé '
+                    . 'pour comptabiliser une facture fournisseur : '
+                    . 'ce n’est pas un compte de charges.',
+                $compteCharge->getNumero(),
+                $compteCharge->getLibelle()
+            ));
         }
 
         $fournisseur = $facture->getFournisseur();
@@ -293,18 +361,15 @@ class GenerationFactureFournisseurService
          *
          * La FNP est bien une charge de l'exercice :
          * elle doit donc être répartie normalement.
+         *
+         * Charges courantes :
+         * répartition habituelle entre copropriétaires.
+         *
+         * Chantiers financés par appels spécifiques :
+         * aucune répartition supplémentaire.
          */
-        /*
-        * 3. Répartition de la charge.
-        *
-        * Une facture de chantier n'est pas répartie ici :
-        * la répartition entre copropriétaires est déjà portée
-        * par l'appel de fonds du chantier.
-        *
-        * Seules les charges courantes sont réparties.
-        */
         if (
-            $chantier === null
+            ($chantier === null || $chantier->estFinanceParChargesCourantes())
             && $typeCharge !== null
             && !$typeCharge->isEau()
         ) {
@@ -330,15 +395,13 @@ class GenerationFactureFournisseurService
         /**
          * 4. Réalisation des travaux.
          *
-         * Une facture rattachée à un chantier entraîne :
-         *
-         * Facture :
-         * 671xxx D / 401xxx C
-         *
-         * Réalisation :
-         * 102xxx D / 702xxx C
+         * Uniquement pour les chantiers
+         * financés par appels spécifiques.
          */
-        if ($chantier !== null) {
+        if (
+            $chantier !== null
+            && $chantier->estFinanceParAppels()
+        ) {
             $this->generationRealisationChantierService
                 ->generer($facture);
         }

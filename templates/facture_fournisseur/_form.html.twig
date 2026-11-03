@@ -1,45 +1,74 @@
-{{ form_start(form) }}
-<div class="container">
-	<div class="row">
-		<div class="col-3">
-			{{ form_row(form.numero) }}
-		</div>
-		<div class="d-flex justify-content-start gap-3">
-			<div>
-				{{ form_row(form.fournisseur) }}
-			</div>
-			<div>
-				{{ form_row(form.coproprietaireAvanceur) }}
-			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-6">
-			{{ form_row(form.typeCharge) }}
-		</div>
 
-		<div class="col-6">
-			{{ form_row(form.chantier) }}
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-6">
-			{{ form_row(form.libelle) }}
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-2">
-			{{ form_row(form.dateFacture) }}
-		</div>
-	</div>
-	<div class="row d-flex align-items-center">
-		<div class="col-2">
-			{{ form_row(form.montant) }}
-		</div>
-		<div class="col-6 mt-3">
-			<button class="btn btn-primary">{{ button_label|default('Valider') }}</button>
-		</div>
-	</div>
+{{ form_start(form) }}
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-3">
+            {{ form_row(form.numero) }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="d-flex justify-content-start gap-3">
+            <div>
+                {{ form_row(form.fournisseur) }}
+            </div>
+            <div>
+                {{ form_row(form.coproprietaireAvanceur) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            {{ form_row(form.typeCharge) }}
+        </div>
+        <div class="col-6">
+            {{ form_row(form.chantier) }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            {{ form_row(form.libelle) }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">
+            {{ form_row(form.dateFacture) }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-2">
+            {{ form_row(form.montant) }}
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-6">
+            {{ form_row(form.type) }}
+            {{ form_row(form.fnp) }}
+            {{ form_row(form.volumeEau) }}
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-8">
+            {{ form_row(form.confirmerCorrespondance) }}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <button type="submit" class="btn btn-primary">
+                {{ button_label|default('Valider') }}
+            </button>
+        </div>
+    </div>
 
 </div>
+
 {{ form_end(form) }}

@@ -1,52 +1,133 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}AppelFond index
+{% block title %}
+	Appels de fonds
 {% endblock %}
 
 {% block body %}
-	<h1 class="mb-4">Appel de Fonds</h1>
 
+	<h1 class="mb-4">Appels de fonds</h1>
 
-	<table class="table">
-		<thead>
-			<tr>
-				<th>Origine de l'appel</th>
-				<th class="text-center">Date Appel</th>
-				<th class="text-center">Date Reglement</th>
-				<th class="text-center">Libelle</th>
-				<th class="text-center">Montant Total</th>
-				<th class="text-center">Numero</th>
-				<th class="text-center">actions</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for appel_fond in appel_fonds %}
+	<form
+		method="post"
+		action="{{ path('app_appel_fond_avis_pdf') }}"
+	>
+
+		<input
+			type="hidden"
+			name="_token"
+			value="{{ csrf_token('generer_avis_appels') }}"
+		>
+
+		<div class="mb-3">
+			<button
+				type="submit"
+				class="btn btn-primary"
+			>
+				Générer les avis individuels (ZIP)
+			</button>
+		</div>
+
+		<table class="table table-striped table-hover">
+
+			<thead class="table-dark">
 				<tr>
-					<td>
-						{% if appel_fond.budget %}
-							{{ appel_fond.budget.exercice.nom }}
-						{% elseif appel_fond.chantier %}
-							Chantier : {{ appel_fond.chantier.libelle }}
-						{% else %}
-							Non défini
-						{% endif %}
-					</td>
+					<th class="text-center">
+						<input
+							type="checkbox"
+							id="selectionner-tous"
+							title="Tout sélectionner"
+						>
+					</th>
 
-					<td class="text-center">{{ appel_fond.dateAppel ? appel_fond.dateAppel|date('Y-m-d') : '' }}</td>
-					<td class="text-center">{{ appel_fond.dateReglement ? appel_fond.dateReglement|date('Y-m-d') : '' }}</td>
-					<td class="text-center">{{ appel_fond.libelle }}</td>
-					<td class="text-center">{{ appel_fond.montantTotal }}</td>
-					<td class="text-center">{{ appel_fond.numero }}</td>
-					<td class="text-center">
-						<a href="{{ path('app_appel_fond_show', {'id': appel_fond.id}) }}">Voir</a>
-						{# <a href="{{ path('app_appel_fond_edit', {'id': appel_fond.id}) }}">edit</a> #}
-					</td>
+					<th>Origine de l'appel</th>
+					<th class="text-center">Date appel</th>
+					<th class="text-center">Date règlement</th>
+					<th>Libellé</th>
+					<th class="text-end">Montant total</th>
+					<th class="text-center">Numéro</th>
+					<th class="text-center">Actions</th>
 				</tr>
-			{% else %}
-				<tr>
-					<td colspan="8">Aucun appel de fonds trouvé</td>
-				</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+			</thead>
+
+			<tbody>
+				{% for appel_fond in appel_fonds %}
+					<tr>
+						<td class="text-center">
+							<input
+								type="checkbox"
+								name="appel_ids[]"
+								value="{{ appel_fond.id }}"
+								class="appel-checkbox"
+							>
+						</td>
+
+						<td>
+							{% if appel_fond.budget %}
+								{{ appel_fond.budget.exercice.nom }}
+							{% elseif appel_fond.chantier %}
+								Chantier : {{ appel_fond.chantier.libelle }}
+							{% else %}
+								Non défini
+							{% endif %}
+						</td>
+
+						<td class="text-center">
+							{{ appel_fond.dateAppel|date('d/m/Y') }}
+						</td>
+
+						<td class="text-center">
+							{{ appel_fond.dateReglement
+                                ? appel_fond.dateReglement|date('d/m/Y')
+                                : '—'
+                            }}
+						</td>
+
+						<td>{{ appel_fond.libelle }}</td>
+
+						<td class="text-end">
+							{{ appel_fond.montantTotal|number_format(2, ',', ' ') }} €
+						</td>
+
+						<td class="text-center">
+							{{ appel_fond.numero }}
+						</td>
+
+						<td class="text-center">
+							<a
+								href="{{ path('app_appel_fond_show', {
+                                    id: appel_fond.id
+                                }) }}"
+								class="btn btn-sm btn-outline-secondary"
+							>
+								Voir
+							</a>
+						</td>
+					</tr>
+				{% else %}
+					<tr>
+						<td colspan="8" class="text-center">
+							Aucun appel de fonds trouvé
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+
+		</table>
+
+	</form>
+
+	<script>
+		document
+			.getElementById("selectionner-tous")
+			.addEventListener("change", function () {
+				document
+					.querySelectorAll(".appel-checkbox")
+					.forEach(function (checkbox) {
+						checkbox.checked =
+							document.getElementById("selectionner-tous").checked;
+					});
+			});
+	</script>
+
 {% endblock %}

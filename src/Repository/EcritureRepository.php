@@ -355,4 +355,35 @@ class EcritureRepository extends ServiceEntityRepository
             abs($totalDebit - $totalCredit) < 0.01,
         ];
     }
+
+    public function calculerSoldeHorsAppels(
+        Exercice $exercice,
+        Compte $compte,
+        \DateTimeInterface $date,
+        array $operationIds
+    ): float {
+
+        $qb = $this->createQueryBuilder('e')
+            ->select('COALESCE(SUM(e.debit - e.credit), 0)')
+            ->join('e.operation', 'o')
+            ->where('e.exercice = :exercice')
+            ->andWhere('e.compte = :compte')
+            ->andWhere('e.date <= :date')
+            ->andWhere('o.statut = :statut')
+            ->setParameter('exercice', $exercice)
+            ->setParameter('compte', $compte)
+            ->setParameter('date', $date)
+            ->setParameter('statut', OperationStatut::VALIDE);
+
+        if ($operationIds !== []) {
+            $qb
+                ->andWhere('o.id NOT IN (:operationIds)')
+                ->setParameter('operationIds', $operationIds);
+        }
+
+        return round(
+            (float) $qb->getQuery()->getSingleScalarResult(),
+            2
+        );
+    }
 }

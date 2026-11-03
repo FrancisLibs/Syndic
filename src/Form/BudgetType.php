@@ -11,6 +11,8 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Validator\Constraints\Range;
 
 class BudgetType extends AbstractType
 {
@@ -23,12 +25,11 @@ class BudgetType extends AbstractType
 
             ->add(
                 'libelle',
-            null,
-            [
-                'disabled' => true,
-            ]
-                )
-
+                null,
+                [
+                    'disabled' => true,
+                ]
+            )
             ->add(
                 'copropriete',
                 EntityType::class,
@@ -42,6 +43,21 @@ class BudgetType extends AbstractType
                 EntityType::class,
                 [
                     'class' => Exercice::class,
+                ]
+            )
+            ->add(
+                'nbAppels',
+                IntegerType::class,
+                [
+                    'label' => 'Nombre d’appels de fonds',
+                    'required' => true,
+                    'attr' => [
+                        'min' => 1,
+                    ],
+                    'constraints' => [
+                        new Range(min: 1),
+                    ],
+                    'help' => 'Indiquez 1 pour un appel annuel, 4 pour des appels trimestriels, etc.',
                 ]
             )
             ->add(

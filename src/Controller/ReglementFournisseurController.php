@@ -2,20 +2,22 @@
 
 namespace App\Controller;
 
-use App\Entity\ReglementFournisseur;
+use App\Repository\FactureFournisseurRepository;
 use App\Repository\ExerciceRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\ReglementFournisseurRepository;
+use App\Repository\EcritureRepository;
+use App\Entity\ReglementFournisseur;
+use App\Entity\AffectationReglementFournisseur;
 use App\Form\ReglementFournisseurType;
 use App\Service\ReglementFournisseurService;
 use App\Service\ContexteExerciceService;
-use App\Service\CorrectionReglementFournisseurService;
 use App\Service\ModificationReglementFournisseurService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Form\Extension\Core\Type\MoneyType;
+use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/reglements-fournisseurs')]
 final class ReglementFournisseurController extends AbstractController
@@ -102,12 +104,200 @@ final class ReglementFournisseurController extends AbstractController
     )]
     public function show(
         ReglementFournisseur $reglement,
+        FactureFournisseurRepository $factureRepository,
     ): Response {
+
+        $facturesCandidates = $factureRepository->findBy(
+            [
+                'fournisseur' => $reglement->getFournisseur(),
+                'exercice' => $reglement->getExercice(),
+                'comptabilisee' => true,
+                'fnp' => false,
+                'coproprietaireAvanceur' => null,
+            ],
+            [
+                'dateFacture' => 'ASC',
+            ]
+        );
+
+        $factures = [];
+
+        foreach ($facturesCandidates as $facture) {
+
+            if (
+                !$facture->estFacture()
+                || $facture->getResteARegler() <= 0
+            ) {
+                continue;
+            }
+
+            $factures[] = $facture;
+        }
+
         return $this->render(
             'reglement_fournisseur/show.html.twig',
             [
                 'reglement' => $reglement,
+                'factures' => $factures,
             ]
+        );
+    }
+
+    #[Route(
+        '/{id}/affectations',
+        name: 'app_reglement_fournisseur_affectations',
+        requirements: ['id' => '\d+'],
+        methods: ['POST']
+    )]
+    public function enregistrerAffectations(
+        ReglementFournisseur $reglement,
+        Request $request,
+        FactureFournisseurRepository $factureRepository,
+        ReglementFournisseurService $reglementService,
+        EntityManagerInterface $entityManager,
+    ): Response {
+
+        if ($reglement->getExercice()->isCloture()) {
+            $this->addFlash(
+                'danger',
+                'Impossible de modifier les affectations d’un exercice clôturé.'
+            );
+
+            return $this->redirectToRoute(
+                'app_reglement_fournisseur_show',
+                ['id' => $reglement->getId()]
+            );
+        }
+
+        if (!$this->isCsrfTokenValid(
+            'affectations-reglement-' . $reglement->getId(),
+            (string) $request->request->get('_token')
+        )) {
+            throw $this->createAccessDeniedException(
+                'Jeton CSRF invalide.'
+            );
+        }
+
+        try {
+            $montantsSaisis = $request->request->all('affectations');
+
+            $affectations = [];
+            $totalCentimes = 0;
+
+            foreach ($montantsSaisis as $factureId => $montantSaisi) {
+
+                if (
+                    !ctype_digit((string) $factureId)
+                    || !is_scalar($montantSaisi)
+                ) {
+                    throw new \LogicException(
+                        'Une affectation est invalide.'
+                    );
+                }
+
+                $montantTexte = str_replace(
+                    ',',
+                    '.',
+                    trim((string) $montantSaisi)
+                );
+
+                if (!preg_match(
+                    '/^\d+(?:\.\d{1,2})?$/',
+                    $montantTexte
+                )) {
+                    throw new \LogicException(
+                        'Le montant d’une affectation est invalide.'
+                    );
+                }
+
+                $montantCentimes = (int) round(
+                    (float) $montantTexte * 100
+                );
+
+                if ($montantCentimes === 0) {
+                    continue;
+                }
+
+                $facture = $factureRepository->find(
+                    (int) $factureId
+                );
+
+                if ($facture === null) {
+                    throw new \LogicException(
+                        'Facture introuvable.'
+                    );
+                }
+
+                if (
+                    $facture->getFournisseur() !== $reglement->getFournisseur()
+                    || $facture->getExercice() !== $reglement->getExercice()
+                ) {
+                    throw new \LogicException(
+                        'Cette facture ne peut pas recevoir ce règlement.'
+                    );
+                }
+
+                $totalCentimes += $montantCentimes;
+
+                $affectations[] = [
+                    'facture' => $facture,
+                    'montant' => number_format(
+                        $montantCentimes / 100,
+                        2,
+                        '.',
+                        ''
+                    ),
+                ];
+            }
+
+            $disponibleCentimes = (int) round(
+                $reglement->getMontantNonAffecte() * 100
+            );
+
+            if ($totalCentimes > $disponibleCentimes) {
+                throw new \LogicException(
+                    'Le total des affectations dépasse le montant disponible du règlement.'
+                );
+            }
+
+            if ($affectations === []) {
+                throw new \LogicException(
+                    'Aucun montant à affecter.'
+                );
+            }
+
+            $entityManager->wrapInTransaction(
+                function () use (
+                    $affectations,
+                    $reglementService,
+                    $reglement
+                ): void {
+
+                    foreach ($affectations as $ligne) {
+                        $reglementService->affecterFacture(
+                            $reglement,
+                            $ligne['facture'],
+                            $ligne['montant']
+                        );
+                    }
+                }
+            );
+
+            $this->addFlash(
+                'success',
+                'Les affectations ont été enregistrées.'
+            );
+        } catch (\Throwable $exception) {
+
+            $this->addFlash(
+                'danger',
+                $exception->getMessage()
+            );
+        }
+
+        return $this->redirectToRoute(
+            'app_reglement_fournisseur_show',
+            ['id' => $reglement->getId()]
         );
     }
 
@@ -121,6 +311,8 @@ final class ReglementFournisseurController extends AbstractController
         FournisseurRepository $fournisseurRepository,
         ExerciceRepository $exerciceRepository,
         ReglementFournisseurService $reglementService,
+        FactureFournisseurRepository $factureRepository,
+        EcritureRepository $ecritureRepository,
     ): Response {
         $exercice = $exerciceRepository->findActif();
 
@@ -136,15 +328,12 @@ final class ReglementFournisseurController extends AbstractController
             );
         }
 
-        $fournisseurs = $fournisseurRepository
-            ->findBy(
-                [],
-                ['nom' => 'ASC']
-            );
+        $fournisseurs = $fournisseurRepository->findBy(
+            [],
+            ['nom' => 'ASC']
+        );
 
-        /*
-     * Fournisseur sélectionné.
-     */
+        // Fournisseur sélectionné
         $fournisseurId = $request->isMethod('POST')
             ? (int) $request->request->get('fournisseur_id')
             : (int) $request->query->get('fournisseur');
@@ -152,11 +341,7 @@ final class ReglementFournisseurController extends AbstractController
         $fournisseur = null;
 
         if ($fournisseurId > 0) {
-
-            $fournisseur =
-                $fournisseurRepository->find(
-                    $fournisseurId
-                );
+            $fournisseur = $fournisseurRepository->find($fournisseurId);
 
             if ($fournisseur === null) {
                 throw $this->createNotFoundException(
@@ -165,20 +350,56 @@ final class ReglementFournisseurController extends AbstractController
             }
         }
 
-        /*
-     * Enregistrement.
-     */
+        // Solde comptable du fournisseur
+        $soldeFournisseur = 0.0;
+
+        if (
+            $fournisseur !== null
+            && $fournisseur->getCompte() !== null
+        ) {
+            $soldeFournisseur = round(
+                -$ecritureRepository->calculerSoldeCompte(
+                    $exercice,
+                    $fournisseur->getCompte()
+                ),
+                2
+            );
+        }
+
+        // Factures de l'exercice pouvant recevoir une affectation
+        $factures = [];
+
+        if ($fournisseur !== null) {
+            $facturesCandidates = $factureRepository->findBy(
+                [
+                    'fournisseur' => $fournisseur,
+                    'exercice' => $exercice,
+                    'comptabilisee' => true,
+                    'fnp' => false,
+                    'coproprietaireAvanceur' => null,
+                ],
+                [
+                    'dateFacture' => 'ASC',
+                ]
+            );
+
+            foreach ($facturesCandidates as $facture) {
+                if (
+                    !$facture->estFacture()
+                    || $facture->getResteARegler() <= 0
+                ) {
+                    continue;
+                }
+
+                $factures[] = $facture;
+            }
+        }
+
+        // Enregistrement
         if ($request->isMethod('POST')) {
+            $token = (string) $request->request->get('_token');
 
-            $token = (string) $request->request
-                ->get('_token');
-
-            if (
-                !$this->isCsrfTokenValid(
-                    'reglement-fournisseur',
-                    $token
-                )
-            ) {
+            if (!$this->isCsrfTokenValid('reglement-fournisseur', $token)) {
                 throw $this->createAccessDeniedException(
                     'Jeton CSRF invalide.'
                 );
@@ -195,19 +416,15 @@ final class ReglementFournisseurController extends AbstractController
                 );
             }
 
-            /*
-         * Date.
-         */
+            // Date
             $dateTexte = trim(
-                (string) $request->request
-                    ->get('date_reglement')
+                (string) $request->request->get('date_reglement')
             );
 
-            $dateReglement =
-                \DateTimeImmutable::createFromFormat(
-                    '!Y-m-d',
-                    $dateTexte
-                );
+            $dateReglement = \DateTimeImmutable::createFromFormat(
+                '!Y-m-d',
+                $dateTexte
+            );
 
             if ($dateReglement === false) {
                 $this->addFlash(
@@ -217,30 +434,19 @@ final class ReglementFournisseurController extends AbstractController
 
                 return $this->redirectToRoute(
                     'app_reglement_fournisseur_new',
-                    [
-                        'fournisseur' =>
-                        $fournisseur->getId(),
-                    ]
+                    ['fournisseur' => $fournisseur->getId()]
                 );
             }
 
-            /*
-         * Montant.
-         */
-            $montantTexte = trim(
-                (string) $request->request
-                    ->get('montant')
-            );
-
+            // Montant du règlement
             $montantTexte = str_replace(
                 ',',
                 '.',
-                $montantTexte
+                trim((string) $request->request->get('montant'))
             );
 
             if (
-                $montantTexte === ''
-                || !is_numeric($montantTexte)
+                !preg_match('/^\d+(?:\.\d{1,2})?$/', $montantTexte)
                 || (float) $montantTexte <= 0
             ) {
                 $this->addFlash(
@@ -250,10 +456,7 @@ final class ReglementFournisseurController extends AbstractController
 
                 return $this->redirectToRoute(
                     'app_reglement_fournisseur_new',
-                    [
-                        'fournisseur' =>
-                        $fournisseur->getId(),
-                    ]
+                    ['fournisseur' => $fournisseur->getId()]
                 );
             }
 
@@ -264,40 +467,126 @@ final class ReglementFournisseurController extends AbstractController
                 ''
             );
 
-            /*
-         * Référence.
-         */
+            // Référence
             $reference = trim(
-                (string) $request->request
-                    ->get('reference')
+                (string) $request->request->get('reference')
             );
 
             try {
+                // Montants saisis dans le tableau des factures
+                $montantsSaisis = $request->request->all('affectations');
 
-                $reglementService->enregistrer(
+                // Factures autorisées pour ce fournisseur et cet exercice
+                $facturesParId = [];
+
+                foreach ($factures as $facture) {
+                    $facturesParId[$facture->getId()] = $facture;
+                }
+
+                $affectations = [];
+                $totalAffecteCentimes = 0;
+
+                foreach ($montantsSaisis as $factureId => $montantSaisi) {
+                    if (
+                        !is_scalar($montantSaisi)
+                        || !ctype_digit((string) $factureId)
+                    ) {
+                        throw new \LogicException(
+                            'Une affectation est invalide.'
+                        );
+                    }
+
+                    $montantAffectation = str_replace(
+                        ',',
+                        '.',
+                        trim((string) $montantSaisi)
+                    );
+
+                    if (
+                        !preg_match(
+                            '/^\d+(?:\.\d{1,2})?$/',
+                            $montantAffectation
+                        )
+                    ) {
+                        throw new \LogicException(
+                            'Le montant d’une affectation est invalide.'
+                        );
+                    }
+
+                    $montantCentimes = (int) round(
+                        (float) $montantAffectation * 100
+                    );
+
+                    if ($montantCentimes === 0) {
+                        continue;
+                    }
+
+                    $factureId = (int) $factureId;
+
+                    if (!isset($facturesParId[$factureId])) {
+                        throw new \LogicException(
+                            'La facture sélectionnée ne peut pas recevoir ce règlement.'
+                        );
+                    }
+
+                    $facture = $facturesParId[$factureId];
+
+                    $resteCentimes = (int) round(
+                        $facture->getResteARegler() * 100
+                    );
+
+                    if ($montantCentimes > $resteCentimes) {
+                        throw new \LogicException(
+                            sprintf(
+                                'Le montant affecté à la facture %s dépasse son solde restant.',
+                                $facture->getNumero() ?: $facture->getId()
+                            )
+                        );
+                    }
+
+                    $totalAffecteCentimes += $montantCentimes;
+
+                    $affectations[] = [
+                        'facture' => $facture,
+                        'montant' => number_format(
+                            $montantCentimes / 100,
+                            2,
+                            '.',
+                            ''
+                        ),
+                    ];
+                }
+
+                $montantReglementCentimes = (int) round(
+                    (float) $montant * 100
+                );
+
+                if ($totalAffecteCentimes > $montantReglementCentimes) {
+                    throw new \LogicException(
+                        'Le total affecté dépasse le montant du règlement.'
+                    );
+                }
+
+                // Règlement et affectations enregistrés ensemble
+                $reglementService->enregistrerAvecAffectations(
                     fournisseur: $fournisseur,
                     exercice: $exercice,
                     dateReglement: $dateReglement,
                     montant: $montant,
-                    reference: $reference !== ''
-                        ? $reference
-                        : null,
+                    reference: $reference !== '' ? $reference : null,
+                    affectations: $affectations,
                 );
 
                 $this->addFlash(
                     'success',
-                    'Le règlement fournisseur a été enregistré.'
+                    'Le règlement fournisseur et ses affectations ont été enregistrés.'
                 );
 
                 return $this->redirectToRoute(
                     'app_reglement_fournisseur_new',
-                    [
-                        'fournisseur' =>
-                        $fournisseur->getId(),
-                    ]
+                    ['fournisseur' => $fournisseur->getId()]
                 );
             } catch (\Throwable $exception) {
-
                 $this->addFlash(
                     'danger',
                     $exception->getMessage()
@@ -311,6 +600,8 @@ final class ReglementFournisseurController extends AbstractController
                 'exercice' => $exercice,
                 'fournisseurs' => $fournisseurs,
                 'fournisseur' => $fournisseur,
+                'factures' => $factures,
+                'soldeFournisseur' => $soldeFournisseur,
             ]
         );
     }
@@ -393,6 +684,72 @@ final class ReglementFournisseurController extends AbstractController
                 'reglement' => $reglement,
                 'form' => $form,
             ]
+        );
+    }
+
+    #[Route(
+        '/{id}/affectations/{affectationId}/supprimer',
+        name: 'app_reglement_fournisseur_affectation_delete',
+        requirements: [
+            'id' => '\d+',
+            'affectationId' => '\d+',
+        ],
+        methods: ['POST']
+    )]
+    public function supprimerAffectation(
+        ReglementFournisseur $reglement,
+        int $affectationId,
+        Request $request,
+        EntityManagerInterface $entityManager,
+    ): Response {
+
+        if ($reglement->getExercice()->isCloture()) {
+            $this->addFlash(
+                'danger',
+                'Impossible de modifier les affectations d’un exercice clôturé.'
+            );
+
+            return $this->redirectToRoute(
+                'app_reglement_fournisseur_show',
+                ['id' => $reglement->getId()]
+            );
+        }
+
+        if (!$this->isCsrfTokenValid(
+            'delete-affectation-' . $affectationId,
+            (string) $request->request->get('_token')
+        )) {
+            throw $this->createAccessDeniedException(
+                'Jeton CSRF invalide.'
+            );
+        }
+
+        $affectation = $entityManager->find(
+            AffectationReglementFournisseur::class,
+            $affectationId
+        );
+
+        if (
+            $affectation === null
+            || $affectation->getReglement()?->getId() !== $reglement->getId()
+        ) {
+            throw $this->createNotFoundException(
+                'Affectation introuvable pour ce règlement.'
+            );
+        }
+
+        // Suppression de l'affectation uniquement.
+        $entityManager->remove($affectation);
+        $entityManager->flush();
+
+        $this->addFlash(
+            'success',
+            'L’affectation a été supprimée.'
+        );
+
+        return $this->redirectToRoute(
+            'app_reglement_fournisseur_show',
+            ['id' => $reglement->getId()]
         );
     }
 }

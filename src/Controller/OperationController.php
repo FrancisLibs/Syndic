@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Operation;
 use App\Entity\FactureFournisseur;
+use App\Entity\ReglementFournisseur;
 use App\Enum\OperationStatut;
 use App\Enum\OperationType;
 use App\Service\ContexteExerciceService;
@@ -251,6 +252,30 @@ final class OperationController extends AbstractController
                         $em->remove($affectation);
                     }
                 }
+                break;
+
+            case 'paiement_fournisseur':
+
+                $reglement = $em
+                    ->getRepository(ReglementFournisseur::class)
+                    ->findOneBy(['operation' => $operation]);
+
+                if ($reglement !== null) {
+
+                    foreach ($reglement->getAffectations()->toArray() as $affectation) {
+
+                        $facture = $affectation->getFacture();
+
+                        if ($facture !== null) {
+                            $facture->removeAffectationReglement($affectation);
+                        }
+
+                        $reglement->removeAffectation($affectation);
+
+                        $em->remove($affectation);
+                    }
+                }
+
                 break;
 
             case 'charge':

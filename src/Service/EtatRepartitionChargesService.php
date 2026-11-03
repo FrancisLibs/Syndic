@@ -171,21 +171,21 @@ class EtatRepartitionChargesService
                 2
             );
 
+            $eauEnAttente =
+                $totalFacturesEau > 0
+                && abs($totalRepartiEau) < 0.01;
+
             $controlesCharges[] = [
                 'nature' => 'Eau',
                 'detail' => 'Ensemble des factures d’eau',
 
-                'montantComptabilise' =>
-                $totalFacturesEau,
+                'montantComptabilise' => $totalFacturesEau,
+                'montantReparti' => round($totalRepartiEau, 2),
+                'ecart' => $ecartEau,
 
-                'montantReparti' =>
-                round($totalRepartiEau, 2),
+                'equilibree' => abs($ecartEau) < 0.01,
 
-                'ecart' =>
-                $ecartEau,
-
-                'equilibree' =>
-                abs($ecartEau) < 0.01,
+                'enAttente' => $eauEnAttente,
             ];
 
             $totalCharges += $totalFacturesEau;
@@ -222,7 +222,10 @@ class EtatRepartitionChargesService
 
         foreach ($controlesCharges as $controle) {
 
-            if (!$controle['equilibree']) {
+            if (
+                !$controle['equilibree']
+                && !($controle['enAttente'] ?? false)
+            ) {
                 $toutesChargesEquilibrees = false;
             }
 
@@ -238,32 +241,29 @@ class EtatRepartitionChargesService
             && $repartitionEquilibree
             && $toutesChargesEquilibrees;
 
+        $eauEnAttente = $eauEnAttente ?? false;
+
         return [
             'groupes' => $groupes,
             'totalCharges' => $totalCharges,
             'totalReparti' => $totalReparti,
             'ecart' => $ecart,
 
-            'repartitionEquilibree' =>
-            $repartitionEquilibree,
+            'repartitionEquilibree' => $repartitionEquilibree,
 
-            'controlesCharges' =>
-            $controlesCharges,
+            'controlesCharges' => $controlesCharges,
 
-            'chargesPresentes' =>
-            $chargesPresentes,
+            'chargesPresentes' => $chargesPresentes,
 
-            'eauPresente' =>
-            $eauPresente,
+            'eauPresente' => $eauPresente,
 
-            'eauEquilibree' =>
-            $eauEquilibree,
+            'eauEquilibree' => $eauEquilibree,
 
-            'toutesChargesEquilibrees' =>
-            $toutesChargesEquilibrees,
+            'toutesChargesEquilibrees' => $toutesChargesEquilibrees,
 
-            'validationGlobale' =>
-            $validationGlobale,
+            'validationGlobale' => $validationGlobale,
+
+            'eauEnAttente' => $eauEnAttente,
         ];
     }
 }

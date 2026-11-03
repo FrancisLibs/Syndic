@@ -17,13 +17,15 @@
         </a>
     </div>
 
-    <table class="table">
+    <table class="table table-hover align-middle">
         <thead>
             <tr>
+                <th>N°</th>
                 <th>Exercice</th>
                 <th class="text-center">Date</th>
                 <th class="text-center">Heure</th>
                 <th>Lieu</th>
+                <th class="text-center">Statut</th>
                 <th class="text-center">Actions</th>
             </tr>
         </thead>
@@ -32,7 +34,13 @@
 
             {% for assemblee_generale in assemblee_generales %}
 
+                {% set estCloturee = assemblee_generale.statut.value == 'cloturee' %}
+
                 <tr>
+                    <td>
+                        {{ assemblee_generale.id }}
+                    </td>
+
                     <td>
                         {{ assemblee_generale.exercice.nom }}
                     </td>
@@ -40,19 +48,31 @@
                     <td class="text-center">
                         {{ assemblee_generale.date
                             ? assemblee_generale.date|date('d/m/Y')
-                            : ''
+                            : '—'
                         }}
                     </td>
 
                     <td class="text-center">
                         {{ assemblee_generale.heure
                             ? assemblee_generale.heure|date('H:i')
-                            : ''
+                            : '—'
                         }}
                     </td>
 
                     <td>
-                        {{ assemblee_generale.lieu }}
+                        {{ assemblee_generale.lieu ?: '—' }}
+                    </td>
+
+                    <td class="text-center">
+                        {% if estCloturee %}
+                            <span class="badge bg-secondary">
+                                Clôturée
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">
+                                En préparation
+                            </span>
+                        {% endif %}
                     </td>
 
                     <td class="text-center">
@@ -62,20 +82,22 @@
                                 'app_assemblee_generale_show',
                                 {'id': assemblee_generale.id}
                             ) }}"
-                            class="btn btn-sm btn-primary"
+                            class="btn btn-sm {{ estCloturee ? 'btn-outline-primary' : 'btn-primary' }}"
                         >
-                            Préparer l'AG
+                            {{ estCloturee ? 'Consulter' : "Préparer l'AG" }}
                         </a>
 
-                        <a
-                            href="{{ path(
-                                'app_assemblee_generale_edit',
-                                {'id': assemblee_generale.id}
-                            ) }}"
-                            class="btn btn-sm btn-outline-secondary"
-                        >
-                            Modifier
-                        </a>
+                        {% if not estCloturee %}
+                            <a
+                                href="{{ path(
+                                    'app_assemblee_generale_edit',
+                                    {'id': assemblee_generale.id}
+                                ) }}"
+                                class="btn btn-sm btn-outline-secondary"
+                            >
+                                Modifier
+                            </a>
+                        {% endif %}
 
                     </td>
                 </tr>
@@ -83,7 +105,7 @@
             {% else %}
 
                 <tr>
-                    <td colspan="5" class="text-center">
+                    <td colspan="7" class="text-center text-muted py-4">
                         Aucune Assemblée Générale enregistrée.
                     </td>
                 </tr>

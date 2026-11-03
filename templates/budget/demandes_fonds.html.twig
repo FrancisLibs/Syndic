@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Demandes de fonds
+{% endblock %}
+
+{% block body %}
+
+    <h1>Demandes de fonds</h1>
+
+    <h2 class="mb-4">{{ budget.libelle }}</h2>
+
+    {% for appel in appels %}
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header bg-dark text-white">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <span>
+                        {{ appel.numero }}
+                        - {{ appel.dateAppel|date('d/m/Y') }}
+                    </span>
+
+                    <span>
+                        Montant :
+                        {{ appel.montantTotal|number_format(2, ',', ' ') }} €
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="card-body p-0">
+
+                <table class="table table-striped mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Copropriétaire</th>
+                            <th class="text-end">Charges générales</th>
+                            <th class="text-end">Solde antérieur</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for demande in demandes[appel.id]|default([]) %}
+
+                            <tr>
+
+                                <td>
+                                    {{ demande.coproprietaire }}
+                                </td>
+
+                                <td class="text-end">
+                                    {{ demande.montantAppel|number_format(2, ',', ' ') }} €
+                                </td>
+
+                                <td class="text-end">
+                                    {{ demande.soldeAnterieur|number_format(2, ',', ' ') }} €
+                                </td>
+
+                                <td class="text-end fw-bold">
+                                    {{ demande.total|number_format(2, ',', ' ') }} €
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">
+                                    Aucune demande de fonds pour cet appel.
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-info">
+            Aucun appel de fonds trouvé pour ce budget.
+        </div>
+
+    {% endfor %}
+
+    <a
+        href="{{ path('app_budget_index') }}"
+        class="btn btn-secondary"
+    >
+        Retour aux budgets
+    </a>
+
+{% endblock %}

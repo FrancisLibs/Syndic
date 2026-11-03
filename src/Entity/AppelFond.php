@@ -49,7 +49,7 @@ class AppelFond
     #[ORM\JoinColumn(nullable: true)]
     private ?Operation $operation = null;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(length: 50, unique: true)]
     private ?string $numero = null;
 
     public function __construct()

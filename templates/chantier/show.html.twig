@@ -50,6 +50,17 @@
             </tr>
 
             <tr>
+                <th>Financement</th>
+                <td>
+                    {% if chantier.estFinanceParAppels %}
+                        Appels de fonds spécifiques
+                    {% else %}
+                        Charges courantes
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr>
                 <th>État</th>
                 <td>
                     {% if chantier.cloture %}
@@ -69,130 +80,117 @@
     {# --------------------------------
             VOTE COMPLEMENTAIRE
     -------------------------------- #}
+    {% if chantier.estFinanceParAppels %}
+        <div class="d-flex justify-content-start align-items-center gap-3 mb-3">
+            <h2>Votes complémentaires</h2>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Votes complémentaires</h2>
+            {% if not chantier.cloture %}
+                <a
+                    href="{{ path('app_chantier_vote_complementaire', {id: chantier.id}) }}"
+                    class="btn btn-primary"
+                >
+                    Ajouter un vote complémentaire
+                </a>
+            {% endif %}
+        </div>
 
-        {% if not chantier.cloture %}
-            <a
-                href="{{ path('app_chantier_vote_complementaire', {id: chantier.id}) }}"
-                class="btn btn-primary"
-            >
-                Ajouter un vote complémentaire
-            </a>
-        {% endif %}
-    </div>
+        {% if chantier.votesComplementaires is not empty %}
 
-    <p>
-        Montant initial voté :
-        <strong>
-            {{ chantier.montantVote|number_format(2, ',', ' ') }} €
-        </strong>
-    </p>
-
-    {% if chantier.votesComplementaires is not empty %}
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Date du vote</th>
-                    <th class="text-center">Résolution</th>
-                    <th class="text-center">Montant</th>
-                    <th class="text-center">Appel de fonds</th>
-                </tr>
-            </thead>
- 
-            <tbody>
-                {% for vote in chantier.votesComplementaires %}
+            <table class="table">
+                <thead>
                     <tr>
-                        <td>
-                            {{ vote.dateVote|date('d/m/Y') }}
-                        </td>
+                        <th>Date du vote</th>
+                        <th class="text-center">Résolution</th>
+                        <th class="text-center">Montant</th>
+                        <th class="text-center">Appel de fonds</th>
+                    </tr>
+                </thead>
 
-                        <td class="text-center">
-                            {{ vote.numeroResolution }}
-                        </td>
+                <tbody>
+                    {% for vote in chantier.votesComplementaires %}
+                        <tr>
+                            <td>
+                                {{ vote.dateVote|date('d/m/Y') }}
+                            </td>
 
-                        <td class="text-center">
-                            {{ vote.montant|number_format(2, ',', ' ') }} €
-                        </td>
+                            <td class="text-center">
+                                {{ vote.numeroResolution }}
+                            </td>
 
-                        <td class="text-center">
-                            {% if vote.appelFond %}
+                            <td class="text-center">
+                                {{ vote.montant|number_format(2, ',', ' ') }} €
+                            </td>
 
-                                <strong>
-                                    {{ vote.appelFond.numero }}
-                                </strong>
+                            <td class="text-center">
+                                {% if vote.appelFond %}
 
-                                <br>
+                                    <strong>
+                                        {{ vote.appelFond.numero }}
+                                    </strong>
 
-                                <small class="text-muted">
-                                    {{ vote.appelFond.dateAppel|date('d/m/Y') }}
-                                    —
-                                    {{ vote.appelFond.montantTotal|number_format(2, ',', ' ') }} €
-                                </small>
+                                    <br>
 
-                            {% elseif not chantier.cloture %}
+                                    <small class="text-muted">
+                                        {{ vote.appelFond.dateAppel|date('d/m/Y') }}
+                                        —
+                                        {{ vote.appelFond.montantTotal|number_format(2, ',', ' ') }} €
+                                    </small>
 
-                                <form
-                                    method="post"
-                                    action="{{ path(
+                                {% elseif not chantier.cloture %}
+
+                                    <form
+                                        method="post"
+                                        action="{{ path(
                                     'app_chantier_vote_complementaire_generer_appel',
                                     {id: vote.id}
                                 ) }}"
-                                    class="d-flex align-items-center gap-2"
-                                >
-                                    <input
-                                        type="date"
-                                        name="date_appel"
-                                        class="form-control form-control-sm"
-                                        min="{{ vote.dateVote|date('Y-m-d') }}"
-                                        required
+                                        class="d-flex align-items-center gap-2"
                                     >
+                                        <input
+                                            type="date"
+                                            name="date_appel"
+                                            class="form-control form-control-sm"
+                                            min="{{ vote.dateVote|date('Y-m-d') }}"
+                                            required
+                                        >
 
-                                    <input
-                                        type="hidden"
-                                        name="_token"
-                                        value="{{ csrf_token(
+                                        <input
+                                            type="hidden"
+                                            name="_token"
+                                            value="{{ csrf_token(
                                         'generer-appel-complementaire-' ~ vote.id
                                     ) }}"
-                                    >
+                                        >
 
-                                    <button
-                                        type="submit"
-                                        class="btn btn-primary btn-sm"
-                                    >
-                                        Générer l'appel
-                                    </button>
-                                </form>
+                                        <button
+                                            type="submit"
+                                            class="btn btn-primary btn-sm"
+                                        >
+                                            Générer l'appel
+                                        </button>
+                                    </form>
 
-                            {% else %}
+                                {% else %}
 
-                                <span class="text-muted">
-                                    Non généré
-                                </span>
+                                    <span class="text-muted">
+                                        Non généré
+                                    </span>
 
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-    {% else %}
+        {% else %}
 
-        <p class="text-muted">
-            Aucun vote complémentaire.
-        </p>
+            <p class="text-muted">
+                Aucun vote complémentaire.
+            </p>
 
+        {% endif %}
     {% endif %}
-
-    <p class="fs-5">
-        <strong>
-            Montant total voté :
-            {{ chantier.montantTotalVote|number_format(2, ',', ' ') }} €
-        </strong>
-    </p>
 
     {# --------------------------------
         SITUATION FINANCIÈRE
@@ -209,145 +207,137 @@
                 </td>
             </tr>
 
-            <tr>
-                <th>Appels de fonds générés</th>
-                <td class="text-end">
-                    {{ totalAppels|number_format(2, ',', ' ') }} €
-                </td>
-            </tr>
+            {% if chantier.estFinanceParAppels %}
+                <tr>
+                    <th>Appels de fonds générés</th>
+                    <td class="text-end">
+                        {{ totalAppels|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Reste à appeler</th>
+                    <td class="text-end">
+                        {{ resteAAppeler|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+            {% endif %}
 
             <tr>
-                <th>Reste à appeler</th>
-                <td class="text-end">
-                    {{ resteAAppeler|number_format(2, ',', ' ') }} €
-                </td>
-            </tr>
-
-            <tr>
-                <th>Factures de travaux</th>
-                <td class="text-end">
-                    {{ totalFacture|number_format(2, ',', ' ') }} €
-                </td>
-            </tr>
-
-            <tr>
-                <th>Travaux réalisés comptablement</th>
+                <th>Coût réel des travaux</th>
                 <td class="text-end">
                     {{ totalRealise|number_format(2, ',', ' ') }} €
                 </td>
             </tr>
 
-            <tr class="table-light">
-                <th>Provision disponible</th>
-                <td class="text-end">
-                    <strong>
-                        {{ provisionDisponible|number_format(2, ',', ' ') }} €
-                    </strong>
-                </td>
-            </tr>
+            {% if chantier.estFinanceParAppels %}
+                <tr class="table-light">
+                    <th>Provision disponible</th>
+                    <td class="text-end">
+                        <strong>
+                            {{ provisionDisponible|number_format(2, ',', ' ') }} €
+                        </strong>
+                    </td>
+                </tr>
+            {% endif %}
+
         </tbody>
     </table>
 
-    {% if totalFacture != totalRealise %}
-        <div class="alert alert-warning">
-            Le montant des factures de travaux
-            ({{ totalFacture|number_format(2, ',', ' ') }} €)
-            ne correspond pas au montant des travaux réalisés comptablement
-            ({{ totalRealise|number_format(2, ',', ' ') }} €).
-        </div>
-    {% endif %}
+    {% if chantier.estFinanceParAppels %}
 
-    <h2 class="mt-5">Appels de fonds</h2>
+        <h2 class="mt-5">Appels de fonds</h2>
 
-    {% if chantier.appelInitial is null %}
+        {% if chantier.appelInitial is null %}
 
-        <div class="alert alert-warning">
-            Aucun appel de fonds n'a encore été généré
-            pour ce chantier.
-        </div>
-
-        {% if not chantier.cloture %}
-
-            <div class="card mt-4">
-                <div class="card-body">
-
-                    <h5 class="card-title">
-                        Générer l'appel de fonds
-                    </h5>
-
-                    <p>
-                        Montant de l'appel :
-                        <strong>
-                            {{ chantier.montantVote|number_format(2, ',', ' ') }} €
-                        </strong>
-                    </p>
-
-                    <form
-                        method="post"
-                        action="{{ path('app_chantier_generer_appel', {id: chantier.id}) }}"
-                    >
-                        <div class="mb-3">
-                            <label for="date_appel" class="form-label">
-                                Date de l'appel
-                            </label>
-
-                            <input
-                                type="date"
-                                id="date_appel"
-                                name="date_appel"
-                                class="form-control"
-                                required
-                            >
-                        </div>
-
-                        <input
-                            type="hidden"
-                            name="_token"
-                            value="{{ csrf_token('generer-appel-' ~ chantier.id) }}"
-                        >
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
-                        >
-                            Générer l'appel de fonds
-                        </button>
-                    </form>
-
-                </div>
+            <div class="alert alert-warning">
+                Aucun appel de fonds n'a encore été généré
+                pour ce chantier.
             </div>
 
+            {% if not chantier.cloture %}
+
+                <div class="card mt-4">
+                    <div class="card-body">
+
+                        <h5 class="card-title">
+                            Générer l'appel de fonds
+                        </h5>
+
+                        <p>
+                            Montant de l'appel :
+                            <strong>
+                                {{ chantier.montantVote|number_format(2, ',', ' ') }} €
+                            </strong>
+                        </p>
+
+                        <form
+                            method="post"
+                            action="{{ path('app_chantier_generer_appel', {id: chantier.id}) }}"
+                        >
+                            <div class="mb-3">
+                                <label for="date_appel" class="form-label">
+                                    Date de l'appel
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="date_appel"
+                                    name="date_appel"
+                                    class="form-control"
+                                    required
+                                >
+                            </div>
+
+                            <input
+                                type="hidden"
+                                name="_token"
+                                value="{{ csrf_token('generer-appel-' ~ chantier.id) }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                Générer l'appel de fonds
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+
+            {% endif %}
+
+        {% else %}
+
+            {% for appel in chantier.appels %}
+                <table class="table border">
+                    <tbody>
+                        <tr>
+                            <th>Appel N°</th>
+                            <td>{{ loop.index }}</td>
+                        </tr>
+                        <tr>
+                            <th>Numéro</th>
+                            <td>{{ appel.numero }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Date</th>
+                            <td>{{ appel.dateAppel|date('d/m/Y') }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Montant</th>
+                            <td>
+                                {{ appel.montantTotal|number_format(2, ',', ' ') }} €
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            {% endfor %}
+
         {% endif %}
-
-    {% else %}
-
-        {% for appel in chantier.appels %}
-            <table class="table border">
-                <tbody>
-                    <tr>
-                        <th>Appel N°</th>
-                        <td>{{ loop.index }}</td>
-                    </tr>
-                    <tr>
-                        <th>Numéro</th>
-                        <td>{{ appel.numero }}</td>
-                    </tr>
-
-                    <tr>
-                        <th>Date</th>
-                        <td>{{ appel.dateAppel|date('d/m/Y') }}</td>
-                    </tr>
-
-                    <tr>
-                        <th>Montant</th>
-                        <td>
-                            {{ appel.montantTotal|number_format(2, ',', ' ') }} €
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        {% endfor %}
-
     {% endif %}
 
     <h2 class="mt-5">Factures</h2>
@@ -393,72 +383,151 @@
 
     {% endif %}
 
+    {% if chantier.estFinanceParAppels and chantier.appels is not empty %}
 
-    <h3 class="mt-4">Simulation de clôture du chantier</h3>
+        <h3 class="mt-4">Simulation de clôture du chantier</h3>
 
-    <p class="text-muted">
-        Simulation indicative — aucune écriture comptable générée.
-    </p>
+        <p class="text-muted">
+            Simulation indicative — aucune écriture comptable générée.
+        </p>
 
-    <table class="table table-striped table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Copropriétaire</th>
-                <th class="text-end">Appels</th>
-                <th class="text-end">Quote-part réelle</th>
-                <th class="text-end">Régularisation</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for ligne in simulation.lignes %}
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
                 <tr>
-                    <td>{{ ligne.coproprietaire }}</td>
+                    <th>Copropriétaire</th>
+                    <th class="text-end">Appels</th>
+                    <th class="text-end">Quote-part réelle</th>
+                    <th class="text-end">Régularisation</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for ligne in simulation.lignes %}
+                    <tr>
+                        <td>{{ ligne.coproprietaire }}</td>
+
+                        <td class="text-end">
+                            {{ ligne.appels|number_format(2, ',', ' ') }} €
+                        </td>
+
+                        <td class="text-end">
+                            {{ ligne.quotePart|number_format(2, ',', ' ') }} €
+                        </td>
+
+                        <td class="text-end">
+                            {{ ligne.regularisation|number_format(2, ',', ' ') }} €
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+            <tfoot class="table-secondary fw-bold">
+                <tr>
+                    <td>Total</td>
 
                     <td class="text-end">
-                        {{ ligne.appels|number_format(2, ',', ' ') }} €
+                        {{ simulation.totalAppels|number_format(2, ',', ' ') }} €
                     </td>
 
                     <td class="text-end">
-                        {{ ligne.quotePart|number_format(2, ',', ' ') }} €
+                        {{ simulation.coutReel|number_format(2, ',', ' ') }} €
                     </td>
 
                     <td class="text-end">
-                        {{ ligne.regularisation|number_format(2, ',', ' ') }} €
+                        {{ simulation.regularisationTotale|number_format(2, ',', ' ') }} €
                     </td>
                 </tr>
-            {% endfor %}
-        </tbody>
+            </tfoot>
+        </table>
 
-        <tfoot class="table-secondary fw-bold">
-            <tr>
-                <td>Total</td>
+    {% elseif chantier.estFinanceParAppels %}
 
-                <td class="text-end">
-                    {{ simulation.totalAppels|number_format(2, ',', ' ') }} €
-                </td>
-
-                <td class="text-end">
-                    {{ simulation.coutReel|number_format(2, ',', ' ') }} €
-                </td>
-
-                <td class="text-end">
-                    {{ simulation.regularisationTotale|number_format(2, ',', ' ') }} €
-                </td>
-            </tr>
-        </tfoot>
-    </table>
-
-    <h3>Contrôle de clôture</h3>
-
-    {% if controleCloture.valide %}
-        <div class="alert alert-success">
-            {{ controleCloture.message }}
+        <div class="alert alert-info mt-4">
+            La simulation de clôture sera disponible
+            après la génération des appels de fonds.
         </div>
+
+    {% endif %}
+
+
+    {% if not chantier.cloture %}
+
+        <h3>Contrôle de clôture</h3>
+
+        {% if controleCloture.valide %}
+            <div class="alert alert-success">
+                {{ controleCloture.message }}
+            </div>
+        {% else %}
+            <div class="alert alert-warning">
+                {{ controleCloture.message }}
+            </div>
+        {% endif %}
+
+        {% if controleCloture.valide %}
+
+            <h3>Clôture définitive du chantier</h3>
+
+            {% if chantier.estFinanceParAppels %}
+
+                <div class="alert alert-warning">
+                    La clôture génère les régularisations comptables
+                    nécessaires et clôture définitivement le chantier.
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-info">
+                    Ce chantier est financé par les charges courantes.
+                    Sa clôture ne génère aucune régularisation
+                    spécifique de travaux.
+                </div>
+
+            {% endif %}
+
+            <form
+                method="post"
+                action="{{ path('app_chantier_cloturer', {
+            id: chantier.id
+        }) }}"
+                onsubmit="return confirm('Confirmer la clôture définitive du chantier ?');"
+            >
+                <input
+                    type="hidden"
+                    name="_token"
+                    value="{{ csrf_token('cloturer-chantier-' ~ chantier.id) }}"
+                >
+
+                <div class="mb-3">
+                    <label for="date_regularisation" class="form-label">
+                        {{ chantier.estFinanceParAppels
+                            ? 'Date de régularisation'
+                            : 'Date de clôture'
+                        }}
+                    </label>
+
+                    <input
+                        type="date"
+                        id="date_regularisation"
+                        name="date_regularisation"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-danger">
+                    Clôturer définitivement le chantier
+                </button>
+            </form>
+
+        {% endif %}
     {% else %}
-        <div class="alert alert-warning">
-            {{ controleCloture.message }}
+
+        <div class="alert alert-secondary mt-4">
+            Chantier clôturé le
+            {{ chantier.dateCloture|date('d/m/Y') }}.
         </div>
+
     {% endif %}
 
 {% endblock %}

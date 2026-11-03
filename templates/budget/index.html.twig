@@ -39,9 +39,12 @@
 
 						{% else %}
 
-							<div>
-								Appel de fonds déjà généré.
-							</div>
+							<a
+								href="{{ path('app_budget_demandes_fonds', {id: budget.id}) }}"
+								class="btn btn-primary"
+							>
+								Éditer les demandes de fonds
+							</a>
 
 						{% endif %}
 

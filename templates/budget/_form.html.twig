@@ -6,7 +6,8 @@
 	</div>
 	<div class="card-body">
 		<div class="row g-3">
-			<div class="col-md-4">
+
+			<div class="col-md-3">
 				{{ form_label(form.libelle) }}
 				{{ form_widget(
                     form.libelle,
@@ -18,7 +19,7 @@
 				<p>Le libellé sera complété automatiquement à l'enregistrement avec le nom de l'exercice</p>
 			</div>
 
-			<div class="col-md-4">
+			<div class="col-md-3">
 				{{ form_label(form.copropriete) }}
 				{{ form_widget(
                     form.copropriete,
@@ -29,7 +30,7 @@
 				{{ form_errors(form.copropriete) }}
 			</div>
 
-			<div class="col-md-4">
+			<div class="col-md-3">
 				{{ form_label(form.exercice) }}
 				{{ form_widget(
                     form.exercice,
@@ -40,6 +41,22 @@
                     }
                 ) }}
 				{{ form_errors(form.exercice) }}
+			</div>
+
+			<div class="col-md-3">
+				{{ form_label(form.nbAppels) }}
+
+				{{ form_widget(
+					form.nbAppels,
+					{
+						attr: {
+							class: 'form-control'
+						}
+					}
+				) }}
+
+				{{ form_errors(form.nbAppels) }}
+				{{ form_help(form.nbAppels) }}
 			</div>
 
 		</div>
@@ -64,7 +81,7 @@
 
 	</div>
 
-	<div class="card-body" id="lignes-budget" data-prototype="{{ include( 'budget/_prototype_ligne.html.twig', { ligne: form.lignes.vars.prototype } )|e('html_attr') }}">
+	<div class="card-body" id="lignes-budget" data-prototype="{{ include('budget/_prototype_ligne.html.twig', { ligne: form.lignes.vars.prototype })|e('html_attr') }}">
 
 		{% for ligne in form.lignes %}
 

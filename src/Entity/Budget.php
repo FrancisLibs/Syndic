@@ -66,6 +66,9 @@ class Budget
     #[ORM\Column]
     private ?bool $verrouille = null;
 
+    #[ORM\Column(options: ['default' => 1])]
+    private int $nbAppels = 1;
+
     public function __construct()
     {
         $this->lignes = new ArrayCollection();
@@ -236,6 +239,24 @@ class Budget
     public function setVerrouille(bool $verrouille): static
     {
         $this->verrouille = $verrouille;
+
+        return $this;
+    }
+
+    public function getNbAppels(): int
+    {
+        return $this->nbAppels;
+    }
+
+    public function setNbAppels(int $nbAppels): static
+    {
+        if ($nbAppels < 1) {
+            throw new \InvalidArgumentException(
+                'Le nombre d’appels doit être au moins égal à 1.'
+            );
+        }
+
+        $this->nbAppels = $nbAppels;
 
         return $this;
     }

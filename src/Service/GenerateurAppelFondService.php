@@ -23,70 +23,152 @@ class GenerateurAppelFondService
         \DateTimeImmutable $dateReglement,
     ): AppelFond {
 
-        // =====================
-        // Total budget
-        // =====================
+        // ==========================================
+        // 1. Vérifications
+        // ==========================================
 
-        $montantTotalBudget = 0;
-
-        foreach ($budget->getLignes() as $ligne) {
-
-            $montantTotalBudget +=
-                (float) $ligne->getMontant();
+        if ($dateReglement < $dateAppel) {
+            throw new \LogicException(
+                'La date d’échéance ne peut pas précéder la date de l’appel.'
+            );
         }
 
-        // =====================
-        // Création appel
-        // =====================
+        $nbAppels = $budget->getNbAppels();
 
-        $appelFond = new AppelFond();
-        $appelFond->setBudget($budget);
-        $appelFond->setLibelle('Appel de fonds - ' . $budget->getLibelle());
-        $appelFond->setDateAppel($dateAppel);
-        $appelFond->setDateReglement(
-            $dateReglement
+        if ($nbAppels < 1) {
+            throw new \LogicException(
+                'Le nombre d’appels doit être supérieur à zéro.'
+            );
+        }
+
+        // On interroge les appels existants.
+        // Ne pas se fier uniquement à la collection Doctrine,
+        // qui peut ne pas être synchronisée en mémoire.
+
+        $appelsExistants = $this->appelFondRepository->findBy(
+            ['budget' => $budget],
+            ['dateAppel' => 'ASC']
         );
 
-        $appelFond->setMontantTotal($montantTotalBudget);
+        $nombreAppelsGeneres = count($appelsExistants);
 
-        // 🌟 Automatisation du numéro (Ex: AF-2026-001)
-        $anneeEnCours = (int) $dateAppel->format('Y');
+        if ($nombreAppelsGeneres >= $nbAppels) {
+            throw new \LogicException(
+                'Tous les appels prévus pour ce budget ont déjà été générés.'
+            );
+        }
 
-        // 🌟 On appelle la méthode du Repository qu'on vient de créer
-        $totalAppelsCetteAnnee = $this->appelFondRepository->countForYear($anneeEnCours);
+        $numeroAppel = $nombreAppelsGeneres + 1;
 
-        $prochainNumero = $totalAppelsCetteAnnee + 1;
+        // ==========================================
+        // 2. Calcul du montant du budget
+        // ==========================================
 
-        // Génère la chaîne (ex: AF-2026-001)
-        $reference = "AF-" . $anneeEnCours . "-" . str_pad($prochainNumero, 3, "0", STR_PAD_LEFT);
+        $montantTotalBudget = round(
+            $budget->getTotal(),
+            2
+        );
 
-        $appelFond->setNumero($reference);
+        if ($montantTotalBudget <= 0) {
+            throw new \LogicException(
+                'Le montant total du budget doit être positif.'
+            );
+        }
 
-        $budget->setVerrouille(true);
+        // ==========================================
+        // 3. Calcul du montant du prochain appel
+        // ==========================================
 
-        // =====================
-        // Lots copropriété
-        // =====================
+        $montantDejaAppele = 0.0;
+
+        foreach ($appelsExistants as $appel) {
+            $montantDejaAppele +=
+                (float) $appel->getMontantTotal();
+        }
+
+        $montantDejaAppele = round(
+            $montantDejaAppele,
+            2
+        );
+
+        if ($numeroAppel === $nbAppels) {
+
+            // Dernier appel : on prend le solde du budget
+            // pour absorber les éventuels écarts d'arrondi.
+
+            $montantAppel = round(
+                $montantTotalBudget - $montantDejaAppele,
+                2
+            );
+        } else {
+
+            $montantAppel = round(
+                $montantTotalBudget / $nbAppels,
+                2
+            );
+        }
+
+        if ($montantAppel <= 0) {
+            throw new \LogicException(
+                'Le montant du prochain appel est invalide.'
+            );
+        }
+
+        // ==========================================
+        // 4. Création de l'appel
+        // ==========================================
+
+        $appelFond = new AppelFond();
+
+        $appelFond
+            ->setBudget($budget)
+            ->setLibelle(
+                sprintf(
+                    'Appel de fonds %d/%d - %s',
+                    $numeroAppel,
+                    $nbAppels,
+                    $budget->getLibelle()
+                )
+            )
+            ->setDateAppel($dateAppel)
+            ->setDateReglement($dateReglement)
+            ->setMontantTotal($montantAppel);
+
+        // ==========================================
+        // 5. Numérotation automatique
+        // ==========================================
+
+        $annee = (int) $dateAppel->format('Y');
+
+        $numero = $this->appelFondRepository
+            ->getProchainNumero($annee);
+
+        $appelFond->setNumero($numero);
+
+        // ==========================================
+        // 6. Recherche des lots
+        // ==========================================
 
         $copropriete = $budget->getCopropriete();
 
-        $lots =
-            $this->lotRepository->findBy(
-                [
-                    'copropriete' => $copropriete
-                ]
-            );
+        $lots = $this->lotRepository->findBy([
+            'copropriete' => $copropriete,
+        ]);
 
-        // =====================
-        // Total tantièmes
-        // =====================
+        if ($lots === []) {
+            throw new \LogicException(
+                'Aucun lot trouvé pour cette copropriété.'
+            );
+        }
+
+        // ==========================================
+        // 7. Total des tantièmes
+        // ==========================================
 
         $totalTantiemes = 0;
 
         foreach ($lots as $lot) {
-
-            $totalTantiemes +=
-                $lot->getTantiemes();
+            $totalTantiemes += $lot->getTantiemes();
         }
 
         if ($totalTantiemes <= 0) {
@@ -95,20 +177,22 @@ class GenerateurAppelFondService
             );
         }
 
-        // =====================
-        // Répartition
-        // =====================
+        // ==========================================
+        // 8. Préparation des répartitions
+        // ==========================================
 
         $lignesARepartir = [];
 
         foreach ($lots as $lot) {
-            $tantiemeLot = $lot->getTantiemes();
+
+            $tantiemesLot = $lot->getTantiemes();
 
             $montantLot =
-                ($montantTotalBudget * $tantiemeLot)
+                ($montantAppel * $tantiemesLot)
                 / $totalTantiemes;
 
             foreach ($lot->getLotCoproprietaires() as $lotCoproprietaire) {
+
                 $dateDebut = $lotCoproprietaire->getDateDebut();
                 $dateFin = $lotCoproprietaire->getDateFin();
 
@@ -120,8 +204,8 @@ class GenerateurAppelFondService
                     continue;
                 }
 
-                $pourcentage =
-                    (float) $lotCoproprietaire->getPourcentage();
+                $pourcentage = (float)
+                $lotCoproprietaire->getPourcentage();
 
                 $montantBrut =
                     $montantLot * $pourcentage / 100;
@@ -142,16 +226,23 @@ class GenerateurAppelFondService
             );
         }
 
+        // ==========================================
+        // 9. Répartition avec gestion des arrondis
+        // ==========================================
+
         $totalGenere = 0.0;
         $dernierIndex = count($lignesARepartir) - 1;
 
         foreach ($lignesARepartir as $index => $donnees) {
+
             if ($index === $dernierIndex) {
+
                 $montant = round(
-                    $montantTotalBudget - $totalGenere,
+                    $montantAppel - $totalGenere,
                     2
                 );
             } else {
+
                 $montant = round(
                     $donnees['montantBrut'],
                     2
@@ -187,11 +278,22 @@ class GenerateurAppelFondService
             $this->entityManager->persist($ligne);
         }
 
-        // =====================
-        // Sauvegarde
-        // =====================
+        // ==========================================
+        // 10. Verrouillage du budget
+        // ==========================================
+
+        // Le budget devient non modifiable dès le
+        // premier appel, mais les appels suivants
+        // restent autorisés.
+
+        $budget->setVerrouille(true);
+
+        // ==========================================
+        // 11. Enregistrement
+        // ==========================================
 
         $this->entityManager->persist($appelFond);
+
         $this->entityManager->flush();
 
         return $appelFond;

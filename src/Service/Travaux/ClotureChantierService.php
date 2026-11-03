@@ -19,6 +19,7 @@ final class ClotureChantierService
         private readonly ExerciceRepository $exerciceRepository,
         private readonly ComptabiliteService $comptabiliteService,
         private readonly EntityManagerInterface $entityManager,
+        private readonly FactureFournisseurRepository $factureRepository,
     ) {}
 
     public function verifier(
@@ -35,6 +36,88 @@ final class ClotureChantierService
             throw new \LogicException(
                 'Une régularisation comptable existe déjà pour ce chantier.'
             );
+        }
+
+        // Vérifier qu'aucune facture du chantier
+        // ne reste en attente de comptabilisation.
+        $facturesNonComptabilisees = array_filter(
+            $this->factureRepository
+                ->findNonComptabiliseesPourChantier($chantier),
+
+            static function ($facture): bool {
+
+                $operation = $facture->getOperation();
+
+                // Une facture annulée ne bloque pas la clôture.
+                if (
+                    $operation !== null
+                    && $operation->getStatut() === OperationStatut::ANNULE
+                ) {
+                    return false;
+                }
+
+                // Les autres factures non comptabilisées
+                // doivent continuer à bloquer la clôture.
+                return true;
+            }
+        );
+
+        if ($facturesNonComptabilisees !== []) {
+            throw new \LogicException(sprintf(
+                'Impossible de clôturer ce chantier : '
+                    . '%d facture(s) ne sont pas comptabilisées.',
+                count($facturesNonComptabilisees)
+            ));
+        }
+
+        if ($chantier->estFinanceParChargesCourantes()) {
+
+            if (!$chantier->getAppels()->isEmpty()) {
+                throw new \LogicException(
+                    'Ce chantier est financé par les charges courantes, '
+                        . 'mais possède des appels de fonds spécifiques.'
+                );
+            }
+
+            if ($dateRegularisation !== null) {
+                $this->verifierExercice($dateRegularisation);
+            }
+
+            $factures = $this->factureRepository
+                ->findPourChantier($chantier);
+
+            foreach ($factures as $facture) {
+
+                $operation = $facture->getOperation();
+
+                // Ignorer les factures annulées
+                if (
+                    $operation !== null
+                    && $operation->getStatut() === OperationStatut::ANNULE
+                ) {
+                    continue;
+                }
+
+                if (
+                    $operation === null
+                    || $operation->getStatut() !== OperationStatut::VALIDE
+                    || !$operation->isEquilibree()
+                ) {
+                    throw new \LogicException(
+                        sprintf(
+                            'La facture %s ne possède pas une opération comptable valide et équilibrée.',
+                            $facture->getNumero() ?? '#' . $facture->getId()
+                        )
+                    );
+                }
+            }
+
+            return [
+                'totalAppels' => 0.0,
+                'coutReel' => $this->coutReelService->calculer($chantier),
+                'regularisationTotale' => 0.0,
+                'lignes' => [],
+            ];
         }
 
         if ($chantier->getCompteProvision() === null) {
@@ -89,6 +172,13 @@ final class ClotureChantierService
         }
 
         $coutReel = $this->coutReelService->calculer($chantier);
+
+        if ($coutReel > $chantier->getMontantTotalVote() + 0.009) {
+            throw new \LogicException(
+                'Le coût réel du chantier dépasse le montant total voté. '
+                    . 'Un vote complémentaire est nécessaire avant la clôture.'
+            );
+        }
 
         $simulation = $this->simulationService->simuler(
             $chantier,
@@ -150,6 +240,17 @@ final class ClotureChantierService
                     $chantier,
                     $dateRegularisation
                 );
+
+                if ($chantier->estFinanceParChargesCourantes()) {
+
+                    $chantier
+                        ->setDateCloture($dateRegularisation)
+                        ->setCloture(true);
+
+                    $this->entityManager->flush();
+
+                    return;
+                }
 
                 $exercice = $this->verifierExercice(
                     $dateRegularisation

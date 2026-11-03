@@ -7,6 +7,7 @@ use App\Entity\AppelFond;
 use App\Entity\Compte;
 use App\Entity\Operation;
 use App\Enum\ModeRepartition;
+use App\Enum\FinancementChantier;
 use App\Repository\Travaux\ChantierRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -38,7 +39,7 @@ class Chantier
     )]
     private ?string $montantVote = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $dateVote = null;
 
     #[ORM\Column(length: 100, nullable: true)]
@@ -46,6 +47,10 @@ class Chantier
 
     #[ORM\Column(enumType: ModeRepartition::class)]
     private ModeRepartition $modeRepartition = ModeRepartition::TANTIEMES;
+
+    #[ORM\Column(enumType: FinancementChantier::class)]
+    private FinancementChantier $financement =
+    FinancementChantier::APPELS_SPECIFIQUES;
 
     #[ORM\Column]
     private bool $cloture = false;
@@ -156,7 +161,7 @@ class Chantier
         return $this->dateVote;
     }
 
-    public function setDateVote(\DateTimeImmutable $dateVote): static
+    public function setDateVote(?\DateTimeImmutable $dateVote): static
     {
         $this->dateVote = $dateVote;
 
@@ -186,6 +191,31 @@ class Chantier
         $this->modeRepartition = $modeRepartition;
 
         return $this;
+    }
+
+    public function getFinancement(): FinancementChantier
+    {
+        return $this->financement;
+    }
+
+    public function setFinancement(
+        FinancementChantier $financement
+    ): static {
+        $this->financement = $financement;
+
+        return $this;
+    }
+
+    public function estFinanceParAppels(): bool
+    {
+        return $this->financement ===
+            FinancementChantier::APPELS_SPECIFIQUES;
+    }
+
+    public function estFinanceParChargesCourantes(): bool
+    {
+        return $this->financement ===
+            FinancementChantier::CHARGES_COURANTES;
     }
 
     public function isCloture(): bool

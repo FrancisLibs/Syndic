@@ -8,6 +8,10 @@ use Doctrine\DBAL\Types\Types;
 use App\Repository\ResolutionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\MajoriteResolution;
+use App\Entity\Budget;
+use App\Entity\Travaux\Chantier;
+use App\Entity\Travaux\VoteComplementaireChantier;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ResolutionRepository::class)]
 class Resolution
@@ -20,6 +24,21 @@ class Resolution
     #[ORM\ManyToOne(inversedBy: 'resolutions')]
     #[ORM\JoinColumn(nullable: false)]
     private ?AssembleeGenerale $assembleeGenerale = null;
+
+    // Budget concerné par la résolution
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Budget $budget = null;
+
+    // Chantier concerné par la résolution
+    #[ORM\ManyToOne(fetch: 'EAGER')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Chantier $chantier = null;
+
+    // Vote complémentaire concerné par la résolution
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?VoteComplementaireChantier $voteComplementaireChantier = null;
 
     #[ORM\Column]
     private ?int $numero = null;
@@ -90,6 +109,43 @@ class Resolution
     public function setAssembleeGenerale(?AssembleeGenerale $assembleeGenerale): static
     {
         $this->assembleeGenerale = $assembleeGenerale;
+
+        return $this;
+    }
+
+    public function getBudget(): ?Budget
+    {
+        return $this->budget;
+    }
+
+    public function setBudget(?Budget $budget): static
+    {
+        $this->budget = $budget;
+
+        return $this;
+    }
+
+    public function getChantier(): ?Chantier
+    {
+        return $this->chantier;
+    }
+
+    public function setChantier(?Chantier $chantier): static
+    {
+        $this->chantier = $chantier;
+
+        return $this;
+    }
+
+    public function getVoteComplementaireChantier(): ?VoteComplementaireChantier
+    {
+        return $this->voteComplementaireChantier;
+    }
+
+    public function setVoteComplementaireChantier(
+        ?VoteComplementaireChantier $voteComplementaireChantier
+    ): static {
+        $this->voteComplementaireChantier = $voteComplementaireChantier;
 
         return $this;
     }
@@ -299,5 +355,30 @@ class Resolution
             $this->tantiemesPourSecondTour !== null
             || $this->tantiemesContreSecondTour !== null
             || $this->tantiemesAbstentionSecondTour !== null;
+    }
+
+    #[Assert\Callback]
+    public function validerFinancement(
+        \Symfony\Component\Validator\Context\ExecutionContextInterface $context
+    ): void {
+        $nombreAssociations = 0;
+
+        if ($this->getBudget() !== null) {
+            $nombreAssociations++;
+        }
+
+        if ($this->getChantier() !== null) {
+            $nombreAssociations++;
+        }
+
+        if ($this->getVoteComplementaireChantier() !== null) {
+            $nombreAssociations++;
+        }
+
+        if ($nombreAssociations > 1) {
+            $context->buildViolation(
+                'Une résolution ne peut concerner qu’un seul financement : budget, chantier ou vote complémentaire.'
+            )->addViolation();
+        }
     }
 }

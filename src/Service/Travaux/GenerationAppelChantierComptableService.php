@@ -62,7 +62,9 @@ class GenerationAppelChantierComptableService
             $coproprietaire = $ligne->getCoproprietaire();
 
             if (!$coproprietaire) {
-                continue;
+                throw new \LogicException(
+                    'Une ligne d’appel de fonds ne possède pas de copropriétaire.'
+                );
             }
 
             $compteCoproprietaire = $coproprietaire->getCompte();

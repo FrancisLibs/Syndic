@@ -48,6 +48,12 @@ class Copropriete
     #[ORM\OneToMany(targetEntity: Exercice::class, mappedBy: 'copropriete')]
     private Collection $exercices;
 
+    #[ORM\Column(length: 34, nullable: true)]
+    private ?string $iban = null;
+
+    #[ORM\Column(length: 11, nullable: true)]
+    private ?string $bic = null;
+
     public function __construct()
     {
         $this->lots = new ArrayCollection();
@@ -212,6 +218,30 @@ class Copropriete
                 $exercice->setCopropriete(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getIban(): ?string
+    {
+        return $this->iban;
+    }
+
+    public function setIban(?string $iban): static
+    {
+        $this->iban = $iban;
+
+        return $this;
+    }
+
+    public function getBic(): ?string
+    {
+        return $this->bic;
+    }
+
+    public function setBic(?string $bic): static
+    {
+        $this->bic = $bic;
 
         return $this;
     }

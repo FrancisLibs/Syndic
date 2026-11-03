@@ -26,10 +26,12 @@ class RepartitionRepository extends ServiceEntityRepository
     public function findByLot($lot): array
     {
         return $this->createQueryBuilder('r')
+            ->leftJoin('r.ecriture', 'e')
+            ->leftJoin('e.operation', 'o')
             ->andWhere('r.lot = :lot')
+            ->andWhere('(e.id IS NULL OR o.statut = :statut)')
             ->setParameter('lot', $lot)
-            ->leftjoin('r.ecriture', 'e')
-            ->join('e.operation', 'o')
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->orderBy('r.id', 'ASC')
             ->getQuery()
             ->getResult();
@@ -62,14 +64,24 @@ class RepartitionRepository extends ServiceEntityRepository
         Exercice $exercice
     ): array {
         return $this->createQueryBuilder('r')
-            ->addSelect('coproprietaire', 'lot', 'ecriture', 'compte', 'operation')
+            ->addSelect(
+                'coproprietaire',
+                'lot',
+                'ecriture',
+                'compte',
+                'operation'
+            )
             ->join('r.coproprietaire', 'coproprietaire')
             ->join('r.lot', 'lot')
             ->leftJoin('r.ecriture', 'ecriture')
             ->leftJoin('ecriture.compte', 'compte')
             ->leftJoin('ecriture.operation', 'operation')
             ->andWhere('r.exercice = :exercice')
+            ->andWhere(
+                '(ecriture.id IS NULL OR operation.statut = :statut)'
+            )
             ->setParameter('exercice', $exercice)
+            ->setParameter('statut', OperationStatut::VALIDE)
             ->orderBy('coproprietaire.id', 'ASC')
             ->addOrderBy('lot.reference', 'ASC')
             ->addOrderBy('compte.numero', 'ASC')

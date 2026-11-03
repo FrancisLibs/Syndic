@@ -10,17 +10,64 @@
 		<h2>{{ budget.libelle }}</h2>
 	</div>
 
-	<form method="post" action="{{ path( 'app_budget_generer_appel', { id: budget.id } ) }}">
-		{% if not budget.isVerrouille() %}
-			<button class="btn btn-success">
-				Générer les appels de fonds
-			</button>
-		{% else %}
-			<div class="alert alert-info">
-				Les appels de fonds ont déjà été générés pour ce budget.
-			</div>
-		{% endif %}
-	</form>
+	{% set nbAppelsGeneres = budget.appels|length %}
+	{% set nbAppelsPrevus = budget.nbAppels %}
+	{% set nbAppelsRestants = nbAppelsPrevus - nbAppelsGeneres %}
+
+	{% set montantDejaAppele = 0 %}
+	{% for appel in budget.appels %}
+		{% set montantDejaAppele = montantDejaAppele + appel.montantTotal %}
+	{% endfor %}
+
+	{% set montantRestant = budget.total - montantDejaAppele %}
+
+	<div class="card mb-4">
+
+		<div class="card-header bg-dark text-white">
+			Génération des appels de fonds
+		</div>
+
+		<div class="card-body">
+
+			<p>
+				<strong>Appels générés :</strong>
+				{{ nbAppelsGeneres }} / {{ nbAppelsPrevus }}
+			</p>
+
+			<p>
+				<strong>Montant déjà appelé :</strong>
+				{{ montantDejaAppele|number_format(2, ',', ' ') }} €
+			</p>
+
+			<p>
+				<strong>Montant restant à appeler :</strong>
+				{{ montantRestant|number_format(2, ',', ' ') }} €
+			</p>
+
+			{% if nbAppelsRestants > 0 %}
+
+				<form
+					method="post"
+					action="{{ path('app_budget_generer_appel', {'id': budget.id}) }}"
+				>
+
+					<button type="submit" class="btn btn-success">
+						Générer l'appel {{ nbAppelsGeneres + 1 }}/{{ nbAppelsPrevus }}
+					</button>
+
+				</form>
+
+			{% else %}
+
+				<div class="alert alert-success mb-0">
+					Tous les appels de fonds ont été générés pour ce budget.
+				</div>
+
+			{% endif %}
+
+		</div>
+
+	</div>
 
 	<div class="card shadow-sm mt-4">
 

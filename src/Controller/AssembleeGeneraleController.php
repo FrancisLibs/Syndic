@@ -11,7 +11,6 @@ use App\Form\AssembleeGeneraleType;
 use App\Form\ResolutionType;
 use App\Form\AssembleeGeneraleBureauType;
 use App\Form\FeuillePresenceAssembleeGeneraleType;
-use App\Form\FeuilleVoteResolutionType;
 use App\Form\SecondVoteResolutionType;
 use App\Form\VotesCorrespondanceType;
 use App\Form\AssembleeGenerale\DecisionResolutionType;
@@ -113,9 +112,7 @@ final class AssembleeGeneraleController extends AbstractController
         $nombreVotesCorrespondance = 0;
 
         foreach ($assembleeGenerale->getPresences() as $presence) {
-            if (
-                $presence->getStatut() === PresenceStatut::VOTE_CORRESPONDANCE
-            ) {
+            if ($presence->getStatut() === PresenceStatut::VOTE_CORRESPONDANCE) {
                 $nombreVotesCorrespondance++;
             }
         }
@@ -124,10 +121,7 @@ final class AssembleeGeneraleController extends AbstractController
 
         foreach ($assembleeGenerale->getPresences() as $presence) {
 
-            if (
-                $presence->getStatut()
-                !== PresenceStatut::VOTE_CORRESPONDANCE
-            ) {
+            if ($presence->getStatut() !== PresenceStatut::VOTE_CORRESPONDANCE) {
                 continue;
             }
 
@@ -593,7 +587,7 @@ final class AssembleeGeneraleController extends AbstractController
         $data['date_limite_vote'] = $dateLimiteVote;
         $data['detail_charges'] = $detailChargesCoproprietaire;
         $data['lots_eau_coproprietaire'] = $lotsEauCoproprietaire;
-        
+
 
 
         $data = array_merge(
@@ -752,7 +746,10 @@ final class AssembleeGeneraleController extends AbstractController
 
         $form = $this->createForm(
             ResolutionType::class,
-            $resolution
+            $resolution,
+            [
+                'assemblee_generale' => $assembleeGenerale,
+            ]
         );
 
         $form->handleRequest($request);
@@ -812,7 +809,10 @@ final class AssembleeGeneraleController extends AbstractController
 
         $form = $this->createForm(
             ResolutionType::class,
-            $resolution
+            $resolution,
+            [
+                'assemblee_generale' => $assembleeGenerale,
+            ]
         );
 
         $form->handleRequest($request);
@@ -1002,12 +1002,6 @@ final class AssembleeGeneraleController extends AbstractController
                 'titre' => 'Approbation du budget prévisionnel',
                 'texte' => 'L\'Assemblée Générale approuve le budget prévisionnel présenté avec la convocation.',
                 'majorite' => MajoriteResolution::ARTICLE_24,
-            ],
-            [
-                'numero' => 7,
-                'titre' => 'Adoption partielle du projet de plan pluriannuel de travaux',
-                'texte' => 'L\'Assemblée Générale, après avoir pris connaissance du projet de plan pluriannuel de travaux établi par THALES EXPERTISES BATIMENT en date du 25 mai 2026, décide d\'adopter partiellement ce projet.',
-                'majorite' => MajoriteResolution::ARTICLE_25,
             ],
         ];
 
@@ -2366,10 +2360,7 @@ final class AssembleeGeneraleController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
     ): Response {
-        if (
-            $assembleeGenerale->getStatut()
-            !== AssembleeGeneraleStatut::EN_COURS
-        ) {
+        if ($assembleeGenerale->getStatut() !== AssembleeGeneraleStatut::EN_COURS) {
             $this->addFlash(
                 'warning',
                 'Cette assemblée générale ne peut pas être clôturée.'
@@ -2418,8 +2409,6 @@ final class AssembleeGeneraleController extends AbstractController
                 ['id' => $assembleeGenerale->getId()]
             );
         }
-
-
 
         if (!$form->isValid()) {
             return $this->render(

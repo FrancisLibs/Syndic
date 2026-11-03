@@ -84,6 +84,9 @@ class GenerationAppelFondService
 
         $this->comptabiliteService->enregistrer();
 
+        // Association de l'appel à son opération comptable
+        $appelFond->setOperation($operation);
+
         $this->entityManager->flush();
     }
 }

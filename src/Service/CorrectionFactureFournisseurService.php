@@ -76,8 +76,8 @@ final class CorrectionFactureFournisseurService
             $ecritureFournisseur = $ecritureDebit;
         }
 
-        $ecritureProvision = null;
-        $ecritureProduit = null;
+        $ecritureRealisationDebit = null;
+        $ecritureRealisationCredit = null;
 
         if ($facture->getChantier() !== null) {
 
@@ -98,9 +98,6 @@ final class CorrectionFactureFournisseurService
                     'L’opération associée n’est pas une réalisation de travaux.'
                 );
             }
-
-            $ecritureRealisationDebit = null;
-            $ecritureRealisationCredit = null;
 
             [
                 $ecritureRealisationDebit,

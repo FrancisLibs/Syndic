@@ -110,7 +110,8 @@ class FactureFournisseurType extends AbstractType
                     'choice_label' => 'nom',
                     'label' => 'Type de charge',
                     'required' => false,
-                    'placeholder' => 'Aucun — facture de travaux',
+                    'placeholder' => 'Sélectionner un type de charge si nécessaire',
+                    'help' => 'Obligatoire pour les charges courantes, y compris les petits travaux.',
                     'choice_attr' => function (TypeCharge $typeCharge) {
                         return [
                             'data-est-eau' => $typeCharge->isEau()
@@ -129,7 +130,8 @@ class FactureFournisseurType extends AbstractType
                     'choice_label' => 'libelle',
                     'label' => 'Chantier',
                     'required' => false,
-                    'placeholder' => 'Aucun — charge courante',
+                    'placeholder' => 'Aucun chantier',
+                    'help' => 'Facultatif pour une charge ordinaire. Permet de suivre les dépenses d’un chantier.',
                 ]
             )
 

@@ -8,7 +8,9 @@ use App\Form\Travaux\VoteComplementaireChantierType;
 use App\Form\Travaux\ChantierType;
 use App\Repository\Travaux\ChantierRepository;
 use App\Repository\FactureFournisseurRepository;
-use App\Enum\FactureFournisseurType;
+use App\Repository\ResolutionRepository;
+use App\Service\Travaux\CreationResolutionChantierService;
+use App\Enum\AssembleeGeneraleStatut;
 use App\Service\ContexteExerciceService;
 use App\Service\Travaux\GenerateurAppelChantierService;
 use App\Service\Travaux\InitialisationComptesChantierService;
@@ -52,17 +54,15 @@ final class ChantierController extends AbstractController
         ]);
     }
 
-    #[Route(
-        '/new',
-        name: 'app_chantier_new',
-        methods: ['GET', 'POST']
-    )]
+    #[Route('/new', name: 'app_chantier_new', methods: ['GET', 'POST'])]
     public function new(
         Request $request,
         EntityManagerInterface $entityManager,
         ContexteExerciceService $contexteExerciceService,
         InitialisationComptesChantierService $initialisationComptesChantierService,
+        CreationResolutionChantierService $creationResolutionChantierService,
     ): Response {
+
         $exercice = $contexteExerciceService->getExercice();
 
         if (!$exercice) {
@@ -86,19 +86,61 @@ final class ChantierController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            $entityManager->persist($chantier);
-            $entityManager->flush();
+            $resolutionCreee = false;
 
-            $initialisationComptesChantierService->initialiser($chantier);
+            try {
 
-            $this->addFlash(
-                'success',
-                'Le chantier a été créé.'
-            );
+                $entityManager->wrapInTransaction(
+                    function () use (
+                        $entityManager,
+                        $chantier,
+                        $initialisationComptesChantierService,
+                        $creationResolutionChantierService,
+                        &$resolutionCreee
+                    ): void {
 
-            return $this->redirectToRoute(
-                'app_chantier_index'
-            );
+                        // Enregistrement du chantier
+                        $entityManager->persist($chantier);
+                        $entityManager->flush();
+
+                        // Initialisation des comptes comptables
+                        $initialisationComptesChantierService
+                            ->initialiser($chantier);
+
+                        // Création automatique de la résolution
+                        $resolutionCreee = $creationResolutionChantierService
+                            ->creerPourChantier($chantier);
+                    }
+                );
+
+                if ($resolutionCreee) {
+
+                    $this->addFlash(
+                        'success',
+                        'Le chantier a été créé et une résolution '
+                            . 'a été ajoutée à l’assemblée générale en préparation.'
+                    );
+                } else {
+
+                    $this->addFlash(
+                        'warning',
+                        'Le chantier a été créé, mais aucune résolution '
+                            . 'n’a été ajoutée automatiquement. '
+                            . 'Vérifiez qu’une seule AG est en préparation.'
+                    );
+                }
+
+                return $this->redirectToRoute(
+                    'app_chantier_index'
+                );
+            } catch (\Throwable $e) {
+
+                $this->addFlash(
+                    'danger',
+                    'Impossible de créer le chantier : '
+                        . $e->getMessage()
+                );
+            }
         }
 
         return $this->render(
@@ -139,10 +181,11 @@ final class ChantierController extends AbstractController
             $factureFournisseurRepository
             ->findPourChantier($chantier);
 
-        $totalFacture = 0.0;
-        $totalRealise = 0.0;
-
         $totalRealise = $coutReelChantierService->calculer($chantier);
+
+        // Le coût réel correspond aux factures comptabilisées,
+        // déduction faite des avoirs.
+        $totalFacture = $totalRealise;
 
         $montantTotalVote =
             $chantier->getMontantTotalVote();
@@ -151,20 +194,38 @@ final class ChantierController extends AbstractController
         $totalFacture = round($totalFacture, 2);
         $totalRealise = round($totalRealise, 2);
 
-        $resteAAppeler = round(
-            $montantTotalVote - $totalAppels,
-            2
-        );
+        $resteAAppeler = null;
+        $provisionDisponible = null;
 
-        $provisionDisponible = round(
-            $totalAppels - $totalRealise,
-            2
-        );
+        if ($chantier->estFinanceParAppels()) {
 
-        $simulation = $simulationClotureChantierService->simuler(
-            $chantier,
-            $totalRealise
-        );
+            $resteAAppeler = round(
+                $montantTotalVote - $totalAppels,
+                2
+            );
+
+            $provisionDisponible = round(
+                $totalAppels - $totalRealise,
+                2
+            );
+        }
+
+        $simulation = [
+            'lignes' => [],
+            'totalAppels' => 0.0,
+            'coutReel' => $totalRealise,
+            'regularisationTotale' => 0.0,
+        ];
+
+        if (
+            $chantier->estFinanceParAppels()
+            && !$chantier->getAppels()->isEmpty()
+        ) {
+            $simulation = $simulationClotureChantierService->simuler(
+                $chantier,
+                $totalRealise
+            );
+        }
 
         $controleCloture = [
             'valide' => false,
@@ -207,6 +268,7 @@ final class ChantierController extends AbstractController
         Chantier $chantier,
         Request $request,
         GenerateurAppelChantierService $generateurAppelChantierService,
+        ResolutionRepository $resolutionRepository,
     ): Response {
         if (!$this->isCsrfTokenValid(
             'generer-appel-' . $chantier->getId(),
@@ -214,6 +276,69 @@ final class ChantierController extends AbstractController
         )) {
             throw $this->createAccessDeniedException(
                 'Jeton CSRF invalide.'
+            );
+        }
+
+        // Un chantier financé par charges courantes
+        // ne doit pas générer d'appel de fonds spécifique.
+        if (!$chantier->estFinanceParAppels()) {
+
+            $this->addFlash(
+                'danger',
+                'Ce chantier est financé par les charges courantes. '
+                    . 'Aucun appel de fonds spécifique ne peut être généré.'
+            );
+
+            return $this->redirectToRoute(
+                'app_chantier_show',
+                ['id' => $chantier->getId()]
+            );
+        }
+
+        // Aucun nouvel appel sur un chantier clôturé.
+        if ($chantier->isCloture()) {
+
+            $this->addFlash(
+                'danger',
+                'Ce chantier est clôturé. '
+                    . 'Il n’est plus possible de générer un appel de fonds.'
+            );
+
+            return $this->redirectToRoute(
+                'app_chantier_show',
+                ['id' => $chantier->getId()]
+            );
+        }
+
+        $resolutions = $resolutionRepository->findBy([
+            'chantier' => $chantier,
+            'adoptee' => true,
+        ]);
+
+        $chantierApprouve = false;
+
+        foreach ($resolutions as $resolution) {
+            $assembleeGenerale = $resolution->getAssembleeGenerale();
+
+            if (
+                $assembleeGenerale !== null
+                && $assembleeGenerale->getStatut()
+                === AssembleeGeneraleStatut::CLOTUREE
+            ) {
+                $chantierApprouve = true;
+                break;
+            }
+        }
+
+        if (!$chantierApprouve) {
+            $this->addFlash(
+                'danger',
+                'L’appel de fonds ne peut être généré que si les travaux ont été approuvés par une Assemblée générale clôturée.'
+            );
+
+            return $this->redirectToRoute(
+                'app_chantier_show',
+                ['id' => $chantier->getId()]
             );
         }
 
@@ -321,6 +446,7 @@ final class ChantierController extends AbstractController
         VoteComplementaireChantier $vote,
         Request $request,
         GenerateurAppelChantierService $generateurAppelChantierService,
+        ResolutionRepository $resolutionRepository,
     ): Response {
         $chantier = $vote->getChantier();
 
@@ -336,6 +462,69 @@ final class ChantierController extends AbstractController
         )) {
             throw $this->createAccessDeniedException(
                 'Jeton CSRF invalide.'
+            );
+        }
+
+        // Interdire les appels complémentaires
+        // pour les chantiers financés par charges courantes.
+        if (!$chantier->estFinanceParAppels()) {
+
+            $this->addFlash(
+                'danger',
+                'Ce chantier est financé par les charges courantes. '
+                    . 'Aucun appel complémentaire spécifique ne peut être généré.'
+            );
+
+            return $this->redirectToRoute(
+                'app_chantier_show',
+                ['id' => $chantier->getId()]
+            );
+        }
+
+        // Interdire les appels sur un chantier clôturé.
+        if ($chantier->isCloture()) {
+
+            $this->addFlash(
+                'danger',
+                'Ce chantier est clôturé. '
+                    . 'Il n’est plus possible de générer un appel complémentaire.'
+            );
+
+            return $this->redirectToRoute(
+                'app_chantier_show',
+                ['id' => $chantier->getId()]
+            );
+        }
+
+        $resolutions = $resolutionRepository->findBy([
+            'voteComplementaireChantier' => $vote,
+            'adoptee' => true,
+        ]);
+
+        $voteApprouve = false;
+
+        foreach ($resolutions as $resolution) {
+            $assembleeGenerale = $resolution->getAssembleeGenerale();
+
+            if (
+                $assembleeGenerale !== null
+                && $assembleeGenerale->getStatut()
+                === AssembleeGeneraleStatut::CLOTUREE
+            ) {
+                $voteApprouve = true;
+                break;
+            }
+        }
+
+        if (!$voteApprouve) {
+            $this->addFlash(
+                'danger',
+                'L’appel complémentaire ne peut être généré que si son financement a été approuvé par une Assemblée générale clôturée.'
+            );
+
+            return $this->redirectToRoute(
+                'app_chantier_show',
+                ['id' => $chantier->getId()]
             );
         }
 
@@ -372,6 +561,89 @@ final class ChantierController extends AbstractController
                 )
             );
         } catch (\Throwable $e) {
+            $this->addFlash(
+                'danger',
+                $e->getMessage()
+            );
+        }
+
+        return $this->redirectToRoute(
+            'app_chantier_show',
+            ['id' => $chantier->getId()]
+        );
+    }
+
+    #[Route(
+        '/{id}/cloturer',
+        name: 'app_chantier_cloturer',
+        methods: ['POST']
+    )]
+    public function cloturer(
+        Chantier $chantier,
+        Request $request,
+        ClotureChantierService $clotureChantierService,
+    ): Response {
+
+        if (!$this->isCsrfTokenValid(
+            'cloturer-chantier-' . $chantier->getId(),
+            $request->request->get('_token')
+        )) {
+            throw $this->createAccessDeniedException(
+                'Jeton CSRF invalide.'
+            );
+        }
+
+        $dateSaisie = $request->request->get('date_regularisation');
+
+        if (!is_string($dateSaisie) || $dateSaisie === '') {
+            $this->addFlash(
+                'danger',
+                'La date de régularisation est obligatoire.'
+            );
+
+            return $this->redirectToRoute(
+                'app_chantier_show',
+                ['id' => $chantier->getId()]
+            );
+        }
+
+        $dateRegularisation = \DateTimeImmutable::createFromFormat(
+            '!Y-m-d',
+            $dateSaisie
+        );
+
+        if (
+            $dateRegularisation === false
+            || $dateRegularisation->format('Y-m-d') !== $dateSaisie
+        ) {
+            $this->addFlash(
+                'danger',
+                'La date de régularisation est invalide.'
+            );
+
+            return $this->redirectToRoute(
+                'app_chantier_show',
+                ['id' => $chantier->getId()]
+            );
+        }
+
+        try {
+            $clotureChantierService->cloturer(
+                $chantier,
+                $dateRegularisation
+            );
+
+            if ($chantier->estFinanceParChargesCourantes()) {
+                $message = 'Le chantier a été clôturé. '
+                    . 'Les dépenses restent intégrées aux charges courantes de l’exercice.';
+            } else {
+                $message = 'Le chantier a été clôturé. '
+                    . 'Les éventuelles régularisations comptables ont été effectuées.';
+            }
+
+            $this->addFlash('success', $message);
+
+        } catch (\LogicException $e) {
             $this->addFlash(
                 'danger',
                 $e->getMessage()

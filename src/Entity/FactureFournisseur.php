@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use App\Repository\FactureFournisseurRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -88,6 +90,20 @@ class FactureFournisseur
 
     #[ORM\Column]
     private bool $fnpTraitee = false;
+
+    /**
+     * @var Collection<int, AffectationReglementFournisseur>
+     */
+    #[ORM\OneToMany(
+        mappedBy: 'facture',
+        targetEntity: AffectationReglementFournisseur::class
+    )]
+    private Collection $affectationsReglement;
+
+    public function __construct()
+    {
+        $this->affectationsReglement = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -324,5 +340,60 @@ class FactureFournisseur
     public function estFacture(): bool
     {
         return $this->type === FactureFournisseurType::FACTURE;
+    }
+
+    /**
+     * @return Collection<int, AffectationReglementFournisseur>
+     */
+    public function getAffectationsReglement(): Collection
+    {
+        return $this->affectationsReglement;
+    }
+
+    public function addAffectationReglement(
+        AffectationReglementFournisseur $affectation
+    ): static {
+        if (!$this->affectationsReglement->contains($affectation)) {
+            $this->affectationsReglement->add($affectation);
+            $affectation->setFacture($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAffectationReglement(
+        AffectationReglementFournisseur $affectation
+    ): static {
+        if ($this->affectationsReglement->removeElement($affectation)) {
+            if ($affectation->getFacture() === $this) {
+                $affectation->setFacture(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getMontantRegle(): float
+    {
+        $total = 0.0;
+
+        foreach ($this->affectationsReglement as $affectation) {
+            $total += $affectation->getMontantFloat();
+        }
+
+        return round($total, 2);
+    }
+
+    public function getResteARegler(): float
+    {
+        return round(
+            $this->getMontantFacture() - $this->getMontantRegle(),
+            2
+        );
+    }
+
+    public function estSoldee(): bool
+    {
+        return $this->getResteARegler() <= 0;
     }
 }

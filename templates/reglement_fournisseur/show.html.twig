@@ -17,12 +17,12 @@
 			<div class="d-flex gap-2">
 
 				{% if not reglement.exercice.cloture %}
-					<a class="btn btn-outline-secondary" href="{{ path( 'app_reglement_fournisseur_edit', { id: reglement.id } ) }}">
+					<a class="btn btn-outline-secondary" href="{{ path('app_reglement_fournisseur_edit', { id: reglement.id }) }}">
 						Modifier
 					</a>
 				{% endif %}
 
-				<a class="btn btn-outline-primary" href="{{ path( 'app_reglement_fournisseur_index' ) }}">
+				<a class="btn btn-outline-primary" href="{{ path('app_reglement_fournisseur_index') }}">
 					Retour
 				</a>
 
@@ -96,6 +96,215 @@
 				</table>
 
 			</div>
+		</div>
+
+		<div class="card shadow-sm mt-4">
+
+			<div class="card-header">
+				<h5 class="mb-0">
+					Affectations du règlement
+				</h5>
+			</div>
+
+			<div class="card-body">
+
+				<div class="row mb-4">
+
+					<div class="col-md-4">
+						<strong>Montant du règlement</strong>
+						<div>
+							{{ reglement.montant|number_format(2, ',', ' ') }} €
+						</div>
+					</div>
+
+					<div class="col-md-4">
+						<strong>Montant affecté</strong>
+						<div>
+							{{ reglement.montantAffecte|number_format(2, ',', ' ') }} €
+						</div>
+					</div>
+
+					<div class="col-md-4">
+						<strong>Reste à affecter</strong>
+						<div>
+							{{ reglement.montantNonAffecte|number_format(2, ',', ' ') }} €
+						</div>
+					</div>
+
+				</div>
+
+				{% if reglement.affectations is not empty %}
+
+					<h6>Affectations enregistrées</h6>
+
+					<table class="table table-sm table-striped">
+
+						<thead>
+							<tr>
+								<th>Facture</th>
+								<th>Date</th>
+								<th class="text-end">Montant affecté</th>
+								<th class="text-end">Action</th>
+							</tr>
+						</thead>
+
+						<tbody>
+							{% for affectation in reglement.affectations %}
+								<tr>
+									<td>
+										{{ affectation.facture.numero }}
+									</td>
+
+									<td>
+										{{ affectation.facture.dateFacture|date('d/m/Y') }}
+									</td>
+
+									<td class="text-end">
+										{{ affectation.montant|number_format(2, ',', ' ') }} €
+									</td>
+
+									<td class="text-end">
+
+										{% if not reglement.exercice.cloture %}
+
+											<form
+												method="post"
+												action="{{ path(
+													'app_reglement_fournisseur_affectation_delete',
+													{
+														id: reglement.id,
+														affectationId: affectation.id
+													}
+												) }}"
+												onsubmit="return confirm('Supprimer cette affectation ?');"
+											>
+
+												<input
+													type="hidden"
+													name="_token"
+													value="{{ csrf_token(
+														'delete-affectation-' ~ affectation.id
+													) }}"
+												>
+
+												<button
+													type="submit"
+													class="btn btn-sm btn-outline-danger"
+												>
+													Supprimer
+												</button>
+
+											</form>
+
+										{% endif %}
+
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+
+					</table>
+
+				{% endif %}
+
+				{% if not reglement.exercice.cloture
+					and reglement.montantNonAffecte > 0
+					and factures is not empty
+				%}
+
+					<h6 class="mt-4">
+						Factures pouvant recevoir une affectation
+					</h6>
+
+					<form
+						method="post"
+						action="{{ path('app_reglement_fournisseur_affectations', {
+							id: reglement.id
+						}) }}"
+					>
+
+						<input
+							type="hidden"
+							name="_token"
+							value="{{ csrf_token('affectations-reglement-' ~ reglement.id) }}"
+						>
+
+						<table class="table table-sm table-striped">
+
+							<thead>
+								<tr>
+									<th>Date</th>
+									<th>Numéro</th>
+									<th>Libellé</th>
+									<th class="text-end">Montant</th>
+									<th class="text-end">Reste à régler</th>
+									<th class="text-end">Montant à affecter</th>
+								</tr>
+							</thead>
+
+							<tbody>
+								{% for facture in factures %}
+									<tr>
+										<td>
+											{{ facture.dateFacture|date('d/m/Y') }}
+										</td>
+
+										<td>
+											{{ facture.numero }}
+										</td>
+
+										<td>
+											{{ facture.libelle }}
+										</td>
+
+										<td class="text-end">
+											{{ facture.montant|number_format(2, ',', ' ') }} €
+										</td>
+
+										<td class="text-end">
+											{{ facture.resteARegler|number_format(2, ',', ' ') }} €
+										</td>
+
+										<td class="text-end">
+											<input
+												type="number"
+												name="affectations[{{ facture.id }}]"
+												class="form-control form-control-sm text-end"
+												min="0"
+												max="{{ facture.resteARegler|number_format(2, '.', '') }}"
+												step="0.01"
+												value="0.00"
+											>
+										</td>
+									</tr>
+								{% endfor %}
+							</tbody>
+
+						</table>
+						<div class="d-flex justify-content-end mt-3">
+							<button type="submit" class="btn btn-primary">
+								Enregistrer les affectations
+							</button>
+						</div>
+
+					</form>
+
+				{% elseif reglement.montantNonAffecte <= 0 %}
+
+					<div class="alert alert-success mb-0">
+						Ce règlement est intégralement affecté.
+					</div>
+
+				{% else %}
+
+					<div class="alert alert-info mb-0">
+						Aucune facture disponible pour une affectation.
+					</div>
+
+				{% endif %}
+
+			</div>
+
 		</div>
 
 	</div>

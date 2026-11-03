@@ -8,7 +8,12 @@ use App\Form\BudgetType;
 use App\Form\GenererAppelFondType;
 use App\Repository\BudgetRepository;
 use App\Repository\ExerciceRepository;
+use App\Repository\AppelFondRepository;
 use App\Repository\ApprobationComptesRepository;
+use App\Repository\EcritureRepository;
+use App\Repository\CompteRepository;
+use App\Repository\ResolutionRepository;
+use App\Enum\AssembleeGeneraleStatut;
 use App\Service\GenerateurAppelFondService;
 use App\Service\GenerationAppelFondService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -140,15 +145,54 @@ final class BudgetController extends AbstractController
         ExerciceRepository $exerciceRepository,
         ApprobationComptesRepository $approbationComptesRepository,
         EntityManagerInterface $entityManager,
-        Request $request
+        ResolutionRepository $resolutionRepository,
+        AppelFondRepository $appelFondRepository,
+        Request $request,
     ): Response {
-        if ($budget->isVerrouille()) {
-            throw $this->createAccessDeniedException(
-                'Budget verrouillé'
+        $nbAppelsPrevus = $budget->getNbAppels();
+
+        $nbAppelsGeneres = $appelFondRepository->count([
+            'budget' => $budget,
+        ]);
+
+        if ($nbAppelsGeneres >= $nbAppelsPrevus) {
+            $this->addFlash(
+                'warning',
+                'Tous les appels de fonds prévus pour ce budget ont déjà été générés.'
             );
+
+            return $this->redirectToRoute('app_budget_index');
         }
 
         $exercice = $budget->getExercice();
+
+        $resolutions = $resolutionRepository->findBy([
+            'budget' => $budget,
+            'adoptee' => true,
+        ]);
+
+        $budgetApprouve = false;
+
+        foreach ($resolutions as $resolution) {
+            $assembleeGenerale = $resolution->getAssembleeGenerale();
+
+            if (
+                $assembleeGenerale !== null
+                && $assembleeGenerale->getStatut() === AssembleeGeneraleStatut::CLOTUREE
+            ) {
+                $budgetApprouve = true;
+                break;
+            }
+        }
+
+        if (!$budgetApprouve) {
+            $this->addFlash(
+                'danger',
+                'L’appel de fonds ne peut être généré que si le budget a été approuvé par une Assemblée générale clôturée.'
+            );
+
+            return $this->redirectToRoute('app_budget_index');
+        }
 
         $exercicePrecedent =
             $exerciceRepository->findPrecedent($exercice);
@@ -201,18 +245,37 @@ final class BudgetController extends AbstractController
             }
 
             // Création de l'appel et de ses lignes
-            $appelFond = $generateur->generer(
-                $budget,
-                $dateAppel,
-                $dateReglement
-            );
+            try {
+                $entityManager->wrapInTransaction(
+                    function () use (
+                        $generateur,
+                        $generationComptable,
+                        $budget,
+                        $dateAppel,
+                        $dateReglement
+                    ): void {
+                        $appelFond = $generateur->generer(
+                            $budget,
+                            $dateAppel,
+                            $dateReglement
+                        );
 
-            // Génération des écritures comptables
-            $generationComptable->generer($appelFond);
+                        $generationComptable->generer($appelFond);
 
-            $budget->setVerrouille(true);
+                        $budget->setVerrouille(true);
+                    }
+                );
+            } catch (\Throwable $e) {
+                $this->addFlash(
+                    'danger',
+                    'Impossible de générer l’appel de fonds : ' . $e->getMessage()
+                );
 
-            $entityManager->flush();
+                return $this->redirectToRoute(
+                    'app_budget_generer_appel',
+                    ['id' => $budget->getId()]
+                );
+            }
 
             $this->addFlash(
                 'success',
@@ -229,6 +292,97 @@ final class BudgetController extends AbstractController
             [
                 'budget' => $budget,
                 'form' => $form,
+            ]
+        );
+    }
+
+    #[Route(
+        '/{id}/demandes-fonds',
+        name: 'app_budget_demandes_fonds',
+        requirements: ['id' => '\d+'],
+        methods: ['GET']
+    )]
+    public function demandesFonds(
+        Budget $budget,
+        AppelFondRepository $appelFondRepository
+    ): Response {
+
+        $appels = $appelFondRepository->findBy(
+            ['budget' => $budget],
+            ['dateAppel' => 'ASC', 'id' => 'ASC']
+        );
+
+        if (empty($appels)) {
+            throw $this->createNotFoundException(
+                'Aucun appel de fonds généré pour ce budget.'
+            );
+        }
+
+        $demandes = [];
+
+        foreach ($appels as $appel) {
+
+            $appelId = $appel->getId();
+
+            if (!$appel->getOperation()) {
+                throw new \LogicException(
+                    'Opération comptable introuvable pour ' . $appel->getNumero()
+                );
+            }
+
+            $demandes[$appelId] = [];
+
+            foreach ($appel->getLigneAppelFonds() as $ligne) {
+
+                $coproprietaire = $ligne->getCoproprietaire();
+
+                if (!$coproprietaire) {
+                    continue;
+                }
+
+                $coproprietaireId = $coproprietaire->getId();
+
+                if (!isset($demandes[$appelId][$coproprietaireId])) {
+
+                    $soldeAnterieur = (float) $ligne->getSoldeAvantAppel();
+
+                    $demandes[$appelId][$coproprietaireId] = [
+                        'coproprietaire' => $coproprietaire,
+                        'montantAppel' => 0.0,
+                        'soldeAnterieur' => $soldeAnterieur,
+                        'total' => 0.0,
+                    ];
+                }
+
+                // Un copropriétaire peut posséder plusieurs lots.
+                // On additionne uniquement les montants des lignes.
+                $demandes[$appelId][$coproprietaireId]['montantAppel'] +=
+                    (float) $ligne->getMontant();
+            }
+
+            // Calcul des totaux pour cet appel uniquement.
+            foreach ($demandes[$appelId] as &$demande) {
+
+                $demande['montantAppel'] = round(
+                    $demande['montantAppel'],
+                    2
+                );
+
+                $demande['total'] = round(
+                    $demande['montantAppel'] + $demande['soldeAnterieur'],
+                    2
+                );
+            }
+
+            unset($demande);
+        }
+
+        return $this->render(
+            'budget/demandes_fonds.html.twig',
+            [
+                'budget' => $budget,
+                'appels' => $appels,
+                'demandes' => $demandes,
             ]
         );
     }

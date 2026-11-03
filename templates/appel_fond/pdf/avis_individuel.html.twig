@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>Avis d'appel de fonds</title>
+
+        <style>
+        {{ css|raw }}
+    </style>
+    </head>
+
+    <body>
+
+        <div class="entete-avis">
+
+            <div class="identite-copropriete">
+                <strong>{{ avis.copropriete.nom }}</strong><br>
+                {{ avis.copropriete.adresse }}<br>
+                {{ avis.copropriete.codePostal }}
+                {{ avis.copropriete.localite }}
+            </div>
+
+            <h1>Avis d'appel de fonds</h1>
+
+        </div>
+
+        <div>
+            <strong>Destinataire :</strong><br>
+            {{ avis.coproprietaire.nomComplet }}<br>
+            {{ avis.coproprietaire.adresse }}<br>
+            {{ avis.coproprietaire.codePostal }}
+            {{ avis.coproprietaire.ville }}
+        </div>
+
+        <h2>Détail des appels de fonds</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Désignation</th>
+                    <th>Lot</th>
+                    <th class="montant">Montant</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for ligne in avis.lignes %}
+
+                    <tr>
+                        <td>
+                            <strong>{{ ligne.appel.libelle }}</strong>
+
+                            <br>
+                            <small>
+                                Appel n° {{ ligne.appel.numero }}
+                                — Émis le {{ ligne.appel.dateAppel|date('d/m/Y') }}
+
+                                {% if ligne.appel.dateReglement %}
+                                    — Échéance : {{ ligne.appel.dateReglement|date('d/m/Y') }}
+                                {% endif %}
+                            </small>
+
+                            {% if ligne.type == 'travaux' %}
+                                <br>
+                                Chantier : {{ ligne.appel.chantier.libelle }}
+                            {% endif %}
+                        </td>
+
+                        <td>{{ ligne.lot.reference }}</td>
+
+                        <td class="montant">
+                            {{ ligne.montant|number_format(2, ',', ' ') }} €
+                        </td>
+                    </tr>
+
+                    {% if ligne.type == 'charges' %}
+                        {% for detail in ligne.detailsCharges %}
+                            <tr>
+                                <td>
+                                    &nbsp;&nbsp;{{ detail.typeCharge.nom }}
+                                </td>
+                                <td></td>
+                                <td class="montant">
+                                    {{ detail.montant|number_format(2, ',', ' ') }} €
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Récapitulatif</h2>
+
+        <table>
+            <tbody>
+                <tr>
+                    <td>Appels sur budget prévisionnel</td>
+                    <td class="montant">
+                        {{ avis.totalCharges|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Appels spécifiques pour travaux</td>
+                    <td class="montant">
+                        {{ avis.totalTravaux|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Solde antérieur</td>
+                    <td class="montant">
+                        {{ avis.soldeAnterieur|number_format(2, ',', ' ') }} €
+                    </td>
+                </tr>
+
+                <tr>
+                    <th>Montant à régler</th>
+                    <th class="montant">
+                        {{ max(0, avis.totalARegler)|number_format(2, ',', ' ') }} €
+                    </th>
+                </tr>
+
+                {% if avis.totalARegler < 0 %}
+                    <tr>
+                        <th>Crédit restant en votre faveur</th>
+                        <th class="montant">
+                            {{ (avis.totalARegler * - 1)|number_format(2, ',', ' ') }} €
+                        </th>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <h2>Modalités de règlement</h2>
+
+        {% if avis.totalARegler > 0 %}
+
+            <p>
+                Merci d'effectuer votre règlement par virement bancaire
+                sur le compte de la copropriété.
+            </p>
+
+        {% elseif avis.totalARegler < 0 %}
+
+            <p>
+                Aucun règlement n'est nécessaire.
+
+                Votre compte présente un solde créditeur de
+                <strong>
+                    {{ (avis.totalARegler * - 1)|number_format(2, ',', ' ') }} €
+                </strong>.
+
+                Ce montant sera conservé sur votre compte
+                et pourra être imputé sur vos prochains appels de fonds.
+            </p>
+
+        {% else %}
+
+            <p>
+                Votre compte est soldé.
+                Aucun règlement n'est nécessaire.
+            </p>
+
+        {% endif %}
+
+        {% if avis.copropriete.iban %}
+            <p>
+                <strong>IBAN :</strong>
+                {{ avis.copropriete.iban }}
+                <br>
+
+                {% if avis.copropriete.bic %}
+                    <strong>BIC :</strong>
+                    {{ avis.copropriete.bic }}
+                {% endif %}
+            </p>
+        {% endif %}
+
+    </body>
+</html>

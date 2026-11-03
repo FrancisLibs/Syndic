@@ -31,4 +31,60 @@ class AppelFondRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult(); // Renvoie directement le chiffre (ex: 3)
     }
+
+    /**
+     * @return AppelFond[]
+     */
+    public function findPourAvisIndividuels(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('a')
+            ->leftJoin('a.ligneAppelFonds', 'l')
+            ->addSelect('l')
+            ->leftJoin('a.budget', 'b')
+            ->addSelect('b')
+            ->leftJoin('a.chantier', 'ch')
+            ->addSelect('ch')
+            ->where('a.id IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->orderBy('a.dateAppel', 'ASC')
+            ->addOrderBy('a.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getProchainNumero(int $annee): string
+    {
+        $numeros = $this->createQueryBuilder('a')
+            ->select('a.numero')
+            ->where('a.numero LIKE :prefixe')
+            ->setParameter('prefixe', sprintf('AF-%d-%%', $annee))
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        $dernierNumero = 0;
+
+        foreach ($numeros as $numero) {
+
+            if (preg_match(
+                '/^AF-' . $annee . '-(\d+)$/',
+                $numero,
+                $matches
+            )) {
+                $dernierNumero = max(
+                    $dernierNumero,
+                    (int) $matches[1]
+                );
+            }
+        }
+
+        return sprintf(
+            'AF-%d-%03d',
+            $annee,
+            $dernierNumero + 1
+        );
+    }
 }

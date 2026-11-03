@@ -9,31 +9,35 @@
         <thead>
             <tr>
                 <th>Nom</th>
-                <th>Adresse</th>
-                <th>CodePostal</th>
-                <th>Localité</th>
-                <th>TantiemesBase</th>
-                <th>actions</th>
+                <th class="text-center">Adresse</th>
+                <th class="text-center">CodePostal</th>
+                <th class="text-center">Localité</th>
+                <th class="text-center">Tantièmes Base</th>
+                <th class="text-center">IBAN</th>
+                <th class="text-center">BIC</th>
+                <th class="text-center">actions</th>
             </tr>
         </thead>
         <tbody>
-        {% for copropriete in coproprietes %}
-            <tr>
-                <td>{{ copropriete.nom }}</td>
-                <td>{{ copropriete.adresse }}</td>
-                <td>{{ copropriete.codePostal }}</td>
-                <td>{{ copropriete.localite }}</td>
-                <td>{{ copropriete.tantiemesBase }}</td>
-                <td>
-                    <a href="{{ path('app_copropriete_show', {'id': copropriete.id}) }}">Voir</a>
-                    <a href="{{ path('app_copropriete_edit', {'id': copropriete.id}) }}">Modifier</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="6">Aucune copropriété enregistrée</td>
-            </tr>
-        {% endfor %}
+            {% for copropriete in coproprietes %}
+                <tr>
+                    <td class="text-center">{{ copropriete.nom }}</td>
+                    <td class="text-center">{{ copropriete.adresse }}</td>
+                    <td class="text-center">{{ copropriete.codePostal }}</td>
+                    <td class="text-center">{{ copropriete.localite }}</td>
+                    <td class="text-center">{{ copropriete.tantiemesBase }}</td>
+                    <td class="text-center">{{ copropriete.iban }}</td>
+                    <td class="text-center">{{ copropriete.bic }}</td>
+                    <td class="text-center">
+                        <a href="{{ path('app_copropriete_show', {'id': copropriete.id}) }}">Voir</a>
+                        <a href="{{ path('app_copropriete_edit', {'id': copropriete.id}) }}">Modifier</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8">Aucune copropriété enregistrée</td>
+                </tr>
+            {% endfor %}
         </tbody>
     </table>
 

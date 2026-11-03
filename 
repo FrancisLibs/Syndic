@@ -1,0 +1,16 @@
+src/Service/AvisAppelFondService.php:80: trailing whitespace.
+[32m+[m[41m                [m
+templates/chantier/show.html.twig:108: trailing whitespace.
+[32m+[m[41m [m
+templates/chantier/show.html.twig:203: trailing whitespace.
+[32m+[m[32m            <tr>[m[41m    [m
+templates/chantier/show.html.twig:217: trailing whitespace.
+[32m+[m[41m            [m
+templates/chantier/show.html.twig:243: trailing whitespace.
+[32m+[m[41m           [m
+templates/chantier/show.html.twig:505: trailing whitespace.
+[32m+[m[32m                        : 'Date de clôture'[m[41m [m
+templates/facture_fournisseur/index.html.twig:194: trailing whitespace.
+[32m+[m									[32mand facture.coproprietaireAvanceur is null[m[41m [m
+templates/reglement_fournisseur/show.html.twig:212: trailing whitespace.
+[32m+[m					[32mand factures is not empty[m[41m [m

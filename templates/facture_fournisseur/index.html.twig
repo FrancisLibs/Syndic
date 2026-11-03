@@ -43,6 +43,9 @@
 							<th>Libellé</th>
 							<th>Date</th>
 							<th class="text-end">Montant</th>
+							<th class="text-end">Réglé</th>
+							<th class="text-end">Reste à régler</th>
+							<th>Règlement</th>
 							<th>Comptabilité</th>
 							<th class="text-end">Actions</th>
 						</tr>
@@ -184,6 +187,48 @@
 									€
 
 								</td>
+
+								{% if facture.comptabilisee
+									and facture.estFacture()
+									and not facture.fnp
+									and facture.coproprietaireAvanceur is null
+								%}
+
+									<td class="text-end text-nowrap">
+										{{ facture.montantRegle|number_format(2, ',', ' ') }} €
+									</td>
+
+									<td class="text-end text-nowrap">
+										{{ facture.resteARegler|number_format(2, ',', ' ') }} €
+									</td>
+
+									<td>
+										{% if facture.estSoldee() %}
+											<span class="badge bg-success">
+												Réglée
+											</span>
+										{% elseif facture.montantRegle > 0 %}
+											<span class="badge bg-warning text-dark">
+												Partielle
+											</span>
+										{% else %}
+											<span class="badge bg-danger">
+												Non réglée
+											</span>
+										{% endif %}
+									</td>
+
+								{% else %}
+
+									<td class="text-center text-muted">—</td>
+									<td class="text-center text-muted">—</td>
+									<td>
+										<span class="badge bg-secondary">
+											Non applicable
+										</span>
+									</td>
+
+								{% endif %}
 
 								<td>
 

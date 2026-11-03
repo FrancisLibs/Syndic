@@ -2,9 +2,12 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use App\Repository\ReglementFournisseurRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+
 
 #[ORM\Entity(repositoryClass: ReglementFournisseurRepository::class)]
 class ReglementFournisseur
@@ -38,6 +41,22 @@ class ReglementFournisseur
     #[ORM\OneToOne]
     #[ORM\JoinColumn(nullable: true)]
     private ?Operation $operation = null;
+
+    /**
+     * @var Collection<int, AffectationReglementFournisseur>
+     */
+    #[ORM\OneToMany(
+        mappedBy: 'reglement',
+        targetEntity: AffectationReglementFournisseur::class,
+        cascade: ['persist'],
+        orphanRemoval: true
+    )]
+    private Collection $affectations;
+
+    public function __construct()
+    {
+        $this->affectations = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -118,5 +137,55 @@ class ReglementFournisseur
         $this->operation = $operation;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, AffectationReglementFournisseur>
+     */
+    public function getAffectations(): Collection
+    {
+        return $this->affectations;
+    }
+
+    public function addAffectation(
+        AffectationReglementFournisseur $affectation
+    ): static {
+        if (!$this->affectations->contains($affectation)) {
+            $this->affectations->add($affectation);
+            $affectation->setReglement($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAffectation(
+        AffectationReglementFournisseur $affectation
+    ): static {
+        if ($this->affectations->removeElement($affectation)) {
+            if ($affectation->getReglement() === $this) {
+                $affectation->setReglement(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getMontantAffecte(): float
+    {
+        $total = 0.0;
+
+        foreach ($this->affectations as $affectation) {
+            $total += $affectation->getMontantFloat();
+        }
+
+        return round($total, 2);
+    }
+
+    public function getMontantNonAffecte(): float
+    {
+        return round(
+            (float) $this->montant - $this->getMontantAffecte(),
+            2
+        );
     }
 }

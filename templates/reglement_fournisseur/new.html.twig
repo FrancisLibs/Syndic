@@ -24,7 +24,7 @@
 		{# Choix du fournisseur         #}
 		{# ============================ #}
 
-			<div class="card mb-4"> <div class="card-header">
+		<div class="card mb-4"> <div class="card-header">
 				Fournisseur
 			</div>
 
@@ -65,6 +65,38 @@
 			</div>
 
 		</div>
+
+		{# ======================================== #}
+		{# Situation comptable du fournisseur       #}
+		{# ======================================== #}
+
+
+		{% if fournisseur is not null %}
+
+			<div class="card mb-4">
+				<div class="card-header">
+					Situation comptable du fournisseur
+				</div>
+
+				<div class="card-body">
+					<div class="row">
+						<div class="col-md-6">
+							<strong>Fournisseur :</strong>
+							{{ fournisseur.nom }}
+						</div>
+
+						<div class="col-md-6 text-end">
+							<strong>Solde comptable :</strong>
+
+							<span class="{{ soldeFournisseur > 0 ? 'text-danger' : (soldeFournisseur < 0 ? 'text-success' : '') }}">
+								{{ soldeFournisseur|number_format(2, ',', ' ') }} €
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		{% endif %}
 
 
 		{% if fournisseur %}
@@ -156,6 +188,135 @@
 
 				</div>
 
+				{# ======================================== #}
+				{# Factures à régler                        #}
+				{# ======================================== #}
+
+				<div class="card mb-4">
+
+					<div class="card-header">
+						Factures à régler
+					</div>
+
+					<div class="card-body">
+
+						{% if factures is empty %}
+
+							<div class="alert alert-info mb-0">
+								Aucune facture à régler pour ce fournisseur.
+							</div>
+
+						{% else %}
+
+							<div class="table-responsive">
+
+								<table class="table table-striped table-hover">
+
+									<thead>
+										<tr>
+											<th class="text-center">Sélection</th>
+											<th>Exercice</th>
+											<th>Date</th>
+											<th>Numéro</th>
+											<th>Libellé</th>
+											<th class="text-end">Montant</th>
+											<th class="text-end">Déjà réglé</th>
+											<th class="text-end">Reste à régler</th>
+											<th class="text-end">À régler</th>
+										</tr>
+									</thead>
+
+									<tbody>
+
+										{% for facture in factures %}
+
+											<tr>
+
+												<td class="text-center">
+													<input
+														type="checkbox"
+														class="form-check-input js-selection-facture"
+														data-facture-id="{{ facture.id }}"
+													>
+												</td>
+
+												<td>
+													{{ facture.exercice.nom }}
+												</td>
+
+												<td>
+													{{ facture.dateFacture|date('d/m/Y') }}
+												</td>
+
+												<td>
+													{{ facture.numero }}
+												</td>
+
+												<td>
+													{{ facture.libelle }}
+												</td>
+
+												<td class="text-end">
+													{{ facture.montantFacture|number_format(2, ',', ' ') }} €
+												</td>
+
+												<td class="text-end">
+													{{ facture.montantRegle|number_format(2, ',', ' ') }} €
+												</td>
+
+												<td class="text-end fw-bold">
+													{{ facture.resteARegler|number_format(2, ',', ' ') }} €
+												</td>
+
+												<td>
+													<input
+														type="number"
+														name="affectations[{{ facture.id }}]"
+														class="form-control text-end js-montant-affectation"
+														min="0"
+														max="{{ facture.resteARegler|number_format(2, '.', '') }}"
+														step="0.01"
+														value="0.00"
+														data-reste="{{ facture.resteARegler|number_format(2, '.', '') }}"
+													>
+												</td>
+											</tr>
+
+										{% endfor %}
+
+									</tbody>
+
+								</table>
+
+								<div class="d-flex justify-content-end mt-3">
+									<div class="text-end">
+										<div>
+											Total affecté :
+											<strong id="total-affectations">0,00 €</strong>
+										</div>
+
+										<div>
+											Non affecté :
+											<strong id="montant-non-affecte">0,00 €</strong>
+										</div>
+
+										<div
+											id="erreur-affectations"
+											class="text-danger d-none"
+										>
+											Le total des affectations dépasse le montant du règlement.
+										</div>
+									</div>
+								</div>
+
+							</div>
+
+						{% endif %}
+
+					</div>
+
+				</div>
+
 
 				<div class="d-flex justify-content-between">
 
@@ -175,4 +336,9 @@
 
 	</div>
 
+{% endblock %}
+
+{% block javascripts %}
+	{{ parent() }}
+	<script src="{{ asset('assets/js/reglement-fournisseur-affectations.js') }}"></script>
 {% endblock %}

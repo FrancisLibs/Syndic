@@ -7,6 +7,8 @@ use App\Entity\AppelFond;
 use App\Entity\LigneAppelFond;
 use App\Entity\Travaux\Chantier;
 use App\Enum\ModeRepartition;
+use App\Enum\AssembleeGeneraleStatut;
+use App\Repository\ResolutionRepository;
 use App\Repository\AppelFondRepository;
 use App\Repository\LotRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,6 +20,7 @@ class GenerateurAppelChantierService
         private LotRepository $lotRepository,
         private AppelFondRepository $appelFondRepository,
         private GenerationAppelChantierComptableService $generationComptable,
+        private readonly ResolutionRepository $resolutionRepository,
     ) {}
 
     public function generer(
@@ -25,11 +28,11 @@ class GenerateurAppelChantierService
         \DateTimeImmutable $dateAppel,
     ): AppelFond {
 
-        if ($chantier->isCloture()) {
-            throw new \LogicException(
-                'Impossible de générer un appel pour un chantier clôturé.'
-            );
-        }
+        $this->verifierChantierPourAppel($chantier);
+
+        $this->verifierResolutionAdoptee([
+            'chantier' => $chantier,
+        ]);
 
         if ($chantier->getAppelInitial() !== null) {
             throw new \LogicException(
@@ -45,18 +48,21 @@ class GenerateurAppelChantierService
             );
         }
 
-        $appelFond = $this->genererAppel(
-            $chantier,
-            $dateAppel,
-            $montant,
-            'Appel travaux - ' . $chantier->getLibelle()
+        return $this->entityManager->wrapInTransaction(
+            function () use ($chantier, $dateAppel): AppelFond {
+
+                $appelFond = $this->genererAppel(
+                    $chantier,
+                    $dateAppel,
+                    (float) $chantier->getMontantVote(),
+                    'Appel travaux - ' . $chantier->getLibelle()
+                );
+
+                $chantier->setAppelInitial($appelFond);
+
+                return $appelFond;
+            }
         );
-
-        $chantier->setAppelInitial($appelFond);
-
-        $this->entityManager->flush();
-
-        return $appelFond;
     }
 
     public function genererComplementaire(
@@ -72,11 +78,11 @@ class GenerateurAppelChantierService
             );
         }
 
-        if ($chantier->isCloture()) {
-            throw new \LogicException(
-                'Impossible de générer un appel pour un chantier clôturé.'
-            );
-        }
+        $this->verifierChantierPourAppel($chantier);
+
+        $this->verifierResolutionAdoptee([
+            'voteComplementaireChantier' => $vote,
+        ]);
 
         if ($chantier->getAppelInitial() === null) {
             throw new \LogicException(
@@ -104,22 +110,30 @@ class GenerateurAppelChantierService
             );
         }
 
-        $appelFond = $this->genererAppel(
-            $chantier,
-            $dateAppel,
-            $montant,
-            sprintf(
-                'Appel complémentaire travaux - %s - Résolution %s',
-                $chantier->getLibelle(),
-                $vote->getNumeroResolution()
-            )
+        return $this->entityManager->wrapInTransaction(
+            function () use (
+                $chantier,
+                $vote,
+                $dateAppel,
+                $montant
+            ): AppelFond {
+
+                $appelFond = $this->genererAppel(
+                    $chantier,
+                    $dateAppel,
+                    $montant,
+                    sprintf(
+                        'Appel complémentaire travaux - %s - Résolution %s',
+                        $chantier->getLibelle(),
+                        $vote->getNumeroResolution()
+                    )
+                );
+
+                $vote->setAppelFond($appelFond);
+
+                return $appelFond;
+            }
         );
-
-        $vote->setAppelFond($appelFond);
-
-        $this->entityManager->flush();
-
-        return $appelFond;
     }
 
     private function genererAppel(
@@ -128,6 +142,8 @@ class GenerateurAppelChantierService
         float $montantTotal,
         string $libelle,
     ): AppelFond {
+
+        $this->verifierChantierPourAppel($chantier);
 
         // =====================
         // Création de l'appel
@@ -149,16 +165,11 @@ class GenerateurAppelChantierService
 
         $annee = (int) $dateAppel->format('Y');
 
-        $prochainNumero =
-            $this->appelFondRepository->countForYear($annee) + 1;
-
-        $reference = sprintf(
-            'AF-%d-%03d',
-            $annee,
-            $prochainNumero
-        );
+        $reference = $this->appelFondRepository
+            ->getProchainNumero($annee);
 
         $appelFond->setNumero($reference);
+
 
         // =====================
         // Lots
@@ -309,5 +320,46 @@ class GenerateurAppelChantierService
         $this->generationComptable->generer($appelFond);
 
         return $appelFond;
+    }
+
+    private function verifierChantierPourAppel(
+        Chantier $chantier
+    ): void {
+
+        if (!$chantier->estFinanceParAppels()) {
+            throw new \LogicException(
+                'Ce chantier est financé par les charges courantes. '
+                    . 'Aucun appel de fonds spécifique ne peut être généré.'
+            );
+        }
+
+        if ($chantier->isCloture()) {
+            throw new \LogicException(
+                'Impossible de générer un appel pour un chantier clôturé.'
+            );
+        }
+    }
+
+    private function verifierResolutionAdoptee(array $criteres): void
+    {
+        $resolutions = $this->resolutionRepository->findBy(
+            $criteres + ['adoptee' => true]
+        );
+
+        foreach ($resolutions as $resolution) {
+            $ag = $resolution->getAssembleeGenerale();
+
+            if (
+                $ag !== null
+                && $ag->getStatut() === AssembleeGeneraleStatut::CLOTUREE
+            ) {
+                return;
+            }
+        }
+
+        throw new \LogicException(
+            'La génération de cet appel nécessite une résolution '
+                . 'adoptée lors d’une assemblée générale clôturée.'
+        );
     }
 }

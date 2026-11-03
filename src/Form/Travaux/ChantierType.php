@@ -4,9 +4,9 @@ namespace App\Form\Travaux;
 
 use App\Entity\Travaux\Chantier;
 use App\Enum\ModeRepartition;
+use App\Enum\FinancementChantier;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -24,22 +24,23 @@ class ChantierType extends AbstractType
                 'required' => false,
             ])
             ->add('montantVote', MoneyType::class, [
-                'label' => 'Montant voté',
+                'label' => 'Montant prévisionnel des travaux',
                 'currency' => 'EUR',
-            ])
-            ->add('dateVote', DateType::class, [
-                'label' => 'Date du vote',
-                'widget' => 'single_text',
-            ])
-            ->add('numeroResolution', null, [
-                'label' => 'Numéro de résolution',
-                'required' => false,
             ])
             ->add('modeRepartition', ChoiceType::class, [
                 'label' => 'Mode de répartition',
                 'choices' => ModeRepartition::cases(),
                 'choice_label' => fn(ModeRepartition $mode) => $mode->label(),
                 'choice_value' => fn(?ModeRepartition $mode) => $mode?->value,
+            ])
+            ->add('financement', ChoiceType::class, [
+                'label' => 'Mode de financement',
+                'choices' => [
+                    'Appels de fonds spécifiques' =>
+                    FinancementChantier::APPELS_SPECIFIQUES,
+                    'Charges courantes' =>
+                    FinancementChantier::CHARGES_COURANTES,
+                ],
             ]);
     }
 

@@ -17,6 +17,12 @@ class InitialisationComptesChantierService
 
     public function initialiser(Chantier $chantier): void
     {
+        // Les chantiers financés par charges courantes
+        // utilisent les comptes associés aux types de charges.
+        if ($chantier->estFinanceParChargesCourantes()) {
+            return;
+        }
+
         if (
             $chantier->getCompteProvision() !== null
             || $chantier->getCompteCharge() !== null
