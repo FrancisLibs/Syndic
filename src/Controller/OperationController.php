@@ -194,40 +194,79 @@ final class OperationController extends AbstractController
     }
 
 
+
     #[Route(
         '/operation/{id}/annuler',
         name: 'app_operation_annuler',
         requirements: ['id' => '\d+'],
         methods: ['POST']
     )]
-    public function annuler(Request $request, Operation $operation, EntityManagerInterface $em): Response
-    {
-        // 1. Vérification du token CSRF (sécurité)
-        if ($this->isCsrfTokenValid('annuler' . $operation->getId(), $request->request->get('_token'))) {
+    public function annuler(
+        Request $request,
+        Operation $operation,
+        EntityManagerInterface $em
+    ): Response {
 
-            // 2. Vérification : est-elle déjà annulée ?
-            if ($operation->getStatut() === OperationStatut::ANNULE) {
-                $this->addFlash('warning', 'Cette opération est déjà annulée.');
-                return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_operation_index'));
-            }
+        $retour = $request->headers->get('referer')
+            ?? $this->generateUrl('app_operation_index');
 
-            // 3. Changement du statut
-            $operation->setStatut(OperationStatut::ANNULE);
-
-            // 4. On traite les éventuelles conséquences métier de l’annulation
-            $this->nettoyerRepercussions($operation, $em);
-
-            // 5. On sauvegarde tout en base de données
-            $em->flush();
-
-            $this->addFlash('success', 'L’opération a bien été annulée et les soldes ont été mis à jour.');
-        } else {
+        if (!$this->isCsrfTokenValid(
+            'annuler' . $operation->getId(),
+            (string) $request->request->get('_token')
+        )) {
             $this->addFlash('danger', 'Jeton de sécurité invalide.');
+
+            return $this->redirect($retour);
         }
 
-        // On redirige vers la page d'où vient l'utilisateur
-        return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_operation_index'));
+        if ($operation->getStatut() === OperationStatut::ANNULE) {
+            $this->addFlash('warning', 'Cette opération est déjà annulée.');
+
+            return $this->redirect($retour);
+        }
+
+        // Ne pas annuler les écritures d'un exercice clôturé.
+        foreach ($operation->getEcritures() as $ecriture) {
+            if ($ecriture->getExercice()?->isCloture()) {
+                $this->addFlash(
+                    'danger',
+                    'Impossible d’annuler une opération d’un exercice clôturé.'
+                );
+
+                return $this->redirect($retour);
+            }
+        }
+
+        try {
+            $em->wrapInTransaction(
+                function () use ($operation, $em): void {
+
+                    $this->nettoyerRepercussions(
+                        $operation,
+                        $em
+                    );
+
+                    $operation->setStatut(
+                        OperationStatut::ANNULE
+                    );
+                }
+            );
+
+            $this->addFlash(
+                'success',
+                'L’opération a été annulée et ses conséquences ont été traitées.'
+            );
+        } catch (\Throwable $exception) {
+
+            $this->addFlash(
+                'danger',
+                $exception->getMessage()
+            );
+        }
+
+        return $this->redirect($retour);
     }
+
 
     private function nettoyerRepercussions(
         Operation $operation,
@@ -254,29 +293,43 @@ final class OperationController extends AbstractController
                 }
                 break;
 
+
             case 'paiement_fournisseur':
 
                 $reglement = $em
                     ->getRepository(ReglementFournisseur::class)
-                    ->findOneBy(['operation' => $operation]);
+                    ->findOneBy([
+                        'operation' => $operation,
+                    ]);
 
                 if ($reglement !== null) {
 
-                    foreach ($reglement->getAffectations()->toArray() as $affectation) {
-
+                    foreach (
+                        $reglement->getAffectations()->toArray()
+                        as $affectation
+                    ) {
                         $facture = $affectation->getFacture();
 
                         if ($facture !== null) {
-                            $facture->removeAffectationReglement($affectation);
+                            $facture->removeAffectationReglement(
+                                $affectation
+                            );
                         }
 
-                        $reglement->removeAffectation($affectation);
+                        $reglement->removeAffectation(
+                            $affectation
+                        );
 
                         $em->remove($affectation);
                     }
+
+                    // Le règlement disparaît de la liste des paiements.
+                    // L'opération comptable annulée est conservée.
+                    $em->remove($reglement);
                 }
 
                 break;
+
 
             case 'charge':
                 $facture = $em

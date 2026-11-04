@@ -301,6 +301,270 @@ final class ReglementFournisseurController extends AbstractController
         );
     }
 
+
+    #[Route(
+        '/facture/{id}/payer',
+        name: 'app_reglement_fournisseur_payer_facture',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST']
+    )]
+    public function payerFacture(
+        int $id,
+        Request $request,
+        FactureFournisseurRepository $factureRepository,
+        ExerciceRepository $exerciceRepository,
+        ReglementFournisseurService $reglementService,
+    ): Response {
+
+        $facture = $factureRepository->find($id);
+
+        if ($facture === null) {
+            throw $this->createNotFoundException(
+                'Facture fournisseur introuvable.'
+            );
+        }
+
+        $exercice = $exerciceRepository->findActif();
+
+        if (
+            $exercice === null
+            || $exercice->isCloture()
+            || $facture->getExercice()?->getId() !== $exercice->getId()
+        ) {
+            throw $this->createAccessDeniedException(
+                'Cette facture ne peut pas être réglée sur cet exercice.'
+            );
+        }
+
+        if (
+            !$facture->estFacture()
+            || !$facture->isComptabilisee()
+            || $facture->isFnp()
+            || $facture->getCoproprietaireAvanceur() !== null
+            || $facture->getMontantRegle() > 0
+            || $facture->getResteARegler() <= 0
+        ) {
+            throw $this->createAccessDeniedException(
+                'Cette facture ne peut pas être réglée directement.'
+            );
+        }
+
+        if ($request->isMethod('POST')) {
+
+            if (!$this->isCsrfTokenValid(
+                'payer-facture-' . $facture->getId(),
+                (string) $request->request->get('_token')
+            )) {
+                throw $this->createAccessDeniedException(
+                    'Jeton CSRF invalide.'
+                );
+            }
+
+            $dateTexte = trim(
+                (string) $request->request->get('date_reglement')
+            );
+
+            $dateReglement = \DateTimeImmutable::createFromFormat(
+                '!Y-m-d',
+                $dateTexte
+            );
+
+            if (
+                $dateReglement === false
+                || $dateReglement->format('Y-m-d') !== $dateTexte
+            ) {
+                $this->addFlash(
+                    'danger',
+                    'La date de règlement est invalide.'
+                );
+
+                return $this->redirectToRoute(
+                    'app_reglement_fournisseur_payer_facture',
+                    ['id' => $facture->getId()]
+                );
+            }
+
+            $reference = trim(
+                (string) $request->request->get('reference')
+            );
+
+            try {
+                $reglement = $reglementService->payerFacture(
+                    $facture,
+                    $dateReglement,
+                    $reference !== '' ? $reference : null
+                );
+
+                $this->addFlash(
+                    'success',
+                    'La facture a été réglée et affectée au paiement.'
+                );
+
+                return $this->redirectToRoute(
+                    'app_reglement_fournisseur_show',
+                    ['id' => $reglement->getId()]
+                );
+            } catch (\Throwable $exception) {
+                $this->addFlash(
+                    'danger',
+                    $exception->getMessage()
+                );
+            }
+        }
+
+        return $this->render(
+            'reglement_fournisseur/payer_facture.html.twig',
+            [
+                'facture' => $facture,
+                'exercice' => $exercice,
+            ]
+        );
+    }
+
+
+#[Route(
+        '/facture/{id}/affecter',
+        name: 'app_reglement_fournisseur_affecter_facture',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST']
+    )]
+    public function affecterFactureExistante(
+        int $id,
+        Request $request,
+        FactureFournisseurRepository $factureRepository,
+        ReglementFournisseurRepository $reglementRepository,
+        ExerciceRepository $exerciceRepository,
+        ReglementFournisseurService $reglementService,
+        EntityManagerInterface $entityManager,
+    ): Response {
+
+        $facture = $factureRepository->find($id);
+        $exercice = $exerciceRepository->findActif();
+
+        if ($facture === null) {
+            throw $this->createNotFoundException(
+                'Facture fournisseur introuvable.'
+            );
+        }
+
+        if (
+            $exercice === null
+            || $exercice->isCloture()
+            || $facture->getExercice()?->getId() !== $exercice->getId()
+            || !$facture->estFacture()
+            || !$facture->isComptabilisee()
+            || $facture->isFnp()
+            || $facture->getCoproprietaireAvanceur() !== null
+            || $facture->getResteARegler() <= 0
+        ) {
+            throw $this->createAccessDeniedException(
+                'Cette facture ne peut pas recevoir une affectation.'
+            );
+        }
+
+        $reglements = $reglementRepository->findBy(
+            [
+                'fournisseur' => $facture->getFournisseur(),
+                'exercice' => $exercice,
+            ],
+            ['dateReglement' => 'DESC']
+        );
+
+        $reglementsDisponibles = [];
+
+        foreach ($reglements as $reglement) {
+            if ($reglement->getMontantNonAffecte() > 0) {
+                $reglementsDisponibles[] = $reglement;
+            }
+        }
+
+        if ($request->isMethod('POST')) {
+
+            if (!$this->isCsrfTokenValid(
+                'affecter-facture-' . $facture->getId(),
+                (string) $request->request->get('_token')
+            )) {
+                throw $this->createAccessDeniedException(
+                    'Jeton CSRF invalide.'
+                );
+            }
+
+            try {
+                $reglementId = $request->request->get('reglement_id');
+
+                if (
+                    !is_scalar($reglementId)
+                    || !ctype_digit((string) $reglementId)
+                ) {
+                    throw new \LogicException(
+                        'Veuillez sélectionner un règlement.'
+                    );
+                }
+
+                $reglement = null;
+
+                foreach ($reglementsDisponibles as $candidat) {
+                    if ($candidat->getId() === (int) $reglementId) {
+                        $reglement = $candidat;
+                        break;
+                    }
+                }
+
+                if ($reglement === null) {
+                    throw new \LogicException(
+                        'Ce règlement n’est pas disponible.'
+                    );
+                }
+
+                // Affectation intégrale de la facture.
+                $montant = number_format(
+                    $facture->getResteARegler(),
+                    2,
+                    '.',
+                    ''
+                );
+
+                $entityManager->wrapInTransaction(
+                    function () use (
+                        $reglementService,
+                        $reglement,
+                        $facture,
+                        $montant
+                    ): void {
+                        $reglementService->affecterFacture(
+                            $reglement,
+                            $facture,
+                            $montant
+                        );
+                    }
+                );
+
+                $this->addFlash(
+                    'success',
+                    'La facture a été associée au règlement existant.'
+                );
+
+                return $this->redirectToRoute(
+                    'app_facture_fournisseur_index'
+                );
+            } catch (\LogicException $exception) {
+                $this->addFlash(
+                    'danger',
+                    $exception->getMessage()
+                );
+            }
+        }
+
+        return $this->render(
+            'reglement_fournisseur/affecter_facture.html.twig',
+            [
+                'facture' => $facture,
+                'reglements' => $reglementsDisponibles,
+            ]
+        );
+    }
+
+
     #[Route(
         '/nouveau',
         name: 'app_reglement_fournisseur_new',

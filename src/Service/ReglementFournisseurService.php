@@ -362,4 +362,53 @@ final class ReglementFournisseurService
             }
         );
     }
+
+
+    public function payerFacture(
+        FactureFournisseur $facture,
+        \DateTimeImmutable $dateReglement,
+        ?string $reference = null
+    ): ReglementFournisseur {
+
+        $exercice = $facture->getExercice();
+        $fournisseur = $facture->getFournisseur();
+
+        if ($exercice === null || $fournisseur === null) {
+            throw new \LogicException(
+                'La facture doit avoir un exercice et un fournisseur.'
+            );
+        }
+
+        // Le paiement direct concerne uniquement les factures
+        // qui n'ont encore reçu aucune affectation.
+        if ($facture->getMontantRegle() > 0) {
+            throw new \LogicException(
+                'Cette facture possède déjà un règlement affecté.'
+            );
+        }
+
+        $montant = $this->normaliserMontant(
+            $facture->getResteARegler()
+        );
+
+        if ((float) $montant <= 0) {
+            throw new \LogicException(
+                'Cette facture ne présente aucun montant à régler.'
+            );
+        }
+
+        return $this->enregistrerAvecAffectations(
+            $fournisseur,
+            $exercice,
+            $dateReglement,
+            $montant,
+            $reference,
+            [
+                [
+                    'facture' => $facture,
+                    'montant' => $montant,
+                ],
+            ]
+        );
+    }
 }

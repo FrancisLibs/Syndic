@@ -1,0 +1,117 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Payer une facture fournisseur
+{% endblock %}
+
+{% block body %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Payer une facture fournisseur</h1>
+            <p class="text-muted mb-0">
+                Exercice : {{ exercice.nom }}
+            </p>
+        </div>
+
+        <a
+            href="{{ path('app_facture_fournisseur_index') }}"
+            class="btn btn-outline-secondary"
+        >
+            Retour aux factures
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <h5 class="card-title mb-4">
+                Facture à régler
+            </h5>
+
+            <dl class="row">
+                <dt class="col-sm-3">Fournisseur</dt>
+                <dd class="col-sm-9">
+                    {{ facture.fournisseur.nom }}
+                </dd>
+
+                <dt class="col-sm-3">Numéro</dt>
+                <dd class="col-sm-9">
+                    {{ facture.numero ?: '—' }}
+                </dd>
+
+                <dt class="col-sm-3">Libellé</dt>
+                <dd class="col-sm-9">
+                    {{ facture.libelle }}
+                </dd>
+
+                <dt class="col-sm-3">Date de facture</dt>
+                <dd class="col-sm-9">
+                    {{ facture.dateFacture|date('d/m/Y') }}
+                </dd>
+
+                <dt class="col-sm-3">Montant à payer</dt>
+                <dd class="col-sm-9 fw-bold">
+                    {{ facture.resteARegler|number_format(2, ',', ' ') }} €
+                </dd>
+            </dl>
+
+            <hr>
+
+            <form method="post">
+
+                <input
+                    type="hidden"
+                    name="_token"
+                    value="{{ csrf_token('payer-facture-' ~ facture.id) }}"
+                >
+
+                <div class="mb-3">
+                    <label for="date_reglement" class="form-label">
+                        Date du règlement
+                    </label>
+
+                    <input
+                        type="date"
+                        id="date_reglement"
+                        name="date_reglement"
+                        class="form-control"
+                        value="{{ 'now'|date('Y-m-d') }}"
+                        required
+                    >
+                </div>
+
+                <div class="mb-4">
+                    <label for="reference" class="form-label">
+                        Référence bancaire (facultative)
+                    </label>
+
+                    <input
+                        type="text"
+                        id="reference"
+                        name="reference"
+                        class="form-control"
+                        maxlength="255"
+                    >
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a
+                        href="{{ path('app_facture_fournisseur_index') }}"
+                        class="btn btn-outline-secondary"
+                    >
+                        Annuler
+                    </a>
+
+                    <button type="submit" class="btn btn-success">
+                        Enregistrer le paiement
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+{% endblock %}

@@ -47,7 +47,7 @@
 							<th class="text-end">Reste à régler</th>
 							<th>Règlement</th>
 							<th>Comptabilité</th>
-							<th class="text-end">Actions</th>
+							<th class="text-end text-nowrap">Actions</th>
 						</tr>
 					</thead>
 
@@ -84,7 +84,7 @@
 											€
 										</td>
 
-										<td colspan="2"></td>
+										<td colspan="5"></td>
 
 									</tr>
 
@@ -97,7 +97,7 @@
 
 								<tr class="table-primary">
 
-									<td colspan="8" class="fw-bold">
+									<td colspan="11" class="fw-bold">
 
 										{{ typeCourant }}
 
@@ -248,39 +248,112 @@
 
 								</td>
 
-								<td>
+								
+								<td class="text-end">
+									<div class="dropdown">
+										<button
+											class="btn btn-sm btn-outline-secondary dropdown-toggle"
+											type="button"
+											data-bs-toggle="dropdown"
+											aria-expanded="false"
+										>
+											Actions
+										</button>
 
-									<div class="d-flex justify-content-end gap-2">
+										<ul class="dropdown-menu dropdown-menu-end">
 
-										<a class="btn btn-sm btn-outline-primary" href="{{ path('app_facture_fournisseur_show', { id: facture.id }) }}">
-											Voir
-										</a>
+											<li>
+												<a
+													class="dropdown-item"
+													href="{{ path('app_facture_fournisseur_show', {
+														id: facture.id
+													}) }}"
+												>
+													Voir
+												</a>
+											</li>
 
-										{% if
-                                            not facture.comptabilisee
-                                            and not facture.exercice.cloture
-                                        %}
+											{% if
+												facture.comptabilisee
+												and facture.estFacture()
+												and not facture.fnp
+												and facture.coproprietaireAvanceur is null
+												and facture.exercice.actif
+												and not facture.exercice.cloture
+												and facture.montantRegle == 0
+												and facture.resteARegler > 0
+											%}
+												<li>
+													<a
+														class="dropdown-item"
+														href="{{ path('app_reglement_fournisseur_payer_facture', {
+															id: facture.id
+														}) }}"
+													>
+														Payer
+													</a>
+												</li>
+											{% endif %}
 
-											<a class="btn btn-sm btn-outline-secondary" href="{{ path('app_facture_fournisseur_edit', { id: facture.id }) }}">
-												Modifier
-											</a>
+											{% if
+												facture.comptabilisee
+												and facture.estFacture()
+												and not facture.fnp
+												and facture.coproprietaireAvanceur is null
+												and facture.exercice.actif
+												and not facture.exercice.cloture
+												and facture.resteARegler > 0
+											%}
+												<li>
+													<a
+														class="dropdown-item"
+														href="{{ path('app_reglement_fournisseur_affecter_facture', {
+															id: facture.id
+														}) }}"
+													>
+														Affecter à un règlement
+													</a>
+												</li>
+											{% endif %}
 
-										{% endif %}
+											{% if
+												not facture.comptabilisee
+												and not facture.exercice.cloture
+											%}
+												<li>
+													<a
+														class="dropdown-item"
+														href="{{ path('app_facture_fournisseur_edit', {
+															id: facture.id
+														}) }}"
+													>
+														Modifier
+													</a>
+												</li>
+											{% endif %}
 
-										{% if
-                                            facture.comptabilisee
-                                            and not facture.exercice.cloture
-                                            and facture.coproprietaireAvanceur is null
-                                        %}
+											{% if
+												facture.comptabilisee
+												and not facture.exercice.cloture
+												and facture.coproprietaireAvanceur is null
+											%}
+												<li>
+													<hr class="dropdown-divider">
+												</li>
+												<li>
+													<a
+														class="dropdown-item"
+														href="{{ path('app_facture_fournisseur_corriger_montant', {
+															id: facture.id
+														}) }}"
+													>
+														Corriger le montant
+													</a>
+												</li>
+											{% endif %}
 
-											<a class="btn btn-sm btn-outline-warning" href="{{ path('app_facture_fournisseur_corriger_montant', { id: facture.id }) }}">
-												Corriger montant
-											</a>
-
-										{% endif %}
-
+										</ul>
 									</div>
-
 								</td>
 
 							</tr>
@@ -288,7 +361,7 @@
 						{% else %}
 
 							<tr>
-								<td colspan="8" class="text-center text-muted py-4">
+								<td colspan="11" class="text-center text-muted py-4">
 									Aucune facture fournisseur trouvée
 								</td>
 							</tr>
