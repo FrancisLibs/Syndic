@@ -64,18 +64,35 @@
                         <table class="table table-hover align-middle">
                             <thead>
                                 <tr>
-                                    <th></th>
                                     <th>Date</th>
-                                    <th>Référence</th>
-                                    <th class="text-end">Montant</th>
-                                    <th class="text-end">Disponible</th>
+                                    <th class="text-center">Référence</th>
+                                    <th class="text-center">Montant</th>
+                                    <th class="text-center">Disponible</th>
+                                    <th class="text-center"></th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {% for reglement in reglements %}
                                     <tr>
+
                                         <td>
+                                            {{ reglement.dateReglement|date('d/m/Y') }}
+                                        </td>
+
+                                        <td class="text-center">
+                                            {{ reglement.reference ?: '—' }}
+                                        </td>
+
+                                        <td class="text-center">
+                                            {{ reglement.montant|number_format(2, ',', ' ') }} €
+                                        </td>
+
+                                        <td class="text-center">
+                                            {{ reglement.montantNonAffecte|number_format(2, ',', ' ') }} €
+                                        </td>
+
+                                        <td class="text-center">
                                             <input
                                                 type="radio"
                                                 name="reglement_id"
@@ -85,22 +102,6 @@
                                                 disabled
                                                 {% endif %}
                                             >
-                                        </td>
-
-                                        <td>
-                                            {{ reglement.dateReglement|date('d/m/Y') }}
-                                        </td>
-
-                                        <td>
-                                            {{ reglement.reference ?: '—' }}
-                                        </td>
-
-                                        <td class="text-end">
-                                            {{ reglement.montant|number_format(2, ',', ' ') }} €
-                                        </td>
-
-                                        <td class="text-end">
-                                            {{ reglement.montantNonAffecte|number_format(2, ',', ' ') }} €
                                         </td>
                                     </tr>
                                 {% endfor %}

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Enum\OperationStatut;
 use App\Repository\FactureFournisseurRepository;
 use App\Repository\ExerciceRepository;
 use App\Repository\FournisseurRepository;
@@ -78,7 +79,7 @@ final class ReglementFournisseurController extends AbstractController
  */
         uasort(
             $groupes,
-            static fn(array $a, array $b): int =>
+            static fn (array $a, array $b): int =>
             strcasecmp(
                 $a['fournisseur']->getNom(),
                 $b['fournisseur']->getNom()
@@ -301,7 +302,6 @@ final class ReglementFournisseurController extends AbstractController
         );
     }
 
-
     #[Route(
         '/facture/{id}/payer',
         name: 'app_reglement_fournisseur_payer_facture',
@@ -422,7 +422,7 @@ final class ReglementFournisseurController extends AbstractController
     }
 
 
-#[Route(
+    #[Route(
         '/facture/{id}/affecter',
         name: 'app_reglement_fournisseur_affecter_facture',
         requirements: ['id' => '\d+'],
@@ -472,11 +472,25 @@ final class ReglementFournisseurController extends AbstractController
 
         $reglementsDisponibles = [];
 
+
         foreach ($reglements as $reglement) {
+
+            $operation = $reglement->getOperation();
+
+            // Ignorer les règlements sans opération comptable valide.
+            if (
+                $operation === null
+                || $operation->getStatut() !== OperationStatut::VALIDE
+            ) {
+                continue;
+            }
+
+            // Conserver uniquement les règlements disponibles.
             if ($reglement->getMontantNonAffecte() > 0) {
                 $reglementsDisponibles[] = $reglement;
             }
         }
+
 
         if ($request->isMethod('POST')) {
 
@@ -528,7 +542,7 @@ final class ReglementFournisseurController extends AbstractController
                     function () use (
                         $reglementService,
                         $reglement,
-                        $facture,
+                        $facture,#
                         $montant
                     ): void {
                         $reglementService->affecterFacture(

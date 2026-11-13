@@ -386,4 +386,35 @@ class EcritureRepository extends ServiceEntityRepository
             2
         );
     }
+
+
+
+    /**
+     * Retourne les mouvements bancaires valides
+     * d'un exercice, hors écritures d'à-nouveaux.
+     *
+     * @return Ecriture[]
+     */
+    public function findEcrituresBancaires(
+        Compte $compte,
+        Exercice $exercice
+    ): array {
+        return $this->createQueryBuilder('e')
+            ->addSelect('o')
+            ->join('e.operation', 'o')
+            ->where('e.compte = :compte')
+            ->andWhere('e.exercice = :exercice')
+            ->andWhere('o.statut = :statut')
+            ->andWhere('o.type != :typeANouveau')
+            ->setParameter('compte', $compte)
+            ->setParameter('exercice', $exercice)
+            ->setParameter('statut', OperationStatut::VALIDE)
+            ->setParameter('typeANouveau', OperationType::A_NOUVEAU)
+            ->orderBy('e.date', 'ASC')
+            ->addOrderBy('e.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
 }

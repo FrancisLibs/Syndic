@@ -9,9 +9,9 @@ use App\Entity\Fournisseur;
 use App\Entity\Operation;
 use App\Entity\ReglementFournisseur;
 use App\Enum\OperationType;
+use App\Enum\OperationStatut;
 use App\Repository\CompteRepository;
 use Doctrine\ORM\EntityManagerInterface;
-
 
 final class ReglementFournisseurService
 {
@@ -19,7 +19,8 @@ final class ReglementFournisseurService
         private readonly EntityManagerInterface $entityManager,
         private readonly CompteRepository $compteRepository,
         private readonly ComptabiliteService $comptabiliteService,
-    ) {}
+    ) {
+    }
 
     public function enregistrer(
         Fournisseur $fournisseur,
@@ -223,6 +224,18 @@ final class ReglementFournisseurService
     ): AffectationReglementFournisseur {
 
         $montant = $this->normaliserMontant($montant);
+
+
+        $operation = $reglement->getOperation();
+
+        if (
+            $operation === null
+            || $operation->getStatut() !== OperationStatut::VALIDE
+        ) {
+            throw new \LogicException(
+                'Impossible d’affecter une facture à un règlement annulé ou non valide.'
+            );
+        }
 
         // Vérification du fournisseur
         if ($reglement->getFournisseur() !== $facture->getFournisseur()) {

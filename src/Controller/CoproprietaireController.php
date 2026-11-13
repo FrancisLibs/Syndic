@@ -23,12 +23,27 @@ final class CoproprietaireController extends AbstractController
 {
     #[Route(name: 'app_coproprietaire_index', methods: ['GET'])]
     public function index(
-        CoproprietaireRepository $coproprietaireRepository
+        CoproprietaireRepository $coproprietaireRepository,
+        ContexteExerciceService $contexteExerciceService
     ): Response {
+        $exercice = $contexteExerciceService->getExercice();
+
+        if (!$exercice) {
+            throw $this->createNotFoundException(
+                'Aucun exercice sélectionné.'
+            );
+        }
+
+        $coproprietaires = $coproprietaireRepository
+            ->findProprietairesADate(
+                $exercice->getDateFin()
+            );
+
         return $this->render(
             'coproprietaire/index.html.twig',
             [
-                'coproprietaires' => $coproprietaireRepository->findAll(),
+                'coproprietaires' => $coproprietaires,
+                'exercice' => $exercice,
             ]
         );
     }
@@ -196,7 +211,7 @@ final class CoproprietaireController extends AbstractController
         }
 
         // Tri
-        usort($mouvements, fn($a, $b) => $a['date'] <=> $b['date']);
+        usort($mouvements, fn ($a, $b) => $a['date'] <=> $b['date']);
 
         $solde = 0;
 

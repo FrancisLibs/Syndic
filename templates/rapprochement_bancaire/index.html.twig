@@ -1,0 +1,186 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}
+  Rapprochement bancaire
+{% endblock %}
+
+{% block body %}
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-0">Rapprochement bancaire</h1>
+
+      <p class="text-muted mb-0">
+        Exercice :
+        <strong>{{ exercice.nom }}</strong>
+        —
+        Compte :
+        <strong>{{ compte.numero }} - {{ compte.libelle }}</strong>
+      </p>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h5>Solde bancaire</h5>
+    <h4 class="mb-0">
+      {{ soldePointe|number_format(2, ',', ' ') }} €
+    </h4>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Libellé</th>
+              <th>Pièce</th>
+              <th class="text-end">Débit</th>
+              <th class="text-end">Crédit</th>
+              <th class="text-center">État</th>
+              <th class="text-center">Date bancaire</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for ecriture in ecritures %}
+
+              {% set rapprochement = rapprochements[ecriture.id] ?? null %}
+
+              <tr>
+                <td class="text-nowrap">
+                  {{ ecriture.date|date('d/m/Y') }}
+                </td>
+
+                <td>
+                  {{ ecriture.operation.libelle }}
+                </td>
+
+                <td>
+                  {{ ecriture.operation.piece ?: '—' }}
+                </td>
+
+                <td class="text-end text-nowrap">
+                  {% if ecriture.debit > 0 %}
+                    {{ ecriture.debit|number_format(2, ',', ' ') }} €
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+
+                <td class="text-end text-nowrap">
+                  {% if ecriture.credit > 0 %}
+                    {{ ecriture.credit|number_format(2, ',', ' ') }} €
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+
+                <td class="text-center">
+                  {% if rapprochement %}
+                    <span class="badge bg-success">
+                      Pointée
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">
+                      Non pointée
+                    </span>
+                  {% endif %}
+                </td>
+
+                <td class="text-nowrap text-center">
+                  {% if rapprochement %}
+                    {{ rapprochement.dateRapprochement|date('d/m/Y') }}
+                  {% else %}
+                    —
+                  {% endif %}
+                </td>
+
+
+                <td class="text-center">
+
+                  {% if not rapprochement %}
+
+                    <form
+                      method="post"
+                      action="{{ path('app_rapprochement_bancaire_pointer', {
+                          id: ecriture.id
+                      }) }}"
+                      class="d-flex align-items-center gap-2"
+                    >
+
+                      <input
+                        type="hidden"
+                        name="_token"
+                        value="{{ csrf_token('pointer-bancaire-' ~ ecriture.id) }}"
+                      >
+
+                      <input
+                        type="date"
+                        name="date_bancaire"
+                        class="form-control form-control-sm"
+                        value="{{ ecriture.date|date('Y-m-d') }}"
+                        required
+                      >
+
+                      <input
+                        type="text"
+                        name="reference_releve"
+                        class="form-control form-control-sm"
+                        placeholder="Référence relevé"
+                        maxlength="100"
+                      >
+
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-outline-success"
+                      >
+                        Pointer
+                      </button>
+                    </form>
+                  {% else %}
+                    <form
+                      method="post"
+                      action="{{ path('app_rapprochement_bancaire_annuler', {
+                          id: ecriture.id
+                      }) }}"
+                    >
+                      <input
+                        type="hidden"
+                        name="_token"
+                        value="{{ csrf_token('annuler-pointage-' ~ ecriture.id) }}"
+                      >
+
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('Annuler ce pointage bancaire ?');"
+                      >
+                        Annuler le pointage
+                      </button>
+                    </form>
+
+                  {% endif %}
+
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                  Aucune écriture bancaire trouvée.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
